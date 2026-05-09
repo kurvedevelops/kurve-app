@@ -7,23 +7,21 @@
 
 @theme {
   --color-verde-kurve: #65B32E;
+  --color-verde-kurve-dark: #1F8F4D;
+  --color-verde-kurve-light: #E6F7EE;
   --color-azul-kurve: #0C4450;
   --color-gris-kurve: #F1F1F1;
-  --font-noto-sans: "Noto Sans", system-ui, -apple-system, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
-  --font-aleo: "Aleo", serif;
-}
 
-:root {
-  --kurve-green: #2EB872;
-  --kurve-green-dark: #1F8F4D;
-  --kurve-green-light: #E6F7EE;
-  --background: #FFFFFF;
-  --foreground: #1A2E24;
-  --muted: #F4FAF6;
-  --border: #E5E7EB;
+  /* SHADCN */
+  --color-background: #FFFFFF;
+  --color-foreground: #1A2E24;
+  --color-muted: #F4FAF6;
+  --color-border: #E5E7EB;
+
+  --font-noto-sans: "Noto Sans", system-ui, sans-serif;
+  --font-aleo: "Aleo", serif;
+
   --radius: 0.5rem;
-  --font-noto-sans: 'Noto Sans', system-ui, -apple-system, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
-  --font-aleo: 'Aleo', serif;
 }
 
 @layer base {
@@ -34,7 +32,6 @@
   }
 }
 
-/* 6. Estilos globales adicionales */
 body {
   background: var(--background);
   color: var(--foreground);

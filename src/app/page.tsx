@@ -1,12 +1,24 @@
+import { Input } from "@/components/ui/input";
 
 export default function Home() {
   return (
-    <div className="p-8">
-      <h1 className="font-aleo text-3xl text-verde-kurve">
-        ¡Bienvenido a Kurve!
-      </h1>
-      <p className="font-noto-sans text-azul-kurve mt-4">
-        Tailwind v4 funcionando correctamente
+    <div className="space-y-2">
+      <label
+        htmlFor="email"
+        className="text-sm font-medium text-foreground"
+      >
+        Correo electrónico
+      </label>
+
+      <Input
+        id="email"
+        type="email"
+        placeholder="ejemplo@email.com"
+        className="bg-background border-border"
+      />
+
+      <p className="text-sm ">
+        Ingresá el correo asociado a tu cuenta.
       </p>
     </div>
   );
