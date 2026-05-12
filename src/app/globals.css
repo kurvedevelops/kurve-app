@@ -1,26 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Aleo:ital,wght@0,100..900;1,100..900&display=swap');
+
 @import "tailwindcss";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-verde-kurve: #65B32E;
+  --color-verde-kurve-dark: #1F8F4D;
+  --color-verde-kurve-light: #E6F7EE;
+  --color-azul-kurve: #0C4450;
+  --color-gris-kurve: #D4D4D4;
+  --color-gris-kurve-dark: #ADADAD;
+  --color-gris-kurve-light: #F1F1F1;
+
+  /* SHADCN */
+  --color-background: #FFFFFF;
+  --color-foreground: #1A2E24;
+  --color-muted: #F4FAF6;
+  --color-border: #E5E7EB;
+
+  --font-noto-sans: "Noto Sans", system-ui, sans-serif;
+  --font-aleo: "Aleo", serif;
+
+  --radius: 0.5rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@layer components {
+  .font-aleo-italic {
+    font-family: var(--font-aleo);
+    font-style: italic;
+  }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html, body {
+    font-family: var(--font-noto-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
