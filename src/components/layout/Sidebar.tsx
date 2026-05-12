@@ -7,8 +7,8 @@ const Sidebar = () => {
     <>
       <aside
         className="
-          w-64 min-h-[80vh] bg-background text-azul-kurve flex flex-col py-8 px-4
-          transition-all duration-300"
+          fixed left-0 top-0 w-64 h-screen bg-background text-azul-kurve flex flex-col py-8 px-4
+          transition-all duration-300 overflow-y-auto"
       >
         <Image
           src="/kurve-icon.png"
@@ -121,30 +121,30 @@ const Sidebar = () => {
                 <path
                   d="M5 4.75C5 3.78 5.78 3 6.75 3H13.25C14.22 3 15 3.78 15 4.75V19.25C15 20.22 14.22 21 13.25 21H6.75C5.78 21 5 20.22 5 19.25V4.75Z"
                   stroke="#1F3B45"
-                  stroke-width="2"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinejoin="round"
                 />
 
                 <path
                   d="M11 12H21"
                   stroke="#76B041"
-                  stroke-width="2"
-                  stroke-linecap="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
                 />
 
                 <path
                   d="M17 8L21 12L17 16"
                   stroke="#76B041"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
 
                 <path
                   d="M8 8H11"
                   stroke="#1F3B45"
-                  stroke-width="2"
-                  stroke-linecap="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
                 />
               </svg>
             </button>

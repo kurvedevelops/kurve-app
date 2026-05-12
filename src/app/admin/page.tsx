@@ -6,7 +6,7 @@ const AdminPage = () => {
     <div className="min-h-screen w-full bg-muted flex">
       <Sidebar />
 
-      <main className="flex-1 p-8">
+      <main className="flex-1 ml-64 p-8">
         {/* Header */}
         <div className="flex justify-between items-start mb-8">
           <div>
