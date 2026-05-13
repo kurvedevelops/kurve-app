@@ -340,3 +340,87 @@ La única key pública permitida en frontend es:
 ```env
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 ```
+
+---
+
+## Sistema de borrador automático — Activity Logs
+
+Se implementó un sistema de borradores automáticos para evitar pérdida de información mientras el usuario completa el formulario de actividades.
+
+---
+
+### POST `/api/activity-logs/draft`
+
+Guarda o actualiza un borrador pendiente del usuario autenticado.
+
+Funcionamiento:
+
+- si no existe borrador → crea uno nuevo
+- si ya existe → actualiza el mismo registro
+
+Los borradores se almacenan en:
+
+```txt
+activity_logs
+```
+
+utilizando:
+
+```ts
+is_draft: true;
+```
+
+Por lo tanto:
+
+- NO cuentan como consumo real
+- NO representan actividades finales
+
+---
+
+### GET `/api/activity-logs/draft`
+
+Devuelve el último borrador pendiente del usuario autenticado.
+
+Respuesta:
+
+```json
+{
+  "data": null
+}
+```
+
+si no existe borrador pendiente.
+
+---
+
+### Publicación final de actividad
+
+Cuando el usuario envía el formulario definitivo mediante:
+
+```txt
+POST /api/activity-logs
+```
+
+el sistema:
+
+- busca un borrador pendiente
+- si existe → actualiza ese mismo registro
+- convierte el draft en actividad real mediante:
+
+```ts
+is_draft: false;
+```
+
+Esto evita duplicados y permite reutilizar el mismo registro generado por el autosave.
+
+---
+
+### Objetivo del sistema
+
+El sistema permite:
+
+- auto-guardado periódico desde frontend
+- recuperación automática del formulario
+- prevención de pérdida de datos
+- reutilización del mismo registro draft
+- separación entre drafts y actividades reales
