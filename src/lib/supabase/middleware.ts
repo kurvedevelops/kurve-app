@@ -1,12 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+import type { Database } from "@/lib/supabase/database.types";
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: { headers: request.headers },
+  const response = NextResponse.next({
+    request,
   });
 
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -15,33 +16,33 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          );
-          response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
-          );
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
         },
       },
-    },
+    }
   );
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
   const path = request.nextUrl.pathname;
-  // Sin sesión: redirigir a login
+
   if (!user && !path.startsWith("/login")) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
-  // Con sesión: verificar rol vs ruta
+
   if (user) {
     const { data } = await supabase
       .from("users")
       .select("role")
       .eq("id", user.id)
       .single();
+
     const role = data?.role;
+
     if (path.startsWith("/admin") && role !== "admin") {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
@@ -52,8 +53,10 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
   }
+
   return response;
 }
+
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
