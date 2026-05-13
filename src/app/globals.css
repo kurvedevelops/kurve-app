@@ -2,7 +2,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Aleo:ital,wght@0,100..900;1,100..900&display=swap');
 
 @import "tailwindcss";
-@import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
 @theme {
@@ -10,7 +9,9 @@
   --color-verde-kurve-dark: #1F8F4D;
   --color-verde-kurve-light: #E6F7EE;
   --color-azul-kurve: #0C4450;
-  --color-gris-kurve: #F1F1F1;
+  --color-gris-kurve: #D4D4D4;
+  --color-gris-kurve-dark: #ADADAD;
+  --color-gris-kurve-light: #F1F1F1;
 
   /* SHADCN */
   --color-background: #FFFFFF;
@@ -30,6 +31,12 @@ input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0px 1000px #F4FAF6 inset;
   -webkit-text-fill-color: #0C4450;
   transition: background-color 5000s ease-in-out 0s;
+  }
+@layer components {
+  .font-aleo-italic {
+    font-family: var(--font-aleo);
+    font-style: italic;
+  }
 }
 
 @layer base {
