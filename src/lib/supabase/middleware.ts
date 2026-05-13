@@ -15,7 +15,6 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options);
@@ -47,11 +46,9 @@ export async function middleware(request: NextRequest) {
     if (path.startsWith("/admin") && role !== "admin") {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
-
     if (path.startsWith("/member") && role !== "member") {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
-
     if (path.startsWith("/client") && role !== "client") {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
