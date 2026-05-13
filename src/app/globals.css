@@ -25,6 +25,13 @@
   --radius: 0.5rem;
 }
 
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #F4FAF6 inset;
+  -webkit-text-fill-color: #0C4450;
+  transition: background-color 5000s ease-in-out 0s;
+  }
 @layer components {
   .font-aleo-italic {
     font-family: var(--font-aleo);
