@@ -1,10 +1,10 @@
 "use client";
-import Sidebar from "@/components/layout/Sidebar";
+import SidebarAdmin from "@/components/layout/SidebarAdmin";
 
 const AdminPage = () => {
   return (
     <div className="min-h-screen w-full bg-muted flex">
-      <Sidebar />
+      <SidebarAdmin />
 
       <main className="flex-1 ml-64 p-8">
         {/* Header */}

@@ -1,7 +1,11 @@
 "use client";
 import { createClient } from "@/lib/supabase/client";
 import { useForm } from "react-hook-form";
+<<<<<<< HEAD
 import { useRouter } from 'next/navigation'
+=======
+import { useRouter } from "next/navigation";
+>>>>>>> 953487d (Sidebar reutilizable y layout de miembros + installacion de sweetalert2 como dependencia)
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
@@ -15,7 +19,7 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function Home() {
-  const router = useRouter()
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -30,6 +34,7 @@ const onSubmit = async (data: LoginForm) => {
     password: data.password,
   });
 
+<<<<<<< HEAD
   if (error) {
     console.error("Error al iniciar sesión:", error.message);
     return;
@@ -37,6 +42,29 @@ const onSubmit = async (data: LoginForm) => {
   router.refresh();
   router.push("/");
 };
+=======
+    if (error) {
+      console.error("Error al iniciar sesión:", error.message);
+      return;
+    }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const { data: profile } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", user!.id)
+      .single();
+
+    const role = profile?.role;
+
+    if (role === "admin") router.push("/admin");
+    else if (role === "member") router.push("/member");
+    else if (role === "client") router.push("/client");
+    else router.push("/unauthorized");
+  };
+>>>>>>> 953487d (Sidebar reutilizable y layout de miembros + installacion de sweetalert2 como dependencia)
 
   return (
     <div className="flex h-screen">
@@ -87,10 +115,16 @@ const onSubmit = async (data: LoginForm) => {
               <p className="">Ingresá con tu cuenta para acceder a tu panel.</p>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="flex flex-col gap-6"
+            >
               {/* Email */}
               <div className="flex flex-col gap-2">
-                <label htmlFor="email" className="text-sm font-semibold text-azul-kurve">
+                <label
+                  htmlFor="email"
+                  className="text-sm font-semibold text-azul-kurve"
+                >
                   Email
                 </label>
                 <div className="h-14 bg-muted border border-border rounded-2xl px-5 flex items-center transition-all focus-within:border-verde-kurve focus-within:ring-2 focus-within:ring-verde-kurve/20">
@@ -105,13 +139,18 @@ const onSubmit = async (data: LoginForm) => {
                   />
                 </div>
                 {errors.email && (
-                  <span className="text-xs text-red-500">{errors.email.message}</span>
+                  <span className="text-xs text-red-500">
+                    {errors.email.message}
+                  </span>
                 )}
               </div>
 
               {/* Password */}
               <div className="flex flex-col gap-2">
-                <label htmlFor="password" className="text-sm font-semibold text-azul-kurve">
+                <label
+                  htmlFor="password"
+                  className="text-sm font-semibold text-azul-kurve"
+                >
                   Contraseña
                 </label>
                 <div className="h-14 bg-muted border border-border rounded-2xl px-5 flex items-center transition-all focus-within:border-verde-kurve focus-within:ring-2 focus-within:ring-verde-kurve/20">
@@ -127,9 +166,14 @@ const onSubmit = async (data: LoginForm) => {
                   />
                 </div>
                 {errors.password && (
-                  <span className="text-xs text-red-500">{errors.password.message}</span>
+                  <span className="text-xs text-red-500">
+                    {errors.password.message}
+                  </span>
                 )}
-                <button type="button" className="text-sm text-azul-kurve font-semibold self-end mt-1">
+                <button
+                  type="button"
+                  className="text-sm text-azul-kurve font-semibold self-end mt-1"
+                >
                   ¿Olvidaste tu contraseña?
                 </button>
               </div>
