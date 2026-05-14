@@ -424,3 +424,42 @@ El sistema permite:
 - prevención de pérdida de datos
 - reutilización del mismo registro draft
 - separación entre drafts y actividades reales
+
+## GET /api/activity-logs/me
+
+Obtiene las actividades del usuario autenticado.
+
+### Query params opcionales
+
+| Param     | Tipo   | Descripción            |
+| --------- | ------ | ---------------------- |
+| status    | string | Filtrar por estado     |
+| client_id | uuid   | Filtrar por cliente    |
+| date      | string | Filtrar por fecha      |
+| cursor    | string | Cursor para paginación |
+
+### Comportamiento
+
+- Devuelve solo actividades del usuario autenticado
+- No incluye drafts (`is_draft = false`)
+- Ordenado por `log_date` descendente
+- Límite de 20 registros por request
+- Incluye joins con:
+  - clients
+  - task_types
+  - piece_categories
+
+### Ejemplo
+
+```http
+GET /api/activity-logs/me?status=published
+```
+
+### Response
+
+```json
+{
+  "data": [],
+  "nextCursor": "2026-05-14"
+}
+```
