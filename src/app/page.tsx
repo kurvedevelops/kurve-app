@@ -1,7 +1,7 @@
 "use client";
 import { createClient } from "@/lib/supabase/client";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/router";
+import { useRouter } from 'next/navigation'
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
@@ -22,33 +22,21 @@ export default function Home() {
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
 
-  const onSubmit = async (data: LoginForm) => {
-    const supabase = createClient();
+const onSubmit = async (data: LoginForm) => {
+  const supabase = createClient();
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password: data.password,
-    });
+  const { error } = await supabase.auth.signInWithPassword({
+    email: data.email,
+    password: data.password,
+  });
 
-    if (error) {
-      console.error("Error al iniciar sesión:", error.message);
-      return;
-    }
-    const { data: { user } } = await supabase.auth.getUser();
-
-    const { data: profile } = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", user!.id)
-      .single();
-
-    const role = profile?.role;
-
-    if (role === "admin") router.push("/admin");
-    else if (role === "member") router.push("/member");
-    else if (role === "client") router.push("/client");
-    else router.push("/unauthorized");
-  };
+  if (error) {
+    console.error("Error al iniciar sesión:", error.message);
+    return;
+  }
+  router.refresh();
+  router.push("/");
+};
 
   return (
     <div className="flex h-screen">
