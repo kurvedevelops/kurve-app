@@ -1,11 +1,62 @@
 "use client";
 import SidebarMember from "@/components/layout/SidebarMember";
+import BottomNav from "@/components/layout/BottomNav";
+import PageHeader from "@/components/layout/PageHeader";
 import { Plus, CheckSquare, Clock, MessageSquare } from "lucide-react";
 
 const MemberPage = () => {
+  const navItems = [
+    {
+      label: "Inicio",
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+        </svg>
+      ),
+      href: "/member",
+    },
+    {
+      label: "Actividades",
+      icon: <Clock size={24} />,
+      href: "/member/activities",
+    },
+    {
+      label: "Registrar",
+      icon: <Plus size={28} />,
+      href: "/member/register",
+      isFab: true,
+    },
+    {
+      label: "Mensajes",
+      icon: <MessageSquare size={24} />,
+      href: "/member/messages",
+    },
+    {
+      label: "Perfil",
+      icon: (
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      ),
+      href: "/member/profile",
+    },
+  ];
+
+  const handleFabClick = () => {
+    console.log("Registrar actividad");
+  };
+
   return (
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
-      {/* Sidebar - Hidden on mobile, visible on desktop */}
+      {/* Sidebar */}
       <div className="hidden md:block">
         <SidebarMember />
       </div>
@@ -45,16 +96,12 @@ const MemberPage = () => {
 
       <main className="flex-1 md:ml-64 mt-20 md:mt-0 p-4 md:p-8">
         {/* Desktop Header */}
-        <div className="hidden md:block mb-8">
-          <p className="text-xs font-black text-azul-kurve bg-verde-kurve-dark/10 rounded-xl py-1 px-2.5 w-fit uppercase tracking-wide">
-            Portal del Equipo
-          </p>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mt-2">
-            Bienvenido/a, <span className="text-verde-kurve">Sofia</span>
-          </h1>
-          <p className="text-sm text-gris-kurve-dark mt-1">
-            Registrá tu actividad y visualizá tus tareas asignadas
-          </p>
+        <div className="hidden md:block">
+          <PageHeader
+            badge="Portal del Equipo"
+            title="Bienvenido/a, Sofia"
+            subtitle="Registrá tu actividad y visualizá tus tareas asignadas"
+          />
         </div>
 
         {/* Mobile Header Section */}
@@ -67,7 +114,7 @@ const MemberPage = () => {
           </p>
         </div>
 
-        {/* Quick Register Card - Mobile & Desktop */}
+        {/* Quick Register Card */}
         <div className="bg-gradient-to-r from-verde-kurve-dark to-azul-kurve rounded-2xl p-6 md:p-8 text-white relative overflow-hidden mb-6">
           <div className="relative z-10">
             <p className="text-xs font-bold uppercase tracking-wide mb-2 bg-white/20 w-fit px-2 py-1 rounded-xl opacity-90">
@@ -108,44 +155,8 @@ const MemberPage = () => {
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border flex items-center justify-around py-3 z-40">
-        <button className="flex flex-col items-center gap-1 text-gris-kurve-dark">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-          </svg>
-          <span className="text-xs">Inicio</span>
-        </button>
-
-        <button className="flex flex-col items-center gap-1 text-gris-kurve-dark">
-          <Clock size={24} />
-          <span className="text-xs">Actividades</span>
-        </button>
-
-        <button className="flex items-center justify-center w-14 h-14 bg-verde-kurve text-white rounded-full -mt-6 hover:bg-verde-kurve-dark transition-colors">
-          <Plus size={28} />
-        </button>
-
-        <button className="flex flex-col items-center gap-1 text-gris-kurve-dark">
-          <MessageSquare size={24} />
-          <span className="text-xs">Mensajes</span>
-        </button>
-
-        <button className="flex flex-col items-center gap-1 text-gris-kurve-dark">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg>
-          <span className="text-xs">Perfil</span>
-        </button>
-      </nav>
+      {/* Bottom Navigation */}
+      <BottomNav items={navItems} onFabClick={handleFabClick} />
 
       {/* Mobile bottom padding for navbar */}
       <div className="md:hidden h-20"></div>

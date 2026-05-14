@@ -1,4 +1,5 @@
 "use client";
+import PageHeader from "@/components/layout/PageHeader";
 import SidebarClient from "@/components/layout/SidebarClient";
 
 const ClientPage = () => {
@@ -7,19 +8,11 @@ const ClientPage = () => {
       <SidebarClient />
 
       <main className="flex-1 ml-64 p-8">
-        {/* Header */}
-        <div>
-          <p className="text-xs font-black text-azul-kurve bg-verde-kurve-dark/10 rounded-xl py-1 px-2.5 w-fit uppercase tracking-wide">
-            Portal del Cliente
-          </p>
-          <h1 className="text-4xl font-bold text-foreground mt-2">
-            Bienvenido, <span className="text-verde-kurve">Estudio Norte</span>
-          </h1>
-          <p className="text-sm text-gris-kurve-dark mt-1">
-            Acá vas a poder ver el estado de tu plan y todo lo que hicimos por
-            vos
-          </p>
-        </div>
+        <PageHeader
+          badge="Portal del Cliente"
+          title="Bienvenido, Estudio Norte"
+          subtitle="Acá vas a poder ver el estado de tu plan y todo lo que hicimos por vos"
+        />
 
         {/* Hero Card */}
         <div className="mt-4 mb-4 bg-gradient-to-r from-verde-kurve-dark to-azul-kurve rounded-2xl p-8 text-white relative overflow-hidden">

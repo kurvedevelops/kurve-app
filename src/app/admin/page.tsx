@@ -1,35 +1,32 @@
 "use client";
+import PageHeader from "@/components/layout/PageHeader";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
 
 const AdminPage = () => {
+  const actions = [
+    {
+      label: "↓ Exportar",
+      variant: "secondary" as const,
+      onClick: () => console.log("Exportar"),
+    },
+    {
+      label: "+ Nuevo cliente",
+      variant: "primary" as const,
+      onClick: () => console.log("Nuevo cliente"),
+    },
+  ];
+
   return (
     <div className="min-h-screen w-full bg-muted flex">
       <SidebarAdmin />
 
       <main className="flex-1 ml-64 p-8">
-        {/* Header */}
-        <div className="flex justify-between items-start mb-8">
-          <div>
-            <p className="text-xs font-bold text-gris-kurve-dark uppercase tracking-wide">
-              Panel Admin
-            </p>
-            <h1 className="text-4xl font-bold text-foreground mt-2">
-              Hola, <span className="text-verde-kurve">Lucas</span> 👋
-            </h1>
-            <p className="text-sm text-gris-kurve-dark mt-1">
-              Bienvenido al panel de control de Kurve.
-            </p>
-          </div>
-
-          <div className="flex gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 border bg-background border-border rounded-lg hover:bg-gris-kurve-light transition-colors text-foreground text-sm font-medium">
-              ↓ Exportar
-            </button>
-            <button className="px-4 py-2 bg-verde-kurve text-white rounded-lg hover:bg-verde-kurve-dark transition-colors text-sm font-medium">
-              + Nuevo cliente
-            </button>
-          </div>
-        </div>
+        <PageHeader
+          badge="Panel Admin"
+          title="Hola, Lucas 👋"
+          subtitle="Bienvenido al panel de control de Kurve."
+          actions={actions}
+        />
 
         {/* Cards Grid */}
         <div className="grid grid-cols-4 gap-4 mb-8">

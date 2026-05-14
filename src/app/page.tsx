@@ -1,11 +1,7 @@
 "use client";
 import { createClient } from "@/lib/supabase/client";
 import { useForm } from "react-hook-form";
-<<<<<<< HEAD
-import { useRouter } from 'next/navigation'
-=======
 import { useRouter } from "next/navigation";
->>>>>>> 953487d (Sidebar reutilizable y layout de miembros + installacion de sweetalert2 como dependencia)
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
@@ -34,15 +30,6 @@ const onSubmit = async (data: LoginForm) => {
     password: data.password,
   });
 
-<<<<<<< HEAD
-  if (error) {
-    console.error("Error al iniciar sesión:", error.message);
-    return;
-  }
-  router.refresh();
-  router.push("/");
-};
-=======
     if (error) {
       console.error("Error al iniciar sesión:", error.message);
       return;
@@ -64,7 +51,6 @@ const onSubmit = async (data: LoginForm) => {
     else if (role === "client") router.push("/client");
     else router.push("/unauthorized");
   };
->>>>>>> 953487d (Sidebar reutilizable y layout de miembros + installacion de sweetalert2 como dependencia)
 
   return (
     <div className="flex h-screen">
