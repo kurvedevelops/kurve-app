@@ -1,39 +1,36 @@
 "use client";
-import Sidebar from "@/components/layout/Sidebar";
+import PageHeader from "@/components/layout/PageHeader";
+import SidebarAdmin from "@/components/layout/SidebarAdmin";
 
 const AdminPage = () => {
+  const actions = [
+    {
+      label: "↓ Exportar",
+      variant: "secondary" as const,
+      onClick: () => console.log("Exportar"),
+    },
+    {
+      label: "+ Nuevo cliente",
+      variant: "primary" as const,
+      onClick: () => console.log("Nuevo cliente"),
+    },
+  ];
+
   return (
     <div className="min-h-screen w-full bg-muted flex">
-      <Sidebar />
+      <SidebarAdmin />
 
-      <main className="flex-1 ml-64 p-8">
-        {/* Header */}
-        <div className="flex justify-between items-start mb-8">
-          <div>
-            <p className="text-xs font-bold text-gris-kurve-dark uppercase tracking-wide">
-              Panel Admin
-            </p>
-            <h1 className="text-4xl font-bold text-foreground mt-2">
-              Hola, <span className="text-verde-kurve">Lucas</span> 👋
-            </h1>
-            <p className="text-sm text-gris-kurve-dark mt-1">
-              Bienvenido al panel de control de Kurve.
-            </p>
-          </div>
-
-          <div className="flex gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 border bg-background border-border rounded-lg hover:bg-gris-kurve-light transition-colors text-foreground text-sm font-medium">
-              ↓ Exportar
-            </button>
-            <button className="px-4 py-2 bg-verde-kurve text-white rounded-lg hover:bg-verde-kurve-dark transition-colors text-sm font-medium">
-              + Nuevo cliente
-            </button>
-          </div>
-        </div>
+      <main className="flex-1 md:ml-50 lg:ml-64 px-5 py-8 md:p-8">
+        <PageHeader
+          badge="Panel Admin"
+          title="Hola, Lucas 👋"
+          subtitle="Bienvenido al panel de control de Kurve."
+          actions={actions}
+        />
 
         {/* Cards Grid */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
-          <div className="bg-background p-6 rounded-lg border border-border">
+        <div className="grid md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-background p-6 md:pl-4 lg:p-6 rounded-lg border border-border">
             <div className="text-verde-kurve mb-4">
               <svg
                 width="32"
@@ -59,7 +56,7 @@ const AdminPage = () => {
             </div>
           </div>
 
-          <div className="bg-background p-6 rounded-lg border border-border">
+          <div className="bg-background p-6 md:pl-4 lg:p-6 rounded-lg border border-border">
             <div className="text-verde-kurve mb-4">
               <svg
                 width="32"
@@ -78,14 +75,14 @@ const AdminPage = () => {
             <p className="text-xs font-bold text-gris-kurve-dark uppercase tracking-wide mb-3">
               Integrantes
             </p>
-            <div className="border-t border-border pt-3">
+            <div className="mt-7 border-t border-border pt-3">
               <p className="text-sm text-verde-kurve font-medium">
                 Sin datos aún
               </p>
             </div>
           </div>
 
-          <div className="bg-background p-6 rounded-lg border border-border">
+          <div className="bg-background p-6 md:pl-4 lg:p-6 rounded-lg border border-border">
             <div className="text-verde-kurve mb-4">
               <svg
                 width="32"
@@ -109,7 +106,7 @@ const AdminPage = () => {
             </div>
           </div>
 
-          <div className="bg-background p-6 rounded-lg border border-border">
+          <div className="bg-background p-6 md:pl-4 lg:p-6 rounded-lg border border-border">
             <div className="text-verde-kurve mb-4">
               <svg
                 width="32"
@@ -150,7 +147,7 @@ const AdminPage = () => {
               <line x1="12" y1="17" x2="12" y2="21" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-azul-kurve mb-2">
+          <h3 className="text-xl text-center font-bold text-azul-kurve mb-2">
             Estructura lista, sin datos todavía
           </h3>
           <p className="text-sm text-gris-kurve-dark text-center max-w-md">

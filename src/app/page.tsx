@@ -1,7 +1,7 @@
 "use client";
 import { createClient } from "@/lib/supabase/client";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function Home() {
-  const router = useRouter()
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -34,7 +34,9 @@ export default function Home() {
       console.error("Error al iniciar sesión:", error.message);
       return;
     }
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     const { data: profile } = await supabase
       .from("users")
@@ -52,8 +54,8 @@ export default function Home() {
 
   return (
     <div className="flex h-screen">
-      <div className="w-[65%] flex flex-col bg-cover bg-center bg-no-repeat relative bg-[url('/login-background.jpeg')]">
-        <div className="flex flex-col justify-between py-12 pl-14 h-full">
+      <div className="hidden md:flex md:w-[50%] lg:w-[65%] flex-col bg-cover bg-center bg-no-repeat relative bg-[url('/login-background.jpeg')]">
+        <div className="flex flex-col justify-between py-12 md:pl-8 lg:pl-14 pl-14 h-full">
           <h1 className="text-azul-kurve text-4xl font-bold">kurve</h1>
           <div className="flex flex-col gap-6">
             <h2 className="text-5xl leading-14 font-bold text-azul-kurve">
@@ -76,22 +78,23 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-20">
+      <div className="w-full md:flex-1 flex items-center justify-center px-8 md:px-20">
         <div className="w-full max-w-md flex flex-col gap-10">
-          <div className="flex flex-col gap-10">
-            <div className="flex items-center gap-4">
-              <span className="text-white size-10 flex items-center justify-center font-bold bg-verde-kurve rounded-xl">
+          <div className="flex flex-col items-center md:items-start justify-center md:justify-start gap-10">
+            <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-2 md:gap-4">
+              <span className="text-white text-md size-10 flex items-center justify-center font-bold bg-verde-kurve rounded-xl">
                 k
               </span>
               <h2 className="text-azul-kurve text-3xl font-bold">kurve</h2>
             </div>
-            <span className="w-fit bg-verde-kurve-light text-azul-kurve text-xs font-bold px-4 py-1 rounded-full">
-              BIENVENIDO
-            </span>
           </div>
 
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-3">
+              <span className="w-fit bg-verde-kurve-light text-azul-kurve text-xs font-bold px-4 py-1 rounded-full">
+                BIENVENIDO
+              </span>
+
               <h1 className="text-4xl font-bold text-azul-kurve">
                 Iniciar sesión
               </h1>
@@ -99,10 +102,16 @@ export default function Home() {
               <p className="">Ingresá con tu cuenta para acceder a tu panel.</p>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="flex flex-col gap-6"
+            >
               {/* Email */}
               <div className="flex flex-col gap-2">
-                <label htmlFor="email" className="text-sm font-semibold text-azul-kurve">
+                <label
+                  htmlFor="email"
+                  className="text-sm font-semibold text-azul-kurve"
+                >
                   Email
                 </label>
                 <div className="h-14 bg-muted border border-border rounded-2xl px-5 flex items-center transition-all focus-within:border-verde-kurve focus-within:ring-2 focus-within:ring-verde-kurve/20">
@@ -117,13 +126,18 @@ export default function Home() {
                   />
                 </div>
                 {errors.email && (
-                  <span className="text-xs text-red-500">{errors.email.message}</span>
+                  <span className="text-xs text-red-500">
+                    {errors.email.message}
+                  </span>
                 )}
               </div>
 
               {/* Password */}
               <div className="flex flex-col gap-2">
-                <label htmlFor="password" className="text-sm font-semibold text-azul-kurve">
+                <label
+                  htmlFor="password"
+                  className="text-sm font-semibold text-azul-kurve"
+                >
                   Contraseña
                 </label>
                 <div className="h-14 bg-muted border border-border rounded-2xl px-5 flex items-center transition-all focus-within:border-verde-kurve focus-within:ring-2 focus-within:ring-verde-kurve/20">
@@ -139,9 +153,14 @@ export default function Home() {
                   />
                 </div>
                 {errors.password && (
-                  <span className="text-xs text-red-500">{errors.password.message}</span>
+                  <span className="text-xs text-red-500">
+                    {errors.password.message}
+                  </span>
                 )}
-                <button type="button" className="text-sm text-azul-kurve font-semibold self-end mt-1">
+                <button
+                  type="button"
+                  className="text-sm text-azul-kurve font-semibold self-end mt-1"
+                >
                   ¿Olvidaste tu contraseña?
                 </button>
               </div>
@@ -155,7 +174,7 @@ export default function Home() {
               </button>
             </form>
 
-            <p className="text-center text-sm text-[#9A9A9A] leading-6">
+            <p className="text-center text-[12px] text-[#9A9A9A]">
               Sistema de uso interno y para clientes activos.
               <br />
               Si no tenés acceso, contactá a tu{" "}
