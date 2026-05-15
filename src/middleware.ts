@@ -30,10 +30,11 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  if (!user && !path.startsWith("/login")) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  if (!user && !path.startsWith("/")) {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
+  // Con sesión
   if (user) {
     const { data } = await supabase
       .from("users")
@@ -41,17 +42,27 @@ export async function middleware(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
+    console.log("user.id:", user.id);
+    console.log("data:", data);
+    console.log("error:", Error);
+    console.log("path:", path);
     const role = data?.role;
+    console.log("role:", role);
+    if (path === "/") {
+      if (role === "admin")
+        return NextResponse.redirect(new URL("/admin", request.url));
+      if (role === "member")
+        return NextResponse.redirect(new URL("/member", request.url));
+      if (role === "client")
+        return NextResponse.redirect(new URL("/client", request.url));
+    }
 
-    if (path.startsWith("/admin") && role !== "admin") {
+    if (path.startsWith("/admin") && role !== "admin")
       return NextResponse.redirect(new URL("/unauthorized", request.url));
-    }
-    if (path.startsWith("/member") && role !== "member") {
+    if (path.startsWith("/member") && role !== "member")
       return NextResponse.redirect(new URL("/unauthorized", request.url));
-    }
-    if (path.startsWith("/client") && role !== "client") {
+    if (path.startsWith("/client") && role !== "client")
       return NextResponse.redirect(new URL("/unauthorized", request.url));
-    }
   }
 
   return response;
