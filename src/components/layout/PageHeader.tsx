@@ -25,8 +25,8 @@ const PageHeader = ({
   children,
 }: PageHeaderProps) => {
   return (
-    <div className="flex justify-between items-start mb-8">
-      <div className="flex-1">
+    <div className="flex flex-col mt-12 md:mt-0 md:flex-row justify-between items-start mb-6">
+      <div className="flex-1 mb-3">
         {badge && (
           <p className="text-xs font-bold text-gris-kurve-dark uppercase tracking-wide">
             {badge}
@@ -40,12 +40,12 @@ const PageHeader = ({
 
       {/* Actions */}
       {(actions || children) && (
-        <div className="flex gap-3 ml-8">
+        <div className="flex gap-3 w-full md:mt-5 md:w-[300px]">
           {actions?.map((action, index) => (
             <button
               key={index}
               onClick={action.onClick}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 action.variant === "primary"
                   ? "bg-verde-kurve text-white hover:bg-verde-kurve-dark"
                   : "border border-border bg-background hover:bg-gris-kurve-light text-foreground"

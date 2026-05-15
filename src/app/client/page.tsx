@@ -7,7 +7,7 @@ const ClientPage = () => {
     <div className="min-h-screen w-full bg-muted flex">
       <SidebarClient />
 
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 md:ml-47 lg:ml-64 px-5 py-8 md:p-8">
         <PageHeader
           badge="Portal del Cliente"
           title="Bienvenido, Estudio Norte"
@@ -15,13 +15,13 @@ const ClientPage = () => {
         />
 
         {/* Hero Card */}
-        <div className="mt-4 mb-4 bg-gradient-to-r from-verde-kurve-dark to-azul-kurve rounded-2xl p-8 text-white relative overflow-hidden">
+        <div className="md:mt-4 mb-4 bg-gradient-to-r from-verde-kurve-dark to-azul-kurve rounded-2xl p-8 text-white relative overflow-hidden">
           <div className="relative z-10">
             <p className="text-xs font-bold uppercase tracking-wide mb-2 opacity-90">
               FASE 1 - LAYOUT BASE
             </p>
             <h2 className="text-3xl font-bold mb-4">Tu panel está listo</h2>
-            <p className="text-sm opacity-90 max-w-md">
+            <p className="text-sm opacity-90 max-w-md md:w-80">
               El portal del cliente está construido y conectado. En las próximas
               fases vas a ver tu consumo en tiempo real, las piezas entregadas y
               el equipo trabajando para vos.
@@ -29,7 +29,7 @@ const ClientPage = () => {
           </div>
 
           {/* Circle with SIN DATOS */}
-          <div className="absolute right-12 top-1/2 -translate-y-1/2 w-32 h-32 rounded-full border-2 border-white/20 flex items-center justify-center">
+          <div className="hidden absolute right-12 top-1/2 -translate-y-1/2 w-32 h-32 rounded-full border-2 border-white/20 md:flex items-center justify-center">
             <div className="text-center">
               <p className="text-xs font-bold uppercase tracking-wide opacity-70">
                 Sin datos
@@ -39,7 +39,7 @@ const ClientPage = () => {
         </div>
 
         {/* Cards Grid */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="grid md:grid-cols-3 gap-4 mb-4">
           <div className="bg-background p-6 rounded-lg border border-border hover:shadow-md transition-shadow">
             <div className="text-verde-kurve mb-4">
               <svg
@@ -112,7 +112,7 @@ const ClientPage = () => {
         </div>
 
         {/* Empty State */}
-        <div className="bg-background p-12 rounded-lg border border-border flex flex-col items-center justify-center min-h-80">
+        <div className="bg-background p-7 md:p-12 rounded-lg border border-border flex flex-col items-center justify-center min-h-80">
           <div className="w-20 h-20 bg-verde-kurve/10 rounded-full flex items-center justify-center mb-6">
             <svg
               width="40"
@@ -127,7 +127,7 @@ const ClientPage = () => {
               <line x1="12" y1="17" x2="12" y2="21" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-foreground mb-2">
+          <h3 className="text-xl text-center font-bold text-foreground mb-2">
             Vista del cliente preparada
           </h3>
           <p className="text-sm text-gris-kurve-dark text-center max-w-md">

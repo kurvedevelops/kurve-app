@@ -22,13 +22,13 @@ export default function Home() {
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
 
-const onSubmit = async (data: LoginForm) => {
-  const supabase = createClient();
+  const onSubmit = async (data: LoginForm) => {
+    const supabase = createClient();
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email: data.email,
-    password: data.password,
-  });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    });
 
     if (error) {
       console.error("Error al iniciar sesión:", error.message);
@@ -54,8 +54,8 @@ const onSubmit = async (data: LoginForm) => {
 
   return (
     <div className="flex h-screen">
-      <div className="w-[65%] flex flex-col bg-cover bg-center bg-no-repeat relative bg-[url('/login-background.jpeg')]">
-        <div className="flex flex-col justify-between py-12 pl-14 h-full">
+      <div className="hidden md:flex md:w-[50%] lg:w-[65%] flex-col bg-cover bg-center bg-no-repeat relative bg-[url('/login-background.jpeg')]">
+        <div className="flex flex-col justify-between py-12 md:pl-8 lg:pl-14 pl-14 h-full">
           <h1 className="text-azul-kurve text-4xl font-bold">kurve</h1>
           <div className="flex flex-col gap-6">
             <h2 className="text-5xl leading-14 font-bold text-azul-kurve">
@@ -78,22 +78,23 @@ const onSubmit = async (data: LoginForm) => {
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-20">
+      <div className="w-full md:flex-1 flex items-center justify-center px-8 md:px-20">
         <div className="w-full max-w-md flex flex-col gap-10">
-          <div className="flex flex-col gap-10">
-            <div className="flex items-center gap-4">
-              <span className="text-white size-10 flex items-center justify-center font-bold bg-verde-kurve rounded-xl">
+          <div className="flex flex-col items-center md:items-start justify-center md:justify-start gap-10">
+            <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-2 md:gap-4">
+              <span className="text-white text-md size-10 flex items-center justify-center font-bold bg-verde-kurve rounded-xl">
                 k
               </span>
               <h2 className="text-azul-kurve text-3xl font-bold">kurve</h2>
             </div>
-            <span className="w-fit bg-verde-kurve-light text-azul-kurve text-xs font-bold px-4 py-1 rounded-full">
-              BIENVENIDO
-            </span>
           </div>
 
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-3">
+              <span className="w-fit bg-verde-kurve-light text-azul-kurve text-xs font-bold px-4 py-1 rounded-full">
+                BIENVENIDO
+              </span>
+
               <h1 className="text-4xl font-bold text-azul-kurve">
                 Iniciar sesión
               </h1>
@@ -173,7 +174,7 @@ const onSubmit = async (data: LoginForm) => {
               </button>
             </form>
 
-            <p className="text-center text-sm text-[#9A9A9A] leading-6">
+            <p className="text-center text-[12px] text-[#9A9A9A]">
               Sistema de uso interno y para clientes activos.
               <br />
               Si no tenés acceso, contactá a tu{" "}

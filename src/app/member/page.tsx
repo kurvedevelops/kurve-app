@@ -57,61 +57,16 @@ const MemberPage = () => {
   return (
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
       {/* Sidebar */}
-      <div className="hidden md:block">
-        <SidebarMember />
-      </div>
+      <SidebarMember />
 
-      {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-background border-b border-border px-4 py-4 flex items-center justify-between z-40">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-verde-kurve-dark to-azul-kurve flex items-center justify-center text-white font-bold text-sm">
-            SP
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-foreground">Sofia P.</p>
-            <p className="text-xs text-gris-kurve-dark">Buen día</p>
-          </div>
-        </div>
-        <button className="text-gris-kurve-dark">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-          >
-            <path
-              d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <path
-              d="M13.73 21a2 2 0 0 1-3.46 0"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-        </button>
-      </div>
-
-      <main className="flex-1 md:ml-64 mt-20 md:mt-0 p-4 md:p-8">
+      <main className="flex-1 md:ml-46 lg:ml-64 mt-4 md:mt-0 p-4 md:p-8">
         {/* Desktop Header */}
-        <div className="hidden md:block">
+        <div className="md:">
           <PageHeader
             badge="Portal del Equipo"
             title="Bienvenido/a, Sofia"
             subtitle="Registrá tu actividad y visualizá tus tareas asignadas"
           />
-        </div>
-
-        {/* Mobile Header Section */}
-        <div className="md:hidden mb-6">
-          <h2 className="text-2xl font-bold text-foreground mb-1">
-            ¿Trabajaste hoy?
-          </h2>
-          <p className="text-sm text-gris-kurve-dark mb-4">
-            Registrá tu actividad antes de cerrar el día
-          </p>
         </div>
 
         {/* Quick Register Card */}
@@ -123,11 +78,11 @@ const MemberPage = () => {
             <h2 className="text-2xl md:text-3xl font-bold mb-3">
               ¿Trabajaste hoy?
             </h2>
-            <p className="text-sm opacity-90 mb-4 max-w-md">
+            <p className="text-sm opacity-90 mb-4 max-w-62">
               Registrá tu actividad antes de cerrar el día para mantener
               actualizado el panel de control
             </p>
-            <button className="md:absolute md:right-12 md:top-1/2 md:-translate-y-2.5 bg-white text-azul-kurve font-semibold px-6 py-3.5 rounded-2xl hover:bg-gray-100 transition-colors text-md flex items-center gap-2">
+            <button className="md:absolute md:right-1 md:top-1/2 md:-translate-y-2.5 bg-white text-azul-kurve font-semibold px-6 py-3.5 rounded-2xl hover:bg-gray-100 transition-colors text-md flex items-center gap-2">
               Registrar ahora <span>→</span>
             </button>
           </div>
@@ -148,9 +103,6 @@ const MemberPage = () => {
             <p className="text-sm text-gris-kurve-dark text-center max-w-md mb-6">
               Cuando registres tu primera tarea aparecerá aquí. ¡Comienza ahora!
             </p>
-            <button className="px-6 py-2 bg-verde-kurve text-white rounded-full text-sm font-medium hover:bg-verde-kurve-dark transition-colors">
-              Registrar Actividad
-            </button>
           </div>
         </div>
       </main>

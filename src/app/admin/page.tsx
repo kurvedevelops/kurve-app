@@ -20,7 +20,7 @@ const AdminPage = () => {
     <div className="min-h-screen w-full bg-muted flex">
       <SidebarAdmin />
 
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 md:ml-50 lg:ml-64 px-5 py-8 md:p-8">
         <PageHeader
           badge="Panel Admin"
           title="Hola, Lucas 👋"
@@ -29,8 +29,8 @@ const AdminPage = () => {
         />
 
         {/* Cards Grid */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
-          <div className="bg-background p-6 rounded-lg border border-border">
+        <div className="grid md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-background p-6 md:pl-4 lg:p-6 rounded-lg border border-border">
             <div className="text-verde-kurve mb-4">
               <svg
                 width="32"
@@ -56,7 +56,7 @@ const AdminPage = () => {
             </div>
           </div>
 
-          <div className="bg-background p-6 rounded-lg border border-border">
+          <div className="bg-background p-6 md:pl-4 lg:p-6 rounded-lg border border-border">
             <div className="text-verde-kurve mb-4">
               <svg
                 width="32"
@@ -75,14 +75,14 @@ const AdminPage = () => {
             <p className="text-xs font-bold text-gris-kurve-dark uppercase tracking-wide mb-3">
               Integrantes
             </p>
-            <div className="border-t border-border pt-3">
+            <div className="mt-7 border-t border-border pt-3">
               <p className="text-sm text-verde-kurve font-medium">
                 Sin datos aún
               </p>
             </div>
           </div>
 
-          <div className="bg-background p-6 rounded-lg border border-border">
+          <div className="bg-background p-6 md:pl-4 lg:p-6 rounded-lg border border-border">
             <div className="text-verde-kurve mb-4">
               <svg
                 width="32"
@@ -106,7 +106,7 @@ const AdminPage = () => {
             </div>
           </div>
 
-          <div className="bg-background p-6 rounded-lg border border-border">
+          <div className="bg-background p-6 md:pl-4 lg:p-6 rounded-lg border border-border">
             <div className="text-verde-kurve mb-4">
               <svg
                 width="32"
@@ -147,7 +147,7 @@ const AdminPage = () => {
               <line x1="12" y1="17" x2="12" y2="21" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-azul-kurve mb-2">
+          <h3 className="text-xl text-center font-bold text-azul-kurve mb-2">
             Estructura lista, sin datos todavía
           </h3>
           <p className="text-sm text-gris-kurve-dark text-center max-w-md">
