@@ -463,3 +463,179 @@ GET /api/activity-logs/me?status=published
   "nextCursor": "2026-05-14"
 }
 ```
+
+---
+
+# Clients
+
+## GET /api/clients
+
+Obtiene todos los clientes.
+
+### Response
+
+```json
+{
+  "data": []
+}
+```
+
+---
+
+## POST /api/clients
+
+Crea un nuevo cliente.
+
+### Body
+
+```json
+{
+  "name": "Cliente Demo",
+  "status": "active",
+  "start_date": "2026-05-18",
+  "end_date": null
+}
+```
+
+### Comportamiento
+
+- Valida datos con Zod
+- Verifica nombre duplicado antes de crear
+
+---
+
+## GET /api/clients/:id
+
+Obtiene un cliente por ID.
+
+### Response
+
+```json
+{
+  "data": {}
+}
+```
+
+---
+
+## PATCH /api/clients/:id
+
+Actualiza un cliente existente.
+
+### Body
+
+```json
+{
+  "name": "Nuevo Nombre"
+}
+```
+
+### Comportamiento
+
+- Valida datos con Zod
+- Verifica nombre duplicado
+
+---
+
+## DELETE /api/clients/:id
+
+Elimina un cliente.
+
+### Response
+
+```json
+{
+  "message": "Cliente eliminado correctamente"
+}
+```
+
+---
+
+# Members
+
+## GET /api/members
+
+Obtiene todos los integrantes.
+
+### Response
+
+```json
+{
+  "data": []
+}
+```
+
+---
+
+## POST /api/members
+
+Crea un integrante nuevo.
+
+### Body
+
+```json
+{
+  "full_name": "Juan Perez",
+  "email": "juan@mail.com",
+  "password": "123456"
+}
+```
+
+### Comportamiento
+
+- Valida datos con Zod
+- Verifica email duplicado
+- Crea usuario en Supabase Auth
+- Crea usuario en public.users con role member
+
+---
+
+## GET /api/members/:id
+
+Obtiene un integrante por ID.
+
+### Response
+
+```json
+{
+  "data": {}
+}
+```
+
+---
+
+## PATCH /api/members/:id
+
+Actualiza un integrante.
+
+### Body
+
+```json
+{
+  "full_name": "Nuevo Nombre"
+}
+```
+
+### Comportamiento
+
+- Valida datos con Zod
+- Verifica email duplicado
+
+---
+
+## DELETE /api/members/:id
+
+Desactiva un integrante.
+
+### Comportamiento
+
+- No elimina el usuario
+- Realiza soft delete (`active = false`)
+
+### Response
+
+```json
+{
+  "message": "Integrante desactivado correctamente"
+}
+```
