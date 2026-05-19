@@ -2,12 +2,20 @@
 import PageHeader from "@/components/layout/PageHeader";
 import SidebarClient from "@/components/layout/SidebarClient";
 import RedirectedAlert from "@/hooks/redirectedAlert";
+import { Suspense } from "react";
+
+const AlertWrapper = () => {
+  RedirectedAlert();
+  return null;
+};
 
 const ClientPage = () => {
-  RedirectedAlert();
   return (
     <div className="min-h-screen w-full bg-muted flex">
       <SidebarClient />
+      <Suspense fallback={<div>Cargando...</div>}>
+        <AlertWrapper />
+      </Suspense>
 
       <main className="flex-1 md:ml-47 lg:ml-64 px-5 py-8 md:p-8">
         <PageHeader

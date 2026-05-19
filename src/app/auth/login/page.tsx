@@ -6,7 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Mail, Lock } from "lucide-react";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import Swal from "sweetalert2";
 
 const loginSchema = z.object({
@@ -16,7 +16,7 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+const AlertWrapper = () => {
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -30,6 +30,10 @@ export default function LoginPage() {
     }
   }, [searchParams]);
 
+  return null;
+};
+
+export default function LoginPage() {
   const router = useRouter();
   const {
     register,
@@ -69,6 +73,9 @@ export default function LoginPage() {
 
   return (
     <div className="flex h-screen">
+      <Suspense fallback={<div>Cargando...</div>}>
+        <AlertWrapper />
+      </Suspense>
       <div className="hidden md:flex md:w-[50%] lg:w-[65%] flex-col bg-cover bg-center bg-no-repeat relative bg-[url('/login-background.jpeg')]">
         <div className="flex flex-col justify-between py-12 md:pl-8 lg:pl-14 pl-14 h-full">
           <h1 className="text-azul-kurve text-4xl font-bold">kurve</h1>

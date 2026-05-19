@@ -4,10 +4,14 @@ import BottomNav from "@/components/layout/BottomNav";
 import PageHeader from "@/components/layout/PageHeader";
 import { Plus, CheckSquare, Clock, MessageSquare } from "lucide-react";
 import RedirectedAlert from "@/hooks/redirectedAlert";
+import { Suspense } from "react";
+
+const AlertWrapper = () => {
+  RedirectedAlert();
+  return null;
+};
 
 const MemberPage = () => {
-  RedirectedAlert();
-
   const navItems = [
     {
       label: "Inicio",
@@ -61,6 +65,9 @@ const MemberPage = () => {
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
       {/* Sidebar */}
       <SidebarMember />
+      <Suspense fallback={<div>Cargando...</div>}>
+        <AlertWrapper />
+      </Suspense>
 
       <main className="flex-1 md:ml-46 lg:ml-64 mt-4 md:mt-0 p-4 md:p-8">
         {/* Desktop Header */}
