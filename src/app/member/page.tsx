@@ -3,8 +3,11 @@ import SidebarMember from "@/components/layout/SidebarMember";
 import BottomNav from "@/components/layout/BottomNav";
 import PageHeader from "@/components/layout/PageHeader";
 import { Plus, CheckSquare, Clock, MessageSquare } from "lucide-react";
+import RedirectedAlert from "@/hooks/redirectedAlert";
 
 const MemberPage = () => {
+  RedirectedAlert();
+
   const navItems = [
     {
       label: "Inicio",
@@ -61,7 +64,7 @@ const MemberPage = () => {
 
       <main className="flex-1 md:ml-46 lg:ml-64 mt-4 md:mt-0 p-4 md:p-8">
         {/* Desktop Header */}
-        <div className="md:">
+        <div className="md:mb-3">
           <PageHeader
             badge="Portal del Equipo"
             title="Bienvenido/a, Sofia"

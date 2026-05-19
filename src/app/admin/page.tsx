@@ -1,8 +1,11 @@
 "use client";
 import PageHeader from "@/components/layout/PageHeader";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
+import RedirectedAlert from "@/hooks/redirectedAlert";
 
 const AdminPage = () => {
+  RedirectedAlert();
+
   const actions = [
     {
       label: "↓ Exportar",

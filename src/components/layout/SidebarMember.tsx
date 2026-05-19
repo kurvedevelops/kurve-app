@@ -6,8 +6,8 @@ const SidebarMember = () => {
     {
       title: "Actividades",
       links: [
-        { label: "Registrar actividad", href: "/member/register" },
-        { label: "Mis registros", href: "/member/activities" },
+        { label: "Registrar actividad", href: "/member/registrar" },
+        { label: "Mis registros", href: "/member/mis-actividades" },
       ],
     },
     {
