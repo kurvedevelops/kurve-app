@@ -1,6 +1,7 @@
+import React from "react";
 import LoginPage from "./auth/login/page";
 
-const HomeView = () => {
+const HomePage = () => {
   return (
     <div>
       <LoginPage />
@@ -8,4 +9,4 @@ const HomeView = () => {
   );
 };
 
-export default HomeView;
+export default HomePage;
