@@ -21,7 +21,7 @@ export async function middleware(request: NextRequest) {
           });
         },
       },
-    }
+    },
   );
 
   const {
@@ -30,8 +30,13 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  if (!user && !path.startsWith("/")) {
-    return NextResponse.redirect(new URL("/", request.url));
+  if (
+    !user &&
+    (path.startsWith("/admin") ||
+      path.startsWith("/member") ||
+      path.startsWith("/client"))
+  ) {
+    return NextResponse.redirect(new URL("/?redirected=true", request.url));
   }
 
   // Con sesión
@@ -58,11 +63,17 @@ export async function middleware(request: NextRequest) {
     }
 
     if (path.startsWith("/admin") && role !== "admin")
-      return NextResponse.redirect(new URL("/unauthorized", request.url));
+      return NextResponse.redirect(
+        new URL(`/${role}?redirected=true`, request.url),
+      );
     if (path.startsWith("/member") && role !== "member")
-      return NextResponse.redirect(new URL("/unauthorized", request.url));
+      return NextResponse.redirect(
+        new URL(`/${role}?redirected=true`, request.url),
+      );
     if (path.startsWith("/client") && role !== "client")
-      return NextResponse.redirect(new URL("/unauthorized", request.url));
+      return NextResponse.redirect(
+        new URL(`/${role}?redirected=true`, request.url),
+      );
   }
 
   return response;

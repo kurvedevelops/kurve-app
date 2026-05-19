@@ -1,8 +1,10 @@
 "use client";
 import PageHeader from "@/components/layout/PageHeader";
 import SidebarClient from "@/components/layout/SidebarClient";
+import RedirectedAlert from "@/hooks/redirectedAlert";
 
 const ClientPage = () => {
+  RedirectedAlert();
   return (
     <div className="min-h-screen w-full bg-muted flex">
       <SidebarClient />

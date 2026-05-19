@@ -1,11 +1,13 @@
 "use client";
 import { createClient } from "@/lib/supabase/client";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Mail, Lock } from "lucide-react";
+import { useEffect } from "react";
+import Swal from "sweetalert2";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -15,6 +17,19 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("redirected") === "true") {
+      Swal.fire({
+        title: "Sesión requerida",
+        text: "Debes iniciar sesión para acceder",
+        icon: "warning",
+        confirmButtonColor: "#76B041",
+      });
+    }
+  }, [searchParams]);
+
   const router = useRouter();
   const {
     register,
