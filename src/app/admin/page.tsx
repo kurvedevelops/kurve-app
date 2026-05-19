@@ -2,10 +2,16 @@
 import PageHeader from "@/components/layout/PageHeader";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import RedirectedAlert from "@/hooks/redirectedAlert";
+import { Suspense } from "react";
+
+export const dynamic = "force-dynamic";
+
+const AlertWrapper = () => {
+  RedirectedAlert();
+  return null;
+};
 
 const AdminPage = () => {
-  RedirectedAlert();
-
   const actions = [
     {
       label: "↓ Exportar",
@@ -22,6 +28,9 @@ const AdminPage = () => {
   return (
     <div className="min-h-screen w-full bg-muted flex">
       <SidebarAdmin />
+      <Suspense fallback={<div>Cargando...</div>}>
+        <AlertWrapper />
+      </Suspense>
 
       <main className="flex-1 md:ml-50 lg:ml-64 px-5 py-8 md:p-8">
         <PageHeader
