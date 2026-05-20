@@ -30,6 +30,153 @@ const createActivityLogSchema = z.object({
   is_draft: z.boolean().optional(),
 });
 
+// GET /api/activity-logs
+// Planilla de tiempos para admin con filtros, paginación y exportación CSV
+export async function GET(request: Request) {
+  // Crear cliente Supabase
+  const supabase = await createClient();
+
+  // Obtener query params
+  const { searchParams } = new URL(request.url);
+
+  const clientId = searchParams.get("client_id");
+
+  const memberId = searchParams.get("member_id");
+
+  const status = searchParams.get("status");
+
+  const fromDate = searchParams.get("from");
+
+  const toDate = searchParams.get("to");
+
+  const page = Number(searchParams.get("page") ?? 1);
+
+  const exportFormat = searchParams.get("export");
+
+  // Paginación de 50 registros por página
+  const limit = 50;
+
+  const from = (page - 1) * limit;
+
+  const to = from + limit - 1;
+
+  // Query base con joins
+  let query = supabase
+    .from("activity_logs")
+    .select(
+      `
+      *,
+      users(*),
+      clients(*),
+      task_types(*),
+      piece_categories(*)
+    `
+    )
+    .eq("is_draft", false)
+    .order("log_date", { ascending: false });
+
+  // Filtro por cliente
+  if (clientId) {
+    query = query.eq("client_id", clientId);
+  }
+
+  // Filtro por integrante
+  if (memberId) {
+    query = query.eq("user_id", memberId);
+  }
+
+  // Filtro por estado
+  if (status) {
+    query = query.eq(
+      "status",
+      status as "in_progress" | "delivered" | "published"
+    );
+  }
+
+  // Filtro fecha desde
+  if (fromDate) {
+    query = query.gte("log_date", fromDate);
+  }
+
+  // Filtro fecha hasta
+  if (toDate) {
+    query = query.lte("log_date", toDate);
+  }
+
+  // Si no se exporta CSV, aplicar paginación normal
+  if (exportFormat !== "csv") {
+    query = query.range(from, to);
+  }
+
+  // Ejecutar query
+  const { data: activityLogs, error } = await query;
+
+  // Manejar error
+  if (error) {
+    return NextResponse.json(
+      {
+        error: "Error al obtener planilla de tiempos",
+      },
+      { status: 500 }
+    );
+  }
+
+  // Exportación CSV
+  if (exportFormat === "csv") {
+    const headers = [
+      "fecha",
+      "cliente",
+      "integrante",
+      "tipo_tarea",
+      "categoria",
+      "horas",
+      "piezas",
+      "estado",
+      "notas",
+    ];
+
+    const rows = activityLogs.map((log) => [
+      log.log_date,
+      log.clients?.name ?? "",
+      log.users?.full_name ?? "",
+      log.task_types?.name ?? "",
+      log.piece_categories?.name ?? "",
+      log.hours,
+      log.pieces_count,
+      log.status,
+      log.notes ?? "",
+    ]);
+
+    const csv = [
+      headers.join(","),
+      ...rows.map((row) =>
+        row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(",")
+      ),
+    ].join("\n");
+
+    return new NextResponse(csv, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": "attachment; filename=activity-logs.csv",
+      },
+    });
+  }
+
+  // Respuesta JSON normal
+  return NextResponse.json(
+    {
+      data: activityLogs,
+      pagination: {
+        page,
+        limit,
+        hasMore: activityLogs.length === limit,
+      },
+    },
+    { status: 200 }
+  );
+}
+
 export async function POST(request: Request) {
   // Crear cliente Supabase
   const supabase = await createClient();

@@ -639,3 +639,120 @@ Desactiva un integrante.
   "message": "Integrante desactivado correctamente"
 }
 ```
+
+---
+
+# Packages
+
+## GET /api/packages
+
+Obtiene todos los paquetes.
+
+### Comportamiento
+
+- Incluye joins con:
+  - clients
+  - package_pieces
+  - piece_categories
+
+### Response
+
+```json
+{
+  "data": []
+}
+```
+
+---
+
+## POST /api/packages
+
+Crea un nuevo paquete.
+
+### Body
+
+```json
+{
+  "client_id": "uuid",
+  "name": "Plan Mensual",
+  "status": "active",
+  "start_date": "2026-05-20",
+  "end_date": null,
+  "total_hours": 40,
+  "total_pieces": 20,
+  "package_pieces": [
+    {
+      "category_id": "uuid",
+      "quantity": 10
+    }
+  ]
+}
+```
+
+### Comportamiento
+
+- Crea el paquete principal
+- Inserta automáticamente registros en `package_pieces`
+- Valida datos con Zod
+
+---
+
+## GET /api/packages/:id
+
+Obtiene un paquete por ID.
+
+### Comportamiento
+
+- Incluye joins con:
+  - clients
+  - package_pieces
+  - piece_categories
+
+### Response
+
+```json
+{
+  "data": {}
+}
+```
+
+---
+
+## PATCH /api/packages/:id
+
+Actualiza un paquete.
+
+### Body
+
+```json
+{
+  "name": "Nuevo nombre",
+  "status": "paused"
+}
+```
+
+### Comportamiento
+
+- Actualiza información del paquete
+- Reemplaza las filas de `package_pieces` si se envían nuevas
+- Permite cerrar el paquete con `status = ended`
+
+---
+
+## DELETE /api/packages/:id
+
+No elimina físicamente el paquete.
+
+### Comportamiento
+
+- Realiza cierre lógico:
+  - `status = ended`
+  - actualiza `end_date`
+
+### Response
+
+```json
+{
+  "message": "Paquete cerrado correctamente"
+}
+```
