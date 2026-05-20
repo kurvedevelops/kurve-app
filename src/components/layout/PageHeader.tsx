@@ -25,7 +25,7 @@ const PageHeader = ({
   children,
 }: PageHeaderProps) => {
   return (
-    <div className="flex flex-col mt-12 md:mt-0 md:flex-row justify-between items-start mb-6">
+    <div className="flex flex-col mt-12 md:mt-0 md:flex-row justify-between items-start">
       <div className="flex-1 mb-3">
         {badge && (
           <p className="text-xs font-bold text-gris-kurve-dark uppercase tracking-wide">
