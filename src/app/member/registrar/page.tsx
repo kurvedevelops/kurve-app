@@ -5,6 +5,11 @@ import BottomNav from "@/components/layout/BottomNav";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Clock, Plus, MessageSquare } from "lucide-react";
+import {
+  useClients,
+  useClientsByUser,
+  useCurrentUser,
+} from "@/hooks/middleware";
 
 const registroSchema = Yup.object().shape({
   cliente: Yup.string().required("Selecciona un cliente"),
@@ -17,6 +22,14 @@ const registroSchema = Yup.object().shape({
 });
 
 const RegistrarHorasPage = () => {
+  const { user, loadingUser } = useCurrentUser();
+  const { clients, loadingClients } = useClients();
+  const { clientsId, loadingClientsId } = useClientsByUser(user?.id || "");
+
+  const userClients = clients.filter((client) =>
+    clientsId.some((item) => item.client_id === client.id),
+  );
+
   const horasTotales = 34.5;
   const navItems = [
     {
@@ -77,12 +90,6 @@ const RegistrarHorasPage = () => {
     },
   });
 
-  const clientes = [
-    { id: 1, nombre: "Stark Industries" },
-    { id: 2, nombre: "Globex Corp" },
-    { id: 3, nombre: "Wayne Ent" },
-  ];
-
   const tareas = [
     { id: 1, nombre: "Diseño de UI" },
     { id: 2, nombre: "Desarrollo Frontend" },
@@ -110,7 +117,7 @@ const RegistrarHorasPage = () => {
             Registro Diario
           </p>
           <h1 className="text-2xl font-bold text-foreground mb-1">
-            Cargar Horas
+            Carga horas
           </h1>
           <p className="text-sm text-gris-kurve-dark">
             Ingresa el detalle de tus actividades diarias
@@ -139,9 +146,9 @@ const RegistrarHorasPage = () => {
                     className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
                   >
                     <option value="">Selecciona un cliente</option>
-                    {clientes.map((cliente) => (
-                      <option key={cliente.id} value={cliente.id}>
-                        {cliente.nombre}
+                    {userClients.map((client) => (
+                      <option key={client.id} value={client.id}>
+                        {client.name}
                       </option>
                     ))}
                   </select>

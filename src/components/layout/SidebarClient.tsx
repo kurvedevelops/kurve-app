@@ -1,4 +1,5 @@
 "use client";
+import { getInitials, useCurrentUser } from "@/hooks/middleware";
 import SidebarBase from "./SidebarBase";
 
 const ClientHeader = () => (
@@ -15,6 +16,7 @@ const ClientHeader = () => (
 );
 
 const SidebarClient = () => {
+  const { user, loading } = useCurrentUser();
   const navSections = [
     {
       title: "Tu cuenta",
@@ -37,8 +39,8 @@ const SidebarClient = () => {
     <SidebarBase
       headerComponent={<ClientHeader />}
       navSections={navSections}
-      userAvatar="MV"
-      userName="Martin V."
+      userAvatar={getInitials(user?.full_name)}
+      userName={user?.full_name?.toString() || "U"}
       userRole="Cliente"
       showLogout={true}
     />

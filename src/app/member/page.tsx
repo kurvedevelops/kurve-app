@@ -74,7 +74,7 @@ const MemberPage = () => {
         <div className="md:mb-3">
           <PageHeader
             badge="Portal del Equipo"
-            title="Bienvenido/a, Sofia"
+            title="Bienvenido/a"
             subtitle="Registrá tu actividad y visualizá tus tareas asignadas"
           />
         </div>
