@@ -340,3 +340,419 @@ La única key pública permitida en frontend es:
 ```env
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 ```
+
+---
+
+## Sistema de borrador automático — Activity Logs
+
+Se implementó un sistema de borradores automáticos para evitar pérdida de información mientras el usuario completa el formulario de actividades.
+
+---
+
+### POST `/api/activity-logs/draft`
+
+Guarda o actualiza un borrador pendiente del usuario autenticado.
+
+Funcionamiento:
+
+- si no existe borrador → crea uno nuevo
+- si ya existe → actualiza el mismo registro
+
+Los borradores se almacenan en:
+
+```txt
+activity_logs
+```
+
+utilizando:
+
+```ts
+is_draft: true;
+```
+
+Por lo tanto:
+
+- NO cuentan como consumo real
+- NO representan actividades finales
+
+---
+
+### GET `/api/activity-logs/draft`
+
+Devuelve el último borrador pendiente del usuario autenticado.
+
+Respuesta:
+
+```json
+{
+  "data": null
+}
+```
+
+si no existe borrador pendiente.
+
+---
+
+### Publicación final de actividad
+
+Cuando el usuario envía el formulario definitivo mediante:
+
+```txt
+POST /api/activity-logs
+```
+
+el sistema:
+
+- busca un borrador pendiente
+- si existe → actualiza ese mismo registro
+- convierte el draft en actividad real mediante:
+
+```ts
+is_draft: false;
+```
+
+Esto evita duplicados y permite reutilizar el mismo registro generado por el autosave.
+
+---
+
+### Objetivo del sistema
+
+El sistema permite:
+
+- auto-guardado periódico desde frontend
+- recuperación automática del formulario
+- prevención de pérdida de datos
+- reutilización del mismo registro draft
+- separación entre drafts y actividades reales
+
+## GET /api/activity-logs/me
+
+Obtiene las actividades del usuario autenticado.
+
+### Query params opcionales
+
+| Param     | Tipo   | Descripción            |
+| --------- | ------ | ---------------------- |
+| status    | string | Filtrar por estado     |
+| client_id | uuid   | Filtrar por cliente    |
+| date      | string | Filtrar por fecha      |
+| cursor    | string | Cursor para paginación |
+
+### Comportamiento
+
+- Devuelve solo actividades del usuario autenticado
+- No incluye drafts (`is_draft = false`)
+- Ordenado por `log_date` descendente
+- Límite de 20 registros por request
+- Incluye joins con:
+  - clients
+  - task_types
+  - piece_categories
+
+### Ejemplo
+
+```http
+GET /api/activity-logs/me?status=published
+```
+
+### Response
+
+```json
+{
+  "data": [],
+  "nextCursor": "2026-05-14"
+}
+```
+
+---
+
+# Clients
+
+## GET /api/clients
+
+Obtiene todos los clientes.
+
+### Response
+
+```json
+{
+  "data": []
+}
+```
+
+---
+
+## POST /api/clients
+
+Crea un nuevo cliente.
+
+### Body
+
+```json
+{
+  "name": "Cliente Demo",
+  "status": "active",
+  "start_date": "2026-05-18",
+  "end_date": null
+}
+```
+
+### Comportamiento
+
+- Valida datos con Zod
+- Verifica nombre duplicado antes de crear
+
+---
+
+## GET /api/clients/:id
+
+Obtiene un cliente por ID.
+
+### Response
+
+```json
+{
+  "data": {}
+}
+```
+
+---
+
+## PATCH /api/clients/:id
+
+Actualiza un cliente existente.
+
+### Body
+
+```json
+{
+  "name": "Nuevo Nombre"
+}
+```
+
+### Comportamiento
+
+- Valida datos con Zod
+- Verifica nombre duplicado
+
+---
+
+## DELETE /api/clients/:id
+
+Elimina un cliente.
+
+### Response
+
+```json
+{
+  "message": "Cliente eliminado correctamente"
+}
+```
+
+---
+
+# Members
+
+## GET /api/members
+
+Obtiene todos los integrantes.
+
+### Response
+
+```json
+{
+  "data": []
+}
+```
+
+---
+
+## POST /api/members
+
+Crea un integrante nuevo.
+
+### Body
+
+```json
+{
+  "full_name": "Juan Perez",
+  "email": "juan@mail.com",
+  "password": "123456"
+}
+```
+
+### Comportamiento
+
+- Valida datos con Zod
+- Verifica email duplicado
+- Crea usuario en Supabase Auth
+- Crea usuario en public.users con role member
+
+---
+
+## GET /api/members/:id
+
+Obtiene un integrante por ID.
+
+### Response
+
+```json
+{
+  "data": {}
+}
+```
+
+---
+
+## PATCH /api/members/:id
+
+Actualiza un integrante.
+
+### Body
+
+```json
+{
+  "full_name": "Nuevo Nombre"
+}
+```
+
+### Comportamiento
+
+- Valida datos con Zod
+- Verifica email duplicado
+
+---
+
+## DELETE /api/members/:id
+
+Desactiva un integrante.
+
+### Comportamiento
+
+- No elimina el usuario
+- Realiza soft delete (`active = false`)
+
+### Response
+
+```json
+{
+  "message": "Integrante desactivado correctamente"
+}
+```
+
+---
+
+# Packages
+
+## GET /api/packages
+
+Obtiene todos los paquetes.
+
+### Comportamiento
+
+- Incluye joins con:
+  - clients
+  - package_pieces
+  - piece_categories
+
+### Response
+
+```json
+{
+  "data": []
+}
+```
+
+---
+
+## POST /api/packages
+
+Crea un nuevo paquete.
+
+### Body
+
+```json
+{
+  "client_id": "uuid",
+  "name": "Plan Mensual",
+  "status": "active",
+  "start_date": "2026-05-20",
+  "end_date": null,
+  "total_hours": 40,
+  "total_pieces": 20,
+  "package_pieces": [
+    {
+      "category_id": "uuid",
+      "quantity": 10
+    }
+  ]
+}
+```
+
+### Comportamiento
+
+- Crea el paquete principal
+- Inserta automáticamente registros en `package_pieces`
+- Valida datos con Zod
+
+---
+
+## GET /api/packages/:id
+
+Obtiene un paquete por ID.
+
+### Comportamiento
+
+- Incluye joins con:
+  - clients
+  - package_pieces
+  - piece_categories
+
+### Response
+
+```json
+{
+  "data": {}
+}
+```
+
+---
+
+## PATCH /api/packages/:id
+
+Actualiza un paquete.
+
+### Body
+
+```json
+{
+  "name": "Nuevo nombre",
+  "status": "paused"
+}
+```
+
+### Comportamiento
+
+- Actualiza información del paquete
+- Reemplaza las filas de `package_pieces` si se envían nuevas
+- Permite cerrar el paquete con `status = ended`
+
+---
+
+## DELETE /api/packages/:id
+
+No elimina físicamente el paquete.
+
+### Comportamiento
+
+- Realiza cierre lógico:
+  - `status = ended`
+  - actualiza `end_date`
+
+### Response
+
+```json
+{
+  "message": "Paquete cerrado correctamente"
+}
+```
