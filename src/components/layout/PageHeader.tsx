@@ -1,4 +1,5 @@
 "use client";
+import { useCurrentUser } from "@/hooks/middleware";
 import { ReactNode } from "react";
 
 interface Action {
@@ -24,6 +25,7 @@ const PageHeader = ({
   actions,
   children,
 }: PageHeaderProps) => {
+  const { user, loadingUser } = useCurrentUser();
   return (
     <div className="flex flex-col mt-12 md:mt-0 md:flex-row justify-between items-start">
       <div className="flex-1 mb-3">
@@ -32,7 +34,9 @@ const PageHeader = ({
             {badge}
           </p>
         )}
-        <h1 className="text-4xl font-bold text-foreground mt-2">{title}</h1>
+        <h1 className="text-4xl font-bold text-foreground mt-2">
+          {title + (user?.full_name ? `, ${user.full_name}` : "")}
+        </h1>
         {subtitle && (
           <p className="text-sm text-gris-kurve-dark mt-1">{subtitle}</p>
         )}
