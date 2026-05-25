@@ -1,7 +1,10 @@
 "use client";
+import { getInitials, useCurrentUser } from "@/hooks/middleware";
 import SidebarBase from "./SidebarBase";
 
 const SidebarAdmin = () => {
+  const { user, loading } = useCurrentUser();
+
   const navSections = [
     {
       title: "Principal",
@@ -31,8 +34,8 @@ const SidebarAdmin = () => {
   return (
     <SidebarBase
       navSections={navSections}
-      userAvatar="LM"
-      userName="Lucas Méndez"
+      userAvatar={getInitials(user?.full_name)}
+      userName={user?.full_name?.toString() || "U"}
       userRole="Administrador"
       showLogout={true}
     />
