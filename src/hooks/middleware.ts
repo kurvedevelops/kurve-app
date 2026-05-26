@@ -121,3 +121,62 @@ export function getInitials(fullName?: string) {
   if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 }
+
+export function usePieceCategories() {
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("piece_categories")
+          .select("id, name")
+          .eq("active", true)
+          .order("name");
+
+        if (error) throw error;
+
+        setCategories(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    fetchCategories();
+  }, []);
+  return { categories, loadingCategories, error };
+}
+
+export function useTaskTypes() {
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [loadingTasks, setLoadingTasks] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("task_types")
+          .select("*")
+          .eq("active", true)
+          .order("name");
+
+        if (error) throw error;
+
+        setTasks(data);
+        console.log(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingTasks(false);
+      }
+    };
+    fetchTasks();
+  }, []);
+  return { tasks, loadingTasks, error };
+}
