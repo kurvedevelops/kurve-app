@@ -50,7 +50,6 @@ export default function LoginPage() {
     });
 
     if (error) {
-      console.error("Error al iniciar sesión:", error.message);
       return;
     }
     const {

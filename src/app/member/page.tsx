@@ -5,6 +5,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import { Plus, CheckSquare, Clock, MessageSquare } from "lucide-react";
 import RedirectedAlert from "@/hooks/redirectedAlert";
 import { Suspense } from "react";
+import { useRouter } from "next/navigation";
 
 const AlertWrapper = () => {
   RedirectedAlert();
@@ -57,8 +58,10 @@ const MemberPage = () => {
     },
   ];
 
+  const router = useRouter();
+
   const handleFabClick = () => {
-    console.log("Registrar actividad");
+    router.push("/member/registrar");
   };
 
   return (
@@ -92,7 +95,10 @@ const MemberPage = () => {
               Registrá tu actividad antes de cerrar el día para mantener
               actualizado el panel de control
             </p>
-            <button className="md:absolute md:right-1 md:top-1/2 md:-translate-y-2.5 bg-white text-azul-kurve font-semibold px-6 py-3.5 rounded-2xl hover:bg-gray-100 transition-colors text-md flex items-center gap-2">
+            <button
+              onClick={handleFabClick}
+              className="md:absolute md:right-1 md:top-1/2 md:-translate-y-2.5 bg-white text-azul-kurve font-semibold px-6 py-3.5 rounded-2xl hover:bg-gray-100 transition-colors text-md flex items-center gap-2 cursor-pointer"
+            >
               Registrar ahora <span>→</span>
             </button>
           </div>
