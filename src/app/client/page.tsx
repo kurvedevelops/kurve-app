@@ -1,8 +1,77 @@
 "use client";
+import ConsumptionChart from "@/components/client/ConsumptionChart";
 import PageHeader from "@/components/layout/PageHeader";
 import SidebarClient from "@/components/layout/SidebarClient";
+import { Card, CardHeader } from "@/components/ui/card";
 import RedirectedAlert from "@/hooks/redirectedAlert";
 import { Suspense } from "react";
+import { FileText, Folder, BarChart3, BookOpen } from "lucide-react";
+
+const planData = {
+  used: 44,
+  total: 100,
+  percent: 44,
+};
+
+const deliverablesData = {
+  completed: 22,
+  total: 100,
+  percent: 20,
+
+  items: [
+    {
+      label: "website",
+      current: 55,
+      total: 100,
+      progress: 55,
+    },
+    {
+      label: "marketing",
+      current: 22,
+      total: 100,
+      progress: 22,
+    },
+    {
+      label: "contenido",
+      current: 33,
+      total: 100,
+      progress: 33,
+    },
+  ],
+};
+
+const links = [
+  {
+    title: "Contrato",
+    description: "Documento de contrato con los detalles del acuerdo y términos.",
+    icon: FileText,
+    color: "#5B8E3D",
+    bg: "#EEF8E7",
+  },
+  {
+    title: "Google Drive",
+    description: "Google Drive con los entregables y archivos compartidos del proyecto.",
+    icon: Folder,
+    color: "#D2A500",
+    bg: "#FFF7DD",
+  },
+  {
+    title: "Analytics",
+    description:
+      "Datos clave y métricas de rendimiento del proyecto para monitorear el éxito y tomar decisiones informadas.",
+    icon: BarChart3,
+    color: "#D4871F",
+    bg: "#FFF1E3",
+  },
+  {
+    title: "Documentación",
+    description:
+      "Documentación detallada del proyecto, incluyendo procesos, guías y recursos para referencia futura.",
+    icon: BookOpen,
+    color: "#7A52B3",
+    bg: "#F4ECFF",
+  },
+];
 
 const AlertWrapper = () => {
   RedirectedAlert();
@@ -20,134 +89,137 @@ const ClientPage = () => {
       <main className="flex-1 md:ml-47 lg:ml-64 px-5 py-8 md:p-8">
         <PageHeader
           badge="Portal del Cliente"
-          title="Bienvenido, Estudio Norte"
-          subtitle="Acá vas a poder ver el estado de tu plan y todo lo que hicimos por vos"
+          title="Bienvenido/a! Sofia"
+          subtitle="Monitorea tu actividad y metricas clave"
         />
-
-        {/* Hero Card */}
-        <div className="md:mt-4 mb-4 bg-gradient-to-r from-verde-kurve-dark to-azul-kurve rounded-2xl p-8 text-white relative overflow-hidden">
-          <div className="relative z-10">
-            <p className="text-xs font-bold uppercase tracking-wide mb-2 opacity-90">
-              FASE 1 - LAYOUT BASE
-            </p>
-            <h2 className="text-3xl font-bold mb-4">Tu panel está listo</h2>
-            <p className="text-sm opacity-90 max-w-md md:w-80">
-              El portal del cliente está construido y conectado. En las próximas
-              fases vas a ver tu consumo en tiempo real, las piezas entregadas y
-              el equipo trabajando para vos.
-            </p>
+        <div className="flex justify-between items-center mt-8 gap-8 md:flex-row flex-col">
+          <div className="">
+            <ConsumptionChart />
           </div>
+          <div className="flex flex-col gap-5 flex-1">
+            <div className="bg-white rounded-3xl border border-border px-6 py-5 shadow-sm">
+              <div className="flex items-start justify-between mb-4">
+                <h2 className="text-2xl font-semibold">
+                  Consumo de Plan
+                </h2>
 
-          {/* Circle with SIN DATOS */}
-          <div className="hidden absolute right-12 top-1/2 -translate-y-1/2 w-32 h-32 rounded-full border-2 border-white/20 md:flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-wide opacity-70">
-                Sin datos
-              </p>
+                <span className="text-verde-kurve text-2xl font-bold">
+                  {planData.percent}%
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center mb-3">
+                <p className="font-medium">
+                  Horas Utilizadas: {planData.used}
+                </p>
+
+                <p className="font-medium">
+                  Horas Incluidas: {planData.total}
+                </p>
+              </div>
+
+              <div className="w-full h-4 bg-[#ECECEC] rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-verde-kurve"
+                  style={{
+                    width: `${planData.percent}%`,
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-3xl border border-border px-6 py-5 shadow-sm">
+              <div className="flex items-start justify-between mb-4">
+                <h2 className="text-2xl font-semibold">
+                  Resumen de Entregables
+                </h2>
+
+                <span className="text-verde-kurve text-2xl font-bold">
+                  {deliverablesData.percent}%
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center mb-3">
+                <p className="font-medium">
+                  Piezas Realizadas: {deliverablesData.completed}
+                </p>
+
+                <p className="font-medium">
+                  Incluidas: {deliverablesData.total}
+                </p>
+              </div>
+              <div className="w-full h-4 bg-[#ECECEC] rounded-full overflow-hidden mb-4">
+                <div
+                  className="h-full rounded-full bg-verde-kurve"
+                  style={{
+                    width: `${deliverablesData.percent}%`,
+                  }}
+                />
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-6">
+                {deliverablesData.items.map((item) => (
+                  <div key={item.label} className="flex flex-col gap-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">
+                        {item.label ?? "Pieza"}
+                      </span>
+
+                      <span className="font-medium">
+                        {item.current}/{item.total}
+                      </span>
+                    </div>
+
+                    <div className="w-full h-2 bg-[#ECECEC] rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-verde-kurve"
+                        style={{
+                          width: `${item.progress}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
+        <div className="w-full mt-10">
+          <h2 className="text-[28px] font-semibold text-[#1E1E1E] mb-4">
+            Enlaces Importantes
+          </h2>
 
-        {/* Cards Grid */}
-        <div className="grid md:grid-cols-3 gap-4 mb-4">
-          <div className="bg-background p-6 rounded-lg border border-border hover:shadow-md transition-shadow">
-            <div className="text-verde-kurve mb-4">
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-4 ml-10 md:ml-0">
+            {links.map((item) => (
+              <Card
+                key={item.title}
+                className="rounded-2xl border border-[#ECECEC] shadow-none px-5 py-5 w-90 hover:shadow-sm transition-all"
               >
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
-            </div>
-            <h3 className="text-md font-bold text-foreground mb-2">
-              Consumo de horas
-            </h3>
-            <p className="text-md text-gris-kurve-dark">
-              Cuántas horas se consumieron del paquete contratado.
-            </p>
-          </div>
+                <CardHeader className="p-0 flex flex-col gap-5">
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center"
+                    style={{
+                      backgroundColor: item.bg,
+                    }}
+                  >
+                    <item.icon
+                      className="w-8 h-8"
+                      style={{
+                        color: item.color,
+                      }}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <h3 className="text-2xl leading-none font-semibold text-[#1F1F1F]">
+                      {item.title}
+                    </h3>
 
-          <div className="bg-background p-6 rounded-lg border border-border hover:shadow-md transition-shadow">
-            <div className="text-verde-kurve mb-4">
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <rect x="3" y="3" width="7" height="7" />
-                <rect x="14" y="3" width="7" height="7" />
-                <rect x="14" y="14" width="7" height="7" />
-                <rect x="3" y="14" width="7" height="7" />
-              </svg>
-            </div>
-            <h3 className="text-md font-bold text-foreground mb-2">
-              Piezas entregadas
-            </h3>
-            <p className="text-md text-gris-kurve-dark">
-              Publicaciones realizadas durante el período.
-            </p>
+                    <p className=" text-[#707070]">{item.description}</p>
+                  </div>
+                </CardHeader>
+              </Card>
+            ))}
           </div>
-
-          <div className="bg-background p-6 rounded-lg border border-border hover:shadow-md transition-shadow">
-            <div className="text-verde-kurve mb-4">
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
-            </div>
-            <h3 className="text-md font-bold text-foreground mb-2">
-              Equipo asignado
-            </h3>
-            <p className="text-md text-gris-kurve-dark">
-              Las personas trabajando en tu cuenta y sus roles.
-            </p>
-          </div>
-        </div>
-
-        {/* Empty State */}
-        <div className="bg-background p-7 md:p-12 rounded-lg border border-border flex flex-col items-center justify-center min-h-80">
-          <div className="w-20 h-20 bg-verde-kurve/10 rounded-full flex items-center justify-center mb-6">
-            <svg
-              width="40"
-              height="40"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#65B32E"
-              strokeWidth="2"
-            >
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-              <line x1="8" y1="21" x2="16" y2="21" />
-              <line x1="12" y1="17" x2="12" y2="21" />
-            </svg>
-          </div>
-          <h3 className="text-xl text-center font-bold text-foreground mb-2">
-            Vista del cliente preparada
-          </h3>
-          <p className="text-sm text-gris-kurve-dark text-center max-w-md">
-            Toda la estructura del portal del cliente está construida y la
-            autenticación funciona correctamente. Las métricas en tiempo real,
-            las piezas y el equipo asignado se cargarán en las fases siguientes.
-          </p>
-          <button className="mt-6 px-6 py-2 bg-verde-kurve text-white rounded-full text-sm font-medium hover:bg-verde-kurve-dark transition-colors">
-            FASE 1 — LAYOUT BASE COMPLETO
-          </button>
         </div>
       </main>
     </div>

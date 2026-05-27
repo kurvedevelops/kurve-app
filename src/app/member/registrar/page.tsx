@@ -11,8 +11,11 @@ import {
   useClientsByUser,
   useCurrentUser,
   useTaskTypes,
+  useActivityLogs,
 } from "@/hooks/middleware";
 import { createClient } from "@/lib/supabase/client";
+import Swal from "sweetalert2";
+import { useEffect } from "react";
 
 const registroSchema = Yup.object().shape({
   client_id: Yup.string().required("Selecciona un cliente"),
@@ -36,12 +39,14 @@ const registroSchema = Yup.object().shape({
     .min(0.5, "Mínimo 0.5 horas")
     .max(24, "Máximo 24 horas")
     .required("Las horas son requeridas"),
+  activity_status: Yup.string()
+    .oneOf(["in_progress", "delivered"], "Estado de actividad inválido")
+    .required("El estado de actividad es requerido"),
   pieces_count: Yup.number()
     .min(0, "No puede ser negativo")
     .integer("Debe ser un número entero")
     .required("Ingresa la cantidad de piezas"),
   notes: Yup.string().nullable(),
-  is_draft: Yup.boolean(),
 });
 
 const RegistrarHorasPage = () => {
@@ -51,6 +56,9 @@ const RegistrarHorasPage = () => {
   const { clientsId, loadingClientsId } = useClientsByUser(user?.id || "");
   const { categories, loadingCategories } = usePieceCategories();
   const { tasks, loadingTasks } = useTaskTypes();
+  const { activityLogs, loadingActivityLogs } = useActivityLogs(user?.id || "");
+
+  console.log(activityLogs);
 
   const communityManagementId = tasks.find(
     (t) => t.name === "Community management",
@@ -60,7 +68,11 @@ const RegistrarHorasPage = () => {
     clientsId.some((item) => item.client_id === client.id),
   );
 
-  const horasTotales = 34.5;
+  const horasTotales = activityLogs.reduce(
+    (total, log) => total + log.hours,
+    0,
+  );
+
   const navItems = [
     {
       label: "Inicio",
@@ -113,9 +125,9 @@ const RegistrarHorasPage = () => {
       category_id: "",
       log_date: new Date().toISOString().split("T")[0],
       hours: 0,
+      activity_status: "",
       pieces_count: 0,
       notes: "",
-      is_draft: false,
     },
     validationSchema: registroSchema,
     onSubmit: async (values, { setSubmitting, resetForm, setStatus }) => {
@@ -135,21 +147,73 @@ const RegistrarHorasPage = () => {
           hours: values.hours,
           pieces_count: values.pieces_count,
           notes: values.notes || null,
-          is_draft: values.is_draft,
-          status: values.is_draft ? "draft" : "pending",
+          status: values.activity_status,
         });
 
         if (error) throw error;
 
         setStatus({ success: "Horas registradas correctamente" });
+        Swal.fire({
+          icon: "success",
+          title: "Éxito",
+          confirmButtonColor: "#65B32E",
+          confirmButtonText: "Aceptar",
+          text: "Las horas se han registrado correctamente.",
+        });
         resetForm();
+        localStorage.removeItem("activity_draft");
       } catch (err: any) {
         setStatus({ error: err.message || "Error al registrar las horas" });
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          confirmButtonColor: "#65B32E",
+          confirmButtonText: "Vuelve a intentarlo",
+          text: err.message || "Error al registrar las horas",
+        });
       } finally {
         setSubmitting(false);
       }
     },
   });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const values = formik.values;
+      if (values.client_id || values.task_type_id) {
+        localStorage.setItem("activity_draft", JSON.stringify(values));
+      }
+    }, 30);
+    return () => clearInterval(interval);
+  }, [formik.values]);
+
+  useEffect(() => {
+    const draft = localStorage.getItem("activity_draft");
+    if (!draft) return;
+
+    try {
+      const parsed = JSON.parse(draft);
+      if (parsed.client_id || parsed.task_type_id) {
+        formik.setValues({
+          ...formik.initialValues,
+          ...parsed,
+        });
+
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: "info",
+          title: "Recuperamos tu borrador",
+          showConfirmButton: false,
+          iconColor: "#65B32E",
+          timer: 3000,
+          timerProgressBar: true,
+        });
+      }
+    } catch {
+      localStorage.removeItem("activity_draft");
+    }
+  }, []);
 
   return (
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
@@ -306,6 +370,23 @@ const RegistrarHorasPage = () => {
                 </div>
               </div>
 
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-foreground">
+                  Estado de actividad
+                </label>
+                <select
+                  name="activity_status"
+                  value={formik.values.activity_status}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
+                >
+                  <option value="">Selecciona un estado</option>
+                  <option value="in_progress">En Progreso</option>
+                  <option value="delivered">Completado</option>
+                </select>
+              </div>
+
               {/* Row 3: Piezas y Categoría */}
               {formik.values.task_type_id === communityManagementId && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -379,24 +460,6 @@ const RegistrarHorasPage = () => {
                 />
               </div>
 
-              {/* Row 5: Borrador checkbox */}
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="is_draft"
-                  name="is_draft"
-                  checked={formik.values.is_draft}
-                  onChange={formik.handleChange}
-                  className="w-4 h-4 accent-verde-kurve cursor-pointer"
-                />
-                <label
-                  htmlFor="is_draft"
-                  className="text-sm font-semibold text-foreground cursor-pointer"
-                >
-                  Guardar como borrador
-                </label>
-              </div>
-
               {/* Submit Button */}
               <div className="flex justify-center">
                 <button
@@ -404,11 +467,7 @@ const RegistrarHorasPage = () => {
                   disabled={formik.isSubmitting}
                   className="w-full md:w-fit px-8 py-3 bg-verde-kurve text-white font-semibold rounded-lg hover:bg-verde-kurve-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {formik.isSubmitting
-                    ? "Registrando..."
-                    : formik.values.is_draft
-                      ? "Guardar Borrador"
-                      : "Registrar Horas"}
+                  {formik.isSubmitting ? "Registrando..." : "Registrar Horas"}
                 </button>
               </div>
             </form>
@@ -422,8 +481,8 @@ const RegistrarHorasPage = () => {
                   Registros Recientes
                 </h3>
                 <a
-                  href="#"
-                  className="text-xs text-verde-kurve font-semibold hover:underline"
+                  href="member/mis-actividades"
+                  className="text-xs text-verde-kurve font-semibold hover:underline cursor-pointer"
                 >
                   Ver todo
                 </a>
@@ -431,51 +490,38 @@ const RegistrarHorasPage = () => {
 
               {/* Records List */}
               <div className="flex flex-col gap-4">
-                <div className="flex items-start gap-3 pb-4 border-b border-border">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground truncate">
-                      Diseño de UI Dashboard
-                    </p>
-                    <p className="text-xs text-gris-kurve-dark">
-                      Stark Industries • Hoy
-                    </p>
+                {activityLogs.map((log, index) => (
+                  <div
+                    key={log.id}
+                    className={`flex items-start gap-3 pb-4 border-b border-border ${
+                      index === activityLogs.length - 1 ? "border-b-0 pb-0" : ""
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">
+                        {log.task_types?.name}
+                      </p>
+                      <p className="text-xs text-gris-kurve-dark">
+                        {log.clients?.name} • {log.log_date}
+                        {/* reemplazar con nombre real del cliente */}
+                      </p>
+                      {log.notes && (
+                        <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                          {log.notes}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      <p className="text-sm font-bold text-verde-kurve">
+                        {log.hours}h
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-sm font-bold text-verde-kurve flex-shrink-0">
-                    4.5h
-                  </p>
-                </div>
-
-                <div className="flex items-start gap-3 pb-4 border-b border-border">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground truncate">
-                      Post RRSS Semanal
-                    </p>
-                    <p className="text-xs text-gris-kurve-dark">
-                      Globex Corp • Ayer
-                    </p>
-                  </div>
-                  <p className="text-sm font-bold text-verde-kurve flex-shrink-0">
-                    2.0h
-                  </p>
-                </div>
-
-                <div className="flex items-start gap-3 pb-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground truncate">
-                      Reunión de Estatus
-                    </p>
-                    <p className="text-xs text-gris-kurve-dark">
-                      Wayne Ent • 20 May
-                    </p>
-                  </div>
-                  <p className="text-sm font-bold text-verde-kurve flex-shrink-0">
-                    1.0h
-                  </p>
-                </div>
+                ))}
               </div>
 
               {/* Total Weekly */}
-              <div className="mt-6 bg-gradient-to-r from-verde-kurve-dark to-verde-kurve rounded-lg p-4 text-white">
+              <div className="bg-gradient-to-r from-verde-kurve-dark to-verde-kurve rounded-lg p-4 text-white">
                 <p className="text-sm font-semibold opacity-90 mb-2">
                   Total Semanal
                 </p>
