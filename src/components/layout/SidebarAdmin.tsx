@@ -3,7 +3,7 @@ import { getInitials, useCurrentUser } from "@/hooks/middleware";
 import SidebarBase from "./SidebarBase";
 
 const SidebarAdmin = () => {
-  const { user, loading } = useCurrentUser();
+  const { user, loadingUser } = useCurrentUser();
 
   const navSections = [
     {

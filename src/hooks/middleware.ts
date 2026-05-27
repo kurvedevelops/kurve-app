@@ -54,25 +54,13 @@ export function useClientsByUser(userId: string) {
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        // const supabase = createClient();
-        // const { data, error } = await supabase
-        //   .from("client_users")
-        //   .select(
-        //     `
-        //     clients (
-        //       id,
-        //       name,
-        //       status
-        //     )
-        //   `,
-        // )
-        // .eq("user_id", userId);
-        //
-        // if (error) throw error;
-        const data = mockClientUsers
-          .filter((clientUser) => clientUser.user_id === userId)
-          .map((clientUser) => ({ client_id: clientUser.client_id }));
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("client_users")
+          .select("*")
+          .eq("user_id", userId);
 
+        if (error) throw error;
         setClientsId(data || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error desconocido");
@@ -80,7 +68,6 @@ export function useClientsByUser(userId: string) {
         setLoadingClientsId(false);
       }
     };
-
     if (userId) fetchClients();
   }, [userId]);
 
@@ -95,12 +82,11 @@ export function useClients() {
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        // const supabase = createClient();
-        // const { data, error } = await supabase.from("clients").select("*");
-        //
-        // if (error) throw error;
+        const supabase = createClient();
+        const { data, error } = await supabase.from("clients").select("*");
 
-        const data = mockClients;
+        if (error) throw error;
+
         setClients(data || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error desconocido");
@@ -179,4 +165,55 @@ export function useTaskTypes() {
     fetchTasks();
   }, []);
   return { tasks, loadingTasks, error };
+}
+
+type ActivityLogWithRelations = {
+  id: string;
+  hours: number;
+  pieces_count: number;
+  log_date: string;
+  status: "pending" | "approved" | "draft";
+  notes: string | null;
+  is_draft: boolean;
+  task_types: { id: string; name: string } | null;
+  clients: { id: string; name: string } | null;
+};
+
+export function useActivityLogs(userId: string) {
+  const [activityLogs, setActivityLogs] = useState<ActivityLogWithRelations[]>(
+    [],
+  );
+  const [loadingActivityLogs, setLoadingActivityLogs] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchActivityLogs = async () => {
+      try {
+        const supabase = createClient();
+        const { data: activityLogs } = await supabase
+          .from("activity_logs")
+          .select(
+            `
+    *,
+    task_types ( id, name ),
+    clients ( id, name )
+  `,
+          )
+          .eq("user_id", userId)
+          .order("log_date", { ascending: false })
+          .limit(3);
+
+        if (error) throw error;
+
+        setActivityLogs(activityLogs || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingActivityLogs(false);
+      }
+    };
+    if (userId) fetchActivityLogs();
+  }, [userId]);
+
+  return { activityLogs, loadingActivityLogs, error };
 }
