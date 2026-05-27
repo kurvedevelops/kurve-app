@@ -16,7 +16,7 @@ const ClientHeader = () => (
 );
 
 const SidebarClient = () => {
-  const { user, loading } = useCurrentUser();
+  const { user, loadingUser } = useCurrentUser();
   const navSections = [
     {
       title: "Tu cuenta",
