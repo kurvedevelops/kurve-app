@@ -6,25 +6,55 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Clock, Plus, MessageSquare } from "lucide-react";
 import {
+  usePieceCategories,
   useClients,
   useClientsByUser,
   useCurrentUser,
+  useTaskTypes,
 } from "@/hooks/middleware";
+import { createClient } from "@/lib/supabase/client";
 
 const registroSchema = Yup.object().shape({
-  cliente: Yup.string().required("Selecciona un cliente"),
-  tarea: Yup.string().required("Selecciona una tarea"),
-  fecha: Yup.string().required("La fecha es requerida"),
-  horas: Yup.number()
+  client_id: Yup.string().required("Selecciona un cliente"),
+  task_type_id: Yup.string().required("Selecciona una tarea"),
+  category_id: Yup.string().nullable(),
+  log_date: Yup.string()
+    .required("La fecha es requerida")
+    .test(
+      "fecha-minima",
+      "No se permiten fechas anteriores a 7 días",
+      (value) => {
+        if (!value) return false;
+        const fechaIngresada = new Date(value);
+        const fechaMinima = new Date();
+        fechaMinima.setDate(fechaMinima.getDate() - 7);
+        fechaMinima.setHours(0, 0, 0, 0);
+        return fechaIngresada >= fechaMinima;
+      },
+    ),
+  hours: Yup.number()
     .min(0.5, "Mínimo 0.5 horas")
     .max(24, "Máximo 24 horas")
     .required("Las horas son requeridas"),
+  pieces_count: Yup.number()
+    .min(0, "No puede ser negativo")
+    .integer("Debe ser un número entero")
+    .required("Ingresa la cantidad de piezas"),
+  notes: Yup.string().nullable(),
+  is_draft: Yup.boolean(),
 });
 
 const RegistrarHorasPage = () => {
+  const supabase = createClient();
   const { user, loadingUser } = useCurrentUser();
   const { clients, loadingClients } = useClients();
   const { clientsId, loadingClientsId } = useClientsByUser(user?.id || "");
+  const { categories, loadingCategories } = usePieceCategories();
+  const { tasks, loadingTasks } = useTaskTypes();
+
+  const communityManagementId = tasks.find(
+    (t) => t.name === "Community management",
+  )?.id;
 
   const userClients = clients.filter((client) =>
     clientsId.some((item) => item.client_id === client.id),
@@ -78,24 +108,48 @@ const RegistrarHorasPage = () => {
 
   const formik = useFormik({
     initialValues: {
-      cliente: "",
-      tarea: "",
-      fecha: new Date().toISOString().split("T")[0],
-      horas: 0,
+      client_id: "",
+      task_type_id: "",
+      category_id: "",
+      log_date: new Date().toISOString().split("T")[0],
+      hours: 0,
+      pieces_count: 0,
+      notes: "",
+      is_draft: false,
     },
     validationSchema: registroSchema,
-    onSubmit: async (values) => {
-      console.log("Formulario enviado:", values);
-      // Aquí iría la lógica para enviar a Supabase
+    onSubmit: async (values, { setSubmitting, resetForm, setStatus }) => {
+      if (!user?.id) {
+        setStatus({ error: "Usuario no autenticado" });
+        setSubmitting(false);
+        return;
+      }
+
+      try {
+        const { error } = await supabase.from("activity_logs").insert({
+          user_id: user.id,
+          client_id: values.client_id,
+          task_type_id: values.task_type_id,
+          category_id: values.category_id || null,
+          log_date: values.log_date,
+          hours: values.hours,
+          pieces_count: values.pieces_count,
+          notes: values.notes || null,
+          is_draft: values.is_draft,
+          status: values.is_draft ? "draft" : "pending",
+        });
+
+        if (error) throw error;
+
+        setStatus({ success: "Horas registradas correctamente" });
+        resetForm();
+      } catch (err: any) {
+        setStatus({ error: err.message || "Error al registrar las horas" });
+      } finally {
+        setSubmitting(false);
+      }
     },
   });
-
-  const tareas = [
-    { id: 1, nombre: "Diseño de UI" },
-    { id: 2, nombre: "Desarrollo Frontend" },
-    { id: 3, nombre: "Testing" },
-    { id: 4, nombre: "Reunión de Estatus" },
-  ];
 
   return (
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
@@ -106,7 +160,7 @@ const RegistrarHorasPage = () => {
         <div className="hidden md:block mb-3">
           <PageHeader
             badge="Registro Diario"
-            title="Cargar Horas"
+            title="Carga Horas"
             subtitle="Ingresa el detalle de tus actividades diarias"
           />
         </div>
@@ -127,6 +181,18 @@ const RegistrarHorasPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Form Section */}
           <div className="lg:col-span-2 bg-background rounded-xl border border-border p-6 md:p-8">
+            {/* Status messages */}
+            {formik.status?.success && (
+              <div className="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+                {formik.status.success}
+              </div>
+            )}
+            {formik.status?.error && (
+              <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                {formik.status.error}
+              </div>
+            )}
+
             <form
               onSubmit={formik.handleSubmit}
               className="flex flex-col gap-6"
@@ -139,8 +205,8 @@ const RegistrarHorasPage = () => {
                     Cliente
                   </label>
                   <select
-                    name="cliente"
-                    value={formik.values.cliente}
+                    name="client_id"
+                    value={formik.values.client_id}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
@@ -152,9 +218,9 @@ const RegistrarHorasPage = () => {
                       </option>
                     ))}
                   </select>
-                  {formik.touched.cliente && formik.errors.cliente && (
+                  {formik.touched.client_id && formik.errors.client_id && (
                     <p className="text-xs text-red-500">
-                      {formik.errors.cliente}
+                      {formik.errors.client_id}
                     </p>
                   )}
                 </div>
@@ -166,15 +232,15 @@ const RegistrarHorasPage = () => {
                   </label>
                   <input
                     type="date"
-                    name="fecha"
-                    value={formik.values.fecha}
+                    name="log_date"
+                    value={formik.values.log_date}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className="px-2  py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
+                    className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
                   />
-                  {formik.touched.fecha && formik.errors.fecha && (
+                  {formik.touched.log_date && formik.errors.log_date && (
                     <p className="text-xs text-red-500">
-                      {formik.errors.fecha}
+                      {formik.errors.log_date}
                     </p>
                   )}
                 </div>
@@ -188,24 +254,31 @@ const RegistrarHorasPage = () => {
                     Tipo de tarea
                   </label>
                   <select
-                    name="tarea"
-                    value={formik.values.tarea}
-                    onChange={formik.handleChange}
+                    name="task_type_id"
+                    value={formik.values.task_type_id}
+                    onChange={(e) => {
+                      formik.handleChange(e);
+                      if (e.target.value !== communityManagementId) {
+                        formik.setFieldValue("pieces_count", 0);
+                        formik.setFieldValue("category_id", "");
+                      }
+                    }}
                     onBlur={formik.handleBlur}
-                    className="px-2  py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
+                    className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
                   >
                     <option value="">Selecciona una tarea</option>
-                    {tareas.map((tarea) => (
+                    {tasks.map((tarea) => (
                       <option key={tarea.id} value={tarea.id}>
-                        {tarea.nombre}
+                        {tarea.name}
                       </option>
                     ))}
                   </select>
-                  {formik.touched.tarea && formik.errors.tarea && (
-                    <p className="text-xs text-red-500">
-                      {formik.errors.tarea}
-                    </p>
-                  )}
+                  {formik.touched.task_type_id &&
+                    formik.errors.task_type_id && (
+                      <p className="text-xs text-red-500">
+                        {formik.errors.task_type_id}
+                      </p>
+                    )}
                 </div>
 
                 {/* Horas */}
@@ -215,31 +288,129 @@ const RegistrarHorasPage = () => {
                   </label>
                   <input
                     type="number"
-                    name="horas"
+                    name="hours"
                     step="0.5"
                     min="0.5"
                     max="24"
-                    value={formik.values.horas}
+                    value={formik.values.hours}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
                     placeholder="0.00"
                   />
-                  {formik.touched.horas && formik.errors.horas && (
+                  {formik.touched.hours && formik.errors.hours && (
                     <p className="text-xs text-red-500">
-                      {formik.errors.horas}
+                      {formik.errors.hours}
                     </p>
                   )}
                 </div>
               </div>
 
+              {/* Row 3: Piezas y Categoría */}
+              {formik.values.task_type_id === communityManagementId && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Piezas */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-semibold text-foreground">
+                      Cantidad de piezas
+                    </label>
+                    <input
+                      type="number"
+                      name="pieces_count"
+                      min="0"
+                      step="1"
+                      value={formik.values.pieces_count}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
+                      placeholder="0"
+                    />
+                    {formik.touched.pieces_count &&
+                      formik.errors.pieces_count && (
+                        <p className="text-xs text-red-500">
+                          {formik.errors.pieces_count}
+                        </p>
+                      )}
+                  </div>
+
+                  {/* Categoría (opcional) */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-semibold text-foreground">
+                      Categoría{" "}
+                      <span className="text-gris-kurve-dark font-normal">
+                        (opcional)
+                      </span>
+                    </label>
+
+                    <select
+                      name="category_id"
+                      value={formik.values.category_id}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
+                    >
+                      <option value="">Selecciona una categoria</option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* Row 4: Notas */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-foreground">
+                  Notas{" "}
+                  <span className="text-gris-kurve-dark font-normal">
+                    (opcional)
+                  </span>
+                </label>
+                <textarea
+                  name="notes"
+                  value={formik.values.notes}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  rows={3}
+                  className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve resize-none"
+                  placeholder="Agrega comentarios adicionales..."
+                />
+              </div>
+
+              {/* Row 5: Borrador checkbox */}
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="is_draft"
+                  name="is_draft"
+                  checked={formik.values.is_draft}
+                  onChange={formik.handleChange}
+                  className="w-4 h-4 accent-verde-kurve cursor-pointer"
+                />
+                <label
+                  htmlFor="is_draft"
+                  className="text-sm font-semibold text-foreground cursor-pointer"
+                >
+                  Guardar como borrador
+                </label>
+              </div>
+
               {/* Submit Button */}
-              <button
-                type="submit"
-                className="w-full md:w-fit px-8 py-3 bg-verde-kurve text-white font-semibold rounded-lg hover:bg-verde-kurve-dark transition-colors"
-              >
-                Registrar Horas
-              </button>
+              <div className="flex justify-center">
+                <button
+                  type="submit"
+                  disabled={formik.isSubmitting}
+                  className="w-full md:w-fit px-8 py-3 bg-verde-kurve text-white font-semibold rounded-lg hover:bg-verde-kurve-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {formik.isSubmitting
+                    ? "Registrando..."
+                    : formik.values.is_draft
+                      ? "Guardar Borrador"
+                      : "Registrar Horas"}
+                </button>
+              </div>
             </form>
           </div>
 
@@ -260,7 +431,6 @@ const RegistrarHorasPage = () => {
 
               {/* Records List */}
               <div className="flex flex-col gap-4">
-                {/* Record Item */}
                 <div className="flex items-start gap-3 pb-4 border-b border-border">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground truncate">

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { ReactNode, useState } from "react";
 import { Menu, X } from "lucide-react";
+import { useCurrentUser } from "@/hooks/middleware";
 
 interface NavSection {
   title: string;
@@ -36,6 +37,7 @@ const SidebarBase = ({
 }: SidebarBaseProps) => {
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, loadingUser } = useCurrentUser();
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -47,6 +49,12 @@ const SidebarBase = ({
       confirmButtonColor: "#76B041",
     });
     router.push("/");
+  };
+
+  const role = user?.role;
+
+  const handleDashboardClick = () => {
+    router.push(`/${role}`);
   };
 
   return (
@@ -66,7 +74,8 @@ const SidebarBase = ({
           width={40}
           height={40}
           priority
-          className="w-auto h-8"
+          className="w-auto h-8 cursor-pointer"
+          onClick={handleDashboardClick}
         />
 
         <div className="flex items-center gap-3">
@@ -161,7 +170,8 @@ const SidebarBase = ({
           width={100}
           height={100}
           priority
-          className="mb-6 ml-3"
+          className="mb-6 ml-3 cursor-pointer"
+          onClick={handleDashboardClick}
         />
 
         {/* Header Component (Optional) */}
