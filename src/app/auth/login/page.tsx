@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Mail, Lock } from "lucide-react";
 import { Suspense, useEffect } from "react";
 import Swal from "sweetalert2";
+import Image from "next/image";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -102,11 +103,14 @@ export default function LoginPage() {
       <div className="w-full md:flex-1 flex items-center justify-center px-8 md:px-20">
         <div className="w-full max-w-md flex flex-col gap-10">
           <div className="flex flex-col items-center md:items-start justify-center md:justify-start gap-10">
-            <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-2 md:gap-4">
-              <span className="text-white text-md size-10 flex items-center justify-center font-bold bg-verde-kurve rounded-xl">
-                k
-              </span>
-              <h2 className="text-azul-kurve text-3xl font-bold">kurve</h2>
+            <div className="flex justify-center w-full">
+              <Image
+                src={"/kurve-icon.png"}
+                alt="Logo"
+                width={100}
+                height={100}
+                priority
+              />
             </div>
           </div>
 
