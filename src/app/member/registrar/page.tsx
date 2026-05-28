@@ -16,6 +16,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import Swal from "sweetalert2";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const registroSchema = Yup.object().shape({
   client_id: Yup.string().required("Selecciona un cliente"),
@@ -25,20 +26,21 @@ const registroSchema = Yup.object().shape({
     .required("La fecha es requerida")
     .test(
       "fecha-minima",
-      "No se permiten fechas anteriores a 7 días",
+      "No se permiten fechas anteriores a 7 días hábiles",
       (value) => {
         if (!value) return false;
         const fechaIngresada = new Date(value);
         const fechaMinima = new Date();
-        fechaMinima.setDate(fechaMinima.getDate() - 7);
+        fechaMinima.setDate(fechaMinima.getDate() - 9);
         fechaMinima.setHours(0, 0, 0, 0);
         return fechaIngresada >= fechaMinima;
       },
     ),
   hours: Yup.number()
     .min(0.5, "Mínimo 0.5 horas")
-    .max(24, "Máximo 24 horas")
+    .max(12, "Máximo 12 horas")
     .required("Las horas son requeridas"),
+  is_publication: Yup.boolean(),
   activity_status: Yup.string()
     .oneOf(["in_progress", "delivered"], "Estado de actividad inválido")
     .required("El estado de actividad es requerido"),
@@ -58,8 +60,6 @@ const RegistrarHorasPage = () => {
   const { tasks, loadingTasks } = useTaskTypes();
   const { activityLogs, loadingActivityLogs } = useActivityLogs(user?.id || "");
 
-  console.log(activityLogs);
-
   const communityManagementId = tasks.find(
     (t) => t.name === "Community management",
   )?.id;
@@ -68,10 +68,19 @@ const RegistrarHorasPage = () => {
     clientsId.some((item) => item.client_id === client.id),
   );
 
-  const horasTotales = activityLogs.reduce(
-    (total, log) => total + log.hours,
-    0,
-  );
+  const horasTotales = activityLogs
+    .filter((log) => {
+      const logDate = new Date(log.log_date);
+      const now = new Date();
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+      startOfWeek.setHours(0, 0, 0, 0);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23, 59, 59, 999);
+      return logDate >= startOfWeek && logDate <= endOfWeek;
+    })
+    .reduce((total, log) => total + log.hours, 0);
 
   const navItems = [
     {
@@ -118,6 +127,8 @@ const RegistrarHorasPage = () => {
     },
   ];
 
+  const router = useRouter();
+
   const formik = useFormik({
     initialValues: {
       client_id: "",
@@ -125,6 +136,7 @@ const RegistrarHorasPage = () => {
       category_id: "",
       log_date: new Date().toISOString().split("T")[0],
       hours: 0,
+      is_publication: false,
       activity_status: "",
       pieces_count: 0,
       notes: "",
@@ -182,6 +194,8 @@ const RegistrarHorasPage = () => {
       const values = formik.values;
       if (values.client_id || values.task_type_id) {
         localStorage.setItem("activity_draft", JSON.stringify(values));
+      } else {
+        localStorage.removeItem("activity_draft");
       }
     }, 30);
     return () => clearInterval(interval);
@@ -371,6 +385,76 @@ const RegistrarHorasPage = () => {
               </div>
 
               <div className="flex flex-col gap-2">
+                <label className="flex items-center gap-2 cursor-pointer w-fit">
+                  <input
+                    type="checkbox"
+                    name="is_publication"
+                    checked={formik.values.is_publication}
+                    onChange={formik.handleChange}
+                    className="w-4 h-4 accent-verde-kurve"
+                  />
+                  <span className="text-sm font-semibold text-foreground">
+                    ¿Es una publicación?
+                  </span>
+                </label>
+              </div>
+
+              {/* Row 3: Piezas y Categoría */}
+              {formik.values.is_publication && (
+                <div className="flex flex-col gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Piezas */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-semibold text-foreground">
+                        Cantidad de piezas
+                      </label>
+                      <input
+                        type="number"
+                        name="pieces_count"
+                        min="0"
+                        step="1"
+                        value={formik.values.pieces_count}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
+                        placeholder="0"
+                      />
+                      {formik.touched.pieces_count &&
+                        formik.errors.pieces_count && (
+                          <p className="text-xs text-red-500">
+                            {formik.errors.pieces_count}
+                          </p>
+                        )}
+                    </div>
+
+                    {/* Categoría */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-semibold text-foreground">
+                        Categoría{" "}
+                        <span className="text-gris-kurve-dark font-normal">
+                          (opcional)
+                        </span>
+                      </label>
+                      <select
+                        name="category_id"
+                        value={formik.values.category_id}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
+                      >
+                        <option value="">Selecciona una categoria</option>
+                        {categories.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-2">
                 <label className="text-sm font-semibold text-foreground">
                   Estado de actividad
                 </label>
@@ -386,60 +470,6 @@ const RegistrarHorasPage = () => {
                   <option value="delivered">Completado</option>
                 </select>
               </div>
-
-              {/* Row 3: Piezas y Categoría */}
-              {formik.values.task_type_id === communityManagementId && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Piezas */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-foreground">
-                      Cantidad de piezas
-                    </label>
-                    <input
-                      type="number"
-                      name="pieces_count"
-                      min="0"
-                      step="1"
-                      value={formik.values.pieces_count}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
-                      placeholder="0"
-                    />
-                    {formik.touched.pieces_count &&
-                      formik.errors.pieces_count && (
-                        <p className="text-xs text-red-500">
-                          {formik.errors.pieces_count}
-                        </p>
-                      )}
-                  </div>
-
-                  {/* Categoría (opcional) */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-foreground">
-                      Categoría{" "}
-                      <span className="text-gris-kurve-dark font-normal">
-                        (opcional)
-                      </span>
-                    </label>
-
-                    <select
-                      name="category_id"
-                      value={formik.values.category_id}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
-                    >
-                      <option value="">Selecciona una categoria</option>
-                      {categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              )}
 
               {/* Row 4: Notas */}
               <div className="flex flex-col gap-2">
@@ -480,17 +510,17 @@ const RegistrarHorasPage = () => {
                 <h3 className="text-lg font-bold text-foreground">
                   Registros Recientes
                 </h3>
-                <a
-                  href="member/mis-actividades"
+                <button
+                  onClick={() => router.push("./mis-actividades")}
                   className="text-xs text-verde-kurve font-semibold hover:underline cursor-pointer"
                 >
                   Ver todo
-                </a>
+                </button>
               </div>
 
               {/* Records List */}
               <div className="flex flex-col gap-4">
-                {activityLogs.map((log, index) => (
+                {[...activityLogs].slice(0, 4).map((log, index) => (
                   <div
                     key={log.id}
                     className={`flex items-start gap-3 pb-4 border-b border-border ${
@@ -503,7 +533,6 @@ const RegistrarHorasPage = () => {
                       </p>
                       <p className="text-xs text-gris-kurve-dark">
                         {log.clients?.name} • {log.log_date}
-                        {/* reemplazar con nombre real del cliente */}
                       </p>
                       {log.notes && (
                         <p className="text-xs text-muted-foreground mt-0.5 truncate">
@@ -529,7 +558,12 @@ const RegistrarHorasPage = () => {
                   {horasTotales} horas
                 </h4>
                 <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
-                  <div className="h-full w-4/5 bg-white rounded-full"></div>
+                  <div
+                    className="h-full bg-white rounded-full transition-all duration-500"
+                    style={{
+                      width: `${Math.min((horasTotales / 40) * 100, 100)}%`,
+                    }}
+                  />
                 </div>
               </div>
             </div>
