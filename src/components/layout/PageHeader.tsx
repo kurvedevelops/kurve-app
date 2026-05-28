@@ -13,6 +13,7 @@ interface Action {
 interface PageHeaderProps {
   badge?: string;
   title: string;
+  showName?: boolean;
   subtitle?: string;
   actions?: Action[];
   children?: ReactNode;
@@ -21,6 +22,7 @@ interface PageHeaderProps {
 const PageHeader = ({
   badge,
   title,
+  showName = false,
   subtitle,
   actions,
   children,
@@ -35,7 +37,7 @@ const PageHeader = ({
           </p>
         )}
         <h1 className="text-4xl font-bold text-foreground mt-2">
-          {title + (user?.full_name ? `, ${user.full_name}` : "")}
+          {title + (showName && user?.full_name ? `, ${user.full_name}` : "")}
         </h1>
         {subtitle && (
           <p className="text-sm text-gris-kurve-dark mt-1">{subtitle}</p>
