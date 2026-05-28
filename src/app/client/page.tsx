@@ -43,14 +43,16 @@ const deliverablesData = {
 const links = [
   {
     title: "Contrato",
-    description: "Documento de contrato con los detalles del acuerdo y términos.",
+    description:
+      "Documento de contrato con los detalles del acuerdo y términos.",
     icon: FileText,
     color: "#5B8E3D",
     bg: "#EEF8E7",
   },
   {
     title: "Google Drive",
-    description: "Google Drive con los entregables y archivos compartidos del proyecto.",
+    description:
+      "Google Drive con los entregables y archivos compartidos del proyecto.",
     icon: Folder,
     color: "#D2A500",
     bg: "#FFF7DD",
@@ -89,7 +91,8 @@ const ClientPage = () => {
       <main className="flex-1 md:ml-47 lg:ml-64 px-5 py-8 md:p-8">
         <PageHeader
           badge="Portal del Cliente"
-          title="Bienvenido/a! Sofia"
+          title="Bienvenido"
+          showName={true}
           subtitle="Monitorea tu actividad y metricas clave"
         />
         <div className="flex justify-between items-center mt-8 gap-8 md:flex-row flex-col">
@@ -99,9 +102,7 @@ const ClientPage = () => {
           <div className="flex flex-col gap-5 flex-1">
             <div className="bg-white rounded-3xl border border-border px-6 py-5 shadow-sm">
               <div className="flex items-start justify-between mb-4">
-                <h2 className="text-2xl font-semibold">
-                  Consumo de Plan
-                </h2>
+                <h2 className="text-2xl font-semibold">Consumo de Plan</h2>
 
                 <span className="text-verde-kurve text-2xl font-bold">
                   {planData.percent}%
@@ -109,13 +110,9 @@ const ClientPage = () => {
               </div>
 
               <div className="flex justify-between items-center mb-3">
-                <p className="font-medium">
-                  Horas Utilizadas: {planData.used}
-                </p>
+                <p className="font-medium">Horas Utilizadas: {planData.used}</p>
 
-                <p className="font-medium">
-                  Horas Incluidas: {planData.total}
-                </p>
+                <p className="font-medium">Horas Incluidas: {planData.total}</p>
               </div>
 
               <div className="w-full h-4 bg-[#ECECEC] rounded-full overflow-hidden">

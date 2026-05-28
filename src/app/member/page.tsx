@@ -78,6 +78,7 @@ const MemberPage = () => {
           <PageHeader
             badge="Portal del Equipo"
             title="Bienvenido/a"
+            showName={true}
             subtitle="Registrá tu actividad y visualizá tus tareas asignadas"
           />
         </div>

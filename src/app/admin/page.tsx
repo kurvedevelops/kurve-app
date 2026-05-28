@@ -35,7 +35,8 @@ const AdminPage = () => {
       <main className="flex-1 md:ml-50 lg:ml-64 px-5 py-8 md:p-8">
         <PageHeader
           badge="Panel Admin"
-          title="Hola"
+          title="Bienvenido/a"
+          showName={true}
           subtitle="Bienvenido al panel de control de Kurve."
           actions={actions}
         />

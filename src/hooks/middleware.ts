@@ -200,8 +200,7 @@ export function useActivityLogs(userId: string) {
   `,
           )
           .eq("user_id", userId)
-          .order("log_date", { ascending: false })
-          .limit(3);
+          .order("created_at", { ascending: false });
 
         if (error) throw error;
 
