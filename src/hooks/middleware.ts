@@ -137,6 +137,34 @@ export function usePieceCategories() {
   return { categories, loadingCategories, error };
 }
 
+export function usePackageByClient(clientId: string) {
+  const [packages, setPackages] = useState<any[]>([]);
+  const [loadingPackages, setLoadingPackages] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPackages = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("packages")
+          .select("*")
+          .eq("client_id", clientId);
+
+        if (error) throw error;
+
+        setPackages(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingPackages(false);
+      }
+    };
+    fetchPackages();
+  }, [packages, clientId]);
+  return { packages, loadingPackages, error };
+}
+
 export function useTaskTypes() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [loadingTasks, setLoadingTasks] = useState(true);
@@ -212,7 +240,7 @@ export function useActivityLogs(userId: string) {
       }
     };
     if (userId) fetchActivityLogs();
-  }, [userId]);
+  }, [userId, activityLogs, error]);
 
   return { activityLogs, loadingActivityLogs, error };
 }
