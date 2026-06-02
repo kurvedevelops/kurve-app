@@ -38,7 +38,6 @@ const AdminPage = () => {
           title="Bienvenido/a"
           showName={true}
           subtitle="Bienvenido al panel de control de Kurve."
-          actions={actions}
         />
 
         {/* Cards Grid */}
