@@ -162,7 +162,7 @@ export function usePackageByClient(clientId: string) {
     };
     fetchPackages();
   }, [packages, clientId]);
-  return { packages, loadingPackages, error };
+  return { packages, loadingPackages };
 }
 
 export function useTaskTypes() {

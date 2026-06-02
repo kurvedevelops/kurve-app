@@ -2,19 +2,29 @@
 import PageHeader from "@/components/layout/PageHeader";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import { getInitials, useClients } from "@/hooks/middleware";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 
-function ActionDropdown({ onEdit, onView, onDelete }) {
+interface ActionDropdownProps {
+  onEdit?: () => void;
+  onView?: () => void;
+  onDelete?: () => void;
+}
+
+export function ActionDropdown({
+  onEdit,
+  onView,
+  onDelete,
+}: ActionDropdownProps) {
   const [open, setOpen] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    function handleClickOutside(e) {
-      if (buttonRef.current && !buttonRef.current.contains(e.target)) {
+    function handleClickOutside(e: MouseEvent) {
+      if (buttonRef.current && !buttonRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     }
@@ -125,14 +135,14 @@ const ClientesPage = () => {
   return (
     <div className="min-h-screen w-full bg-muted flex">
       <SidebarAdmin />
-      <main className="flex-1 md:ml-50 lg:ml-64 px-5 py-8 md:p-8">
+      <main className="flex-1 md:ml-45 lg:ml-64 px-5 py-8 md:p-8">
         <PageHeader
           badge="Gestión de Clientes"
           title="Clientes"
           subtitle="Administra los clientes y sus paquetes contratados"
           actions={actions}
         />
-        <div className="bg-white rounded-xl border border-gray-200">
+        <div className="bg-white rounded-xl border mt-4 border-gray-200">
           {/* Header */}
           <div className="flex items-center justify-between mb-5 gap-3 mt-4 ml-4 mr-4">
             <div className="flex items-center gap-2">
@@ -215,9 +225,12 @@ const ClientesPage = () => {
                             {getInitials(client.name)}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-900">
+                            <Link
+                              href={`/admin/clientes/${client.id}`}
+                              className="text-sm font-medium text-gray-900"
+                            >
                               {client.name}
-                            </p>
+                            </Link>
                           </div>
                         </div>
                       </td>
