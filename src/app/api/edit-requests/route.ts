@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { resend } from "@/lib/resend";
 
 // Schema para crear solicitud de corrección
 const createEditRequestSchema = z.object({
@@ -94,6 +95,45 @@ export async function POST(request: Request) {
       },
       { status: 500 }
     );
+  }
+
+  // Intentar enviar email al admin
+  // Si falla NO rompe el endpoint
+  try {
+    await resend.emails.send({
+      from: "Kurve <onboarding@resend.dev>",
+
+      to: ["admin@kurveapp.com"],
+
+      subject: "Nueva solicitud de corrección",
+
+      html: `
+        <h2>Nueva solicitud de corrección</h2>
+
+        <p><strong>Usuario:</strong> ${user.email}</p>
+
+        <p><strong>Campo:</strong> ${parsed.data.field_name}</p>
+
+        <p><strong>Valor anterior:</strong> ${oldValue}</p>
+
+        <p><strong>Nuevo valor:</strong> ${parsed.data.new_value}</p>
+
+        <p><strong>Motivo:</strong> ${parsed.data.reason ?? "-"}</p>
+      `,
+    });
+
+    // Guardar notificación enviada
+    await supabase.from("notifications").insert({
+      channel: "email",
+      type: "edit_request_created",
+      payload: {
+        activity_log_id: parsed.data.activity_log_id,
+        requested_by: user.id,
+      },
+      sent_at: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Error enviando email:", error);
   }
 
   return NextResponse.json(

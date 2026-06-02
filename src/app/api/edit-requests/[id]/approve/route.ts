@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { resend } from "@/lib/resend";
 
 // POST /api/edit-requests/:id/approve
 // Admin aprueba una solicitud de corrección
@@ -78,6 +79,55 @@ export async function POST(
       },
       { status: 500 }
     );
+  }
+
+  // Buscar usuario que pidió la corrección para enviar email
+  const { data: requestedByUser } = await supabase
+    .from("users")
+    .select("id, email, full_name")
+    .eq("id", editRequest.requested_by)
+    .single();
+
+  // Intentar enviar email al member
+  // Si falla NO rompe la aprobación
+  try {
+    if (requestedByUser?.email) {
+      await resend.emails.send({
+        from: "Kurve <onboarding@resend.dev>",
+
+        to: [requestedByUser.email],
+
+        subject: "Tu solicitud de corrección fue aprobada",
+
+        html: `
+          <h2>Solicitud aprobada</h2>
+
+          <p>Hola ${requestedByUser.full_name ?? ""},</p>
+
+          <p>Tu solicitud de corrección fue aprobada correctamente.</p>
+
+          <p><strong>Campo:</strong> ${editRequest.field_name}</p>
+
+          <p><strong>Valor anterior:</strong> ${editRequest.old_value}</p>
+
+          <p><strong>Nuevo valor:</strong> ${editRequest.new_value}</p>
+        `,
+      });
+
+      // Guardar notificación enviada
+      await supabase.from("notifications").insert({
+        user_id: requestedByUser.id,
+        channel: "email",
+        type: "edit_request_approved",
+        payload: {
+          edit_request_id: editRequest.id,
+          activity_log_id: editRequest.activity_log_id,
+        },
+        sent_at: new Date().toISOString(),
+      });
+    }
+  } catch (error) {
+    console.error("Error enviando email de aprobación:", error);
   }
 
   return NextResponse.json(
