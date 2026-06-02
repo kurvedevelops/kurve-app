@@ -2,6 +2,7 @@
 import PageHeader from "@/components/layout/PageHeader";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import { getInitials, useClients } from "@/hooks/middleware";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useState, useRef, useEffect } from "react";
@@ -125,14 +126,14 @@ const ClientesPage = () => {
   return (
     <div className="min-h-screen w-full bg-muted flex">
       <SidebarAdmin />
-      <main className="flex-1 md:ml-50 lg:ml-64 px-5 py-8 md:p-8">
+      <main className="flex-1 md:ml-45 lg:ml-64 px-5 py-8 md:p-8">
         <PageHeader
           badge="Gestión de Clientes"
           title="Clientes"
           subtitle="Administra los clientes y sus paquetes contratados"
           actions={actions}
         />
-        <div className="bg-white rounded-xl border border-gray-200">
+        <div className="bg-white rounded-xl border mt-4 border-gray-200">
           {/* Header */}
           <div className="flex items-center justify-between mb-5 gap-3 mt-4 ml-4 mr-4">
             <div className="flex items-center gap-2">
@@ -215,9 +216,12 @@ const ClientesPage = () => {
                             {getInitials(client.name)}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-900">
+                            <Link
+                              href={`/admin/clientes/${client.id}`}
+                              className="text-sm font-medium text-gray-900"
+                            >
                               {client.name}
-                            </p>
+                            </Link>
                           </div>
                         </div>
                       </td>
