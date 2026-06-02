@@ -5,7 +5,11 @@ import { createClient } from "@/lib/supabase/client";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import PageHeader from "@/components/layout/PageHeader";
 import { Package, Mail, Phone, Calendar, MapPin } from "lucide-react";
-import { useClients, usePackageByClient } from "@/hooks/middleware";
+import {
+  getInitials,
+  useClients,
+  usePackageByClient,
+} from "@/hooks/middleware";
 
 interface Client {
   id: string;
@@ -32,6 +36,7 @@ const ClientDetailPage = () => {
   const { packages, loadingPackages } = usePackageByClient(clientId);
 
   const client = clients.find((c) => c.id === clientId);
+  const initials = getInitials(client.name);
 
   const handleActions = {
     edit: () => console.log("Editar cliente"),
@@ -79,12 +84,7 @@ const ClientDetailPage = () => {
           <div className="flex items-start gap-4">
             {/* Client Avatar */}
             <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-verde-kurve-dark to-verde-kurve flex items-center justify-center text-white font-bold text-2xl">
-              {client.name
-                .split(" ")
-                .map((n) => n.charAt(0))
-                .join("")
-                .toUpperCase()
-                .slice(0, 2)}
+              {initials}
             </div>
 
             {/* Client Info */}

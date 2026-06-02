@@ -4,18 +4,27 @@ import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import { getInitials, useClients } from "@/hooks/middleware";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 
-function ActionDropdown({ onEdit, onView, onDelete }) {
+interface ActionDropdownProps {
+  onEdit?: () => void;
+  onView?: () => void;
+  onDelete?: () => void;
+}
+
+export function ActionDropdown({
+  onEdit,
+  onView,
+  onDelete,
+}: ActionDropdownProps) {
   const [open, setOpen] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    function handleClickOutside(e) {
-      if (buttonRef.current && !buttonRef.current.contains(e.target)) {
+    function handleClickOutside(e: MouseEvent) {
+      if (buttonRef.current && !buttonRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     }
