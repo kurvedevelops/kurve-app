@@ -36,7 +36,7 @@ const ClientDetailPage = () => {
   const { packages, loadingPackages } = usePackageByClient(clientId);
 
   const client = clients.find((c) => c.id === clientId);
-  const initials = getInitials(client.name);
+  const initials = getInitials(client?.name);
 
   const handleActions = {
     edit: () => console.log("Editar cliente"),
