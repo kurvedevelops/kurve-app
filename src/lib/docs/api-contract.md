@@ -756,3 +756,21 @@ No elimina físicamente el paquete.
   "message": "Paquete cerrado correctamente"
 }
 ```
+
+# Edit Requests
+
+## POST /api/edit-requests
+
+Crea una solicitud de corrección sobre un activity_log.
+
+## GET /api/edit-requests
+
+Lista solicitudes pendientes.
+
+## POST /api/edit-requests/:id/approve
+
+Aprueba una solicitud, aplica el cambio en activity_logs y marca la solicitud como approved.
+
+## POST /api/edit-requests/:id/reject
+
+Rechaza una solicitud y la marca como rejected.
