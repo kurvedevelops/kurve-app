@@ -131,7 +131,7 @@ export async function POST(request: Request) {
         requested_by: user.id,
       },
       sent_at: new Date().toISOString(),
-    });
+    } as never);
   } catch (error) {
     console.error("Error enviando email:", error);
   }
