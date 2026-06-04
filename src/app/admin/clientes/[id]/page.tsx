@@ -33,7 +33,7 @@ const ClientDetailPage = () => {
   const clientId = params.id as string;
 
   const { clients, loadingClients } = useClients();
-  const { packages, loadingPackages } = usePackageByClient(clientId);
+  const { clientPackage, loadingClientPackage } = usePackageByClient(clientId);
 
   const client = clients.find((c) => c.id === clientId);
   const initials = getInitials(client?.name);
@@ -126,11 +126,11 @@ const ClientDetailPage = () => {
           </div>
         </div>
 
-        {/* Packages Section */}
+        {/* clientPackage Section */}
         <div className="bg-background rounded-xl border border-border p-8">
           <h3 className="text-xl font-bold text-foreground mb-4">Paquetes</h3>
 
-          {packages.length === 0 ? (
+          {clientPackage.length === 0 ? (
             // Empty State
             <div className="flex flex-col items-center justify-center py-20">
               <div className="w-16 h-16 rounded-full bg-verde-kurve/10 flex items-center justify-center mb-4">
@@ -154,9 +154,9 @@ const ClientDetailPage = () => {
               </button>
             </div>
           ) : (
-            // Packages List
+            // clientPackage List
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-1/2 lg:w-2/3 md:min-w-10/12">
-              {packages.map((pkg) => (
+              {clientPackage.map((pkg) => (
                 <div
                   key={pkg.id}
                   className="relative border border-border rounded-lg p-4 hover:bg-muted hover:border-verde-kurve cursor-pointer transition-colors"
