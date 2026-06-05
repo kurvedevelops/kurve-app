@@ -17,19 +17,6 @@ const AdminPage = () => {
 
   const activeClients = clients.filter((client) => client.status === "active");
 
-  const actions = [
-    {
-      label: "↓ Exportar",
-      variant: "secondary" as const,
-      onClick: () => console.log("Exportar"),
-    },
-    {
-      label: "+ Nuevo cliente",
-      variant: "primary" as const,
-      onClick: () => console.log("Nuevo cliente"),
-    },
-  ];
-
   return (
     <div className="min-h-screen w-full bg-muted flex">
       <SidebarAdmin />

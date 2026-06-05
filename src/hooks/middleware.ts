@@ -2,10 +2,59 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tables } from "@/lib/supabase/database.types";
-import { mockClientUsers } from "@/lib/mock_client_users";
-import { mockClients } from "@/lib/mock_clients";
+import { NuevoClienteFormData } from "@/components/modals/NuevoClienteModal";
+import { EditarClienteFormData } from "@/components/modals/EditarClienteModal";
 
 type User = Tables<"users">;
+
+export async function editClient(
+  clientId: string,
+  data: EditarClienteFormData,
+) {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("clients")
+    .update({
+      name: data.name,
+      legal_name: data.razonSocial,
+      email: data.email,
+      phone: data.telefono,
+      created_at: data.fechaAlta,
+      status: data.status,
+    })
+    .eq("id", clientId);
+
+  if (error) throw error;
+}
+
+export async function deleteClient(clientId: string) {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("clients")
+    .update({
+      status: "ended",
+    })
+    .eq("id", clientId);
+
+  if (error) throw error;
+}
+
+export async function createNewClient(data: NuevoClienteFormData) {
+  const supabase = createClient();
+
+  const { error } = await supabase.from("clients").insert({
+    name: data.name,
+    legal_name: data.razonSocial,
+    email: data.email,
+    phone: data.telefono,
+    created_at: data.fechaAlta,
+    status: "active",
+  });
+
+  if (error) throw error;
+}
 
 export function useCurrentUser() {
   const [user, setUser] = useState<User | null>(null);
@@ -137,9 +186,34 @@ export function usePieceCategories() {
   return { categories, loadingCategories, error };
 }
 
-export function usePackageByClient(clientId: string) {
+export function usePackages() {
   const [packages, setPackages] = useState<any[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPackages = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.from("packages").select("*");
+
+        if (error) throw error;
+
+        setPackages(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingPackages(false);
+      }
+    };
+    fetchPackages();
+  }, [packages]);
+  return { packages, loadingPackages };
+}
+
+export function usePackageByClient(clientId: string) {
+  const [clientPackage, setClientPackage] = useState<any[]>([]);
+  const [loadingClientPackage, setLoadingClientPackage] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -153,16 +227,16 @@ export function usePackageByClient(clientId: string) {
 
         if (error) throw error;
 
-        setPackages(data);
+        setClientPackage(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error desconocido");
       } finally {
-        setLoadingPackages(false);
+        setLoadingClientPackage(false);
       }
     };
     fetchPackages();
-  }, [packages, clientId]);
-  return { packages, loadingPackages };
+  }, [clientPackage, clientId]);
+  return { clientPackage, loadingClientPackage };
 }
 
 export function useTaskTypes() {

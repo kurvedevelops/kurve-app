@@ -1,46 +1,39 @@
 "use client";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useParams, useRouter } from "next/navigation";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import PageHeader from "@/components/layout/PageHeader";
-import { Package, Mail, Phone, Calendar, MapPin } from "lucide-react";
+import { Package, Calendar } from "lucide-react";
 import {
+  editClient,
   getInitials,
   useClients,
   usePackageByClient,
 } from "@/hooks/middleware";
-
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  status: "active" | "inactive";
-  created_at: string;
-  city?: string;
-}
-
-interface ClientPackage {
-  id: string;
-  name: string;
-  hours: number;
-  status: string;
-}
+import {
+  EditarClienteFormData,
+  EditarClienteModal,
+} from "@/components/modals/EditarClienteModal";
+import { useState } from "react";
 
 const ClientDetailPage = () => {
   const params = useParams();
   const clientId = params.id as string;
-
+  const [showEditarClienteModal, setShowEditarClienteModal] = useState(false);
   const { clients, loadingClients } = useClients();
-  const { packages, loadingPackages } = usePackageByClient(clientId);
+  const { clientPackage, loadingClientPackage } = usePackageByClient(clientId);
 
   const client = clients.find((c) => c.id === clientId);
   const initials = getInitials(client?.name);
+  const router = useRouter();
 
   const handleActions = {
-    edit: () => console.log("Editar cliente"),
+    edit: () => setShowEditarClienteModal(true),
     assignPackage: () => console.log("Asignar paquete"),
+  };
+
+  const handleEditarCliente = async (data: EditarClienteFormData) => {
+    await editClient(clientId, data);
+    router.refresh();
   };
 
   if (!client)
@@ -54,7 +47,7 @@ const ClientDetailPage = () => {
     {
       label: "Editar",
       variant: "secondary" as const,
-      onClick: () => console.log("Editar"),
+      onClick: () => setShowEditarClienteModal(true),
     },
     {
       label: "Asignar paquete",
@@ -126,11 +119,11 @@ const ClientDetailPage = () => {
           </div>
         </div>
 
-        {/* Packages Section */}
+        {/* clientPackage Section */}
         <div className="bg-background rounded-xl border border-border p-8">
           <h3 className="text-xl font-bold text-foreground mb-4">Paquetes</h3>
 
-          {packages.length === 0 ? (
+          {clientPackage.length === 0 ? (
             // Empty State
             <div className="flex flex-col items-center justify-center py-20">
               <div className="w-16 h-16 rounded-full bg-verde-kurve/10 flex items-center justify-center mb-4">
@@ -154,9 +147,9 @@ const ClientDetailPage = () => {
               </button>
             </div>
           ) : (
-            // Packages List
+            // clientPackage List
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-1/2 lg:w-2/3 md:min-w-10/12">
-              {packages.map((pkg) => (
+              {clientPackage.map((pkg) => (
                 <div
                   key={pkg.id}
                   className="relative border border-border rounded-lg p-4 hover:bg-muted hover:border-verde-kurve cursor-pointer transition-colors"
@@ -190,6 +183,12 @@ const ClientDetailPage = () => {
           )}
         </div>
       </main>
+      <EditarClienteModal
+        open={showEditarClienteModal}
+        onClose={() => setShowEditarClienteModal(false)}
+        client={client}
+        onSubmit={handleEditarCliente}
+      />
     </div>
   );
 };
