@@ -3,6 +3,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import {
   createNewClient,
+  deleteClient,
   editClient,
   getInitials,
   useClients,
@@ -28,7 +29,7 @@ interface Client {
   email: string;
   legal_name: string;
   phone: string;
-  status: "active" | "inactive";
+  status: "active" | "paused";
   created_at: string;
 }
 
@@ -139,9 +140,9 @@ const ClientesPage = () => {
   const { clients, loadingClients } = useClients();
   const { packages, loadingPackages } = usePackages();
   const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "active" | "ended" | "paused"
-  >("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "paused">(
+    "all",
+  );
   const [openStatusDropdown, setOpenStatusDropdown] = useState(false);
 
   const [showNuevoClienteModal, setShowNuevoClienteModal] = useState(false);
@@ -151,7 +152,11 @@ const ClientesPage = () => {
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  const filteredClients = clients.filter((c) => {
+  const filteredClients = clients.filter(
+    (c) => c.status == "active" || c.status == "paused",
+  );
+
+  const searchedClients = filteredClients.filter((c) => {
     const matchesSearch = c.name.toLowerCase().includes(query.toLowerCase());
     const matchesStatus = statusFilter === "all" || c.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -170,8 +175,11 @@ const ClientesPage = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleDelete = (id: string) => {
-    console.log("eliminar", id);
+  const handleDelete = async (id: string) => {
+    if (confirm("¿Estás seguro de que quieres eliminar este cliente?")) {
+      await deleteClient(id);
+      router.refresh();
+    }
   };
 
   // Acá conectás con tu API/hook para crear el cliente
@@ -188,11 +196,14 @@ const ClientesPage = () => {
 
   const handleEditarCliente = async (data: EditarClienteFormData) => {
     try {
-      console.log("Editando cliente:", selectedClient?.id, data);
-      await editClient(data);
+      if (!selectedClient) return;
+
+      console.log("Editando cliente:", selectedClient.id, data);
+      await editClient(selectedClient.id, data);
+
+      router.refresh();
       setShowEditarClienteModal(false);
       setSelectedClient(null);
-      router.refresh();
     } catch (error) {
       console.error("Error al editar cliente:", error);
     }
@@ -214,7 +225,6 @@ const ClientesPage = () => {
   const statusLabels = {
     all: "Todos los estados",
     active: "Activos",
-    ended: "Inactivos",
     paused: "Pausados",
   };
 
@@ -237,8 +247,8 @@ const ClientesPage = () => {
                 Todos los clientes
               </span>
               <span className="text-sm text-gris-kurve-dark">
-                {filteredClients.length}{" "}
-                {filteredClients.length === 1 ? "registro" : "registros"}
+                {searchedClients.length}{" "}
+                {searchedClients.length === 1 ? "registro" : "registros"}
               </span>
             </div>
 
@@ -261,9 +271,7 @@ const ClientesPage = () => {
                       <button
                         key={value}
                         onClick={() => {
-                          setStatusFilter(
-                            value as "all" | "active" | "ended" | "paused",
-                          );
+                          setStatusFilter(value as "all" | "active" | "paused");
                           setOpenStatusDropdown(false);
                         }}
                         className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
@@ -324,7 +332,7 @@ const ClientesPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredClients.length === 0 ? (
+                {searchedClients.length === 0 ? (
                   <tr>
                     <td
                       colSpan={5}
@@ -336,11 +344,11 @@ const ClientesPage = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredClients.map((client, i) => (
+                  searchedClients.map((client, i) => (
                     <tr
                       key={client.id}
                       className={
-                        i < filteredClients.length - 1
+                        i < searchedClients.length - 1
                           ? "border-b border-border"
                           : ""
                       }
@@ -365,14 +373,9 @@ const ClientesPage = () => {
                             Activo
                           </span>
                         ) : client.status === "paused" ? (
-                          <span className="inline-flex items-center gap-1.5 bg-gris-kurve-light/50 text-gris-kurve-dark text-xs font-medium px-2.5 py-1 rounded-full">
-                            <span className="w-1.5 h-1.5 rounded-full bg-gris-kurve-dark" />
+                          <span className="inline-flex items-center gap-1.5 bg-yellow-500/20 text-yellow-500 text-xs font-medium px-2.5 py-1 rounded-full">
+                            <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
                             Pausado
-                          </span>
-                        ) : client.status === "ended" ? (
-                          <span className="inline-flex items-center gap-1.5 bg-red-100 text-red-600 text-xs font-medium px-2.5 py-1 rounded-full">
-                            <span className="w-1.5 h-1.5 rounded-full bg-red-600" />
-                            Inactivo
                           </span>
                         ) : null}
                       </td>

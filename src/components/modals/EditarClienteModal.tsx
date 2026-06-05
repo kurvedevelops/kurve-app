@@ -33,6 +33,9 @@ const editarClienteSchema = z.object({
       (date) => new Date(date) <= new Date(),
       "La fecha de alta no puede ser en el futuro",
     ),
+  status: z.enum(["active", "paused"] as const, {
+    message: "Selecciona un estado válido",
+  }),
 });
 
 interface Client {
@@ -41,7 +44,7 @@ interface Client {
   email: string;
   legal_name: string;
   phone: string;
-  status: "active" | "inactive";
+  status: "active" | "paused";
   created_at: string;
 }
 
@@ -63,6 +66,7 @@ function buildInitialForm(client: Client): EditarClienteFormData {
     email: client.email ?? "",
     telefono: client.phone ?? "",
     fechaAlta: client.created_at ? client.created_at.split("T")[0] : "",
+    status: client.status ?? "active",
   };
 }
 
@@ -143,6 +147,7 @@ export function EditarClienteModal({
           email: true,
           telefono: true,
           fechaAlta: true,
+          status: true,
         });
       }
     } finally {
@@ -158,6 +163,19 @@ export function EditarClienteModal({
         : "border-border bg-muted text-foreground placeholder-gris-kurve-dark focus:border-verde-kurve focus:ring-verde-kurve/30 focus:bg-background"
     }`;
   }
+
+  const statusOptions = [
+    {
+      value: "active",
+      label: "Activo",
+      color: "bg-verde-kurve/10 text-verde-kurve",
+    },
+    {
+      value: "paused",
+      label: "Pausado",
+      color: "bg-gris-kurve-light/50 text-gris-kurve-dark",
+    },
+  ];
 
   return (
     <BaseModal
@@ -266,6 +284,29 @@ export function EditarClienteModal({
             <p className="text-xs text-red-500 mt-1">{errors.fechaAlta}</p>
           )}
         </div>
+      </div>
+
+      {/* Estado */}
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-1.5">
+          Estado <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={form.status}
+          onChange={(e) => handleChange("status", e.target.value)}
+          onBlur={() => handleBlur("status")}
+          className={inputClass("status")}
+        >
+          <option value="">Selecciona un estado</option>
+          {statusOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        {errors.status && touched.status && (
+          <p className="text-xs text-red-500 mt-1">{errors.status}</p>
+        )}
       </div>
     </BaseModal>
   );

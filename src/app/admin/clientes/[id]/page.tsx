@@ -1,10 +1,8 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import PageHeader from "@/components/layout/PageHeader";
-import { Package, Mail, Phone, Calendar, MapPin } from "lucide-react";
+import { Package, Calendar } from "lucide-react";
 import {
   editClient,
   getInitials,
@@ -15,22 +13,7 @@ import {
   EditarClienteFormData,
   EditarClienteModal,
 } from "@/components/modals/EditarClienteModal";
-
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  status: "active" | "inactive";
-  created_at: string;
-}
-
-interface ClientPackage {
-  id: string;
-  name: string;
-  hours: number;
-  status: string;
-}
+import { useState } from "react";
 
 const ClientDetailPage = () => {
   const params = useParams();
@@ -49,7 +32,7 @@ const ClientDetailPage = () => {
   };
 
   const handleEditarCliente = async (data: EditarClienteFormData) => {
-    await editClient(data);
+    await editClient(clientId, data);
     router.refresh();
   };
 
