@@ -6,6 +6,21 @@ import { NuevoClienteFormData } from "@/components/modals/NuevoClienteModal";
 
 type User = Tables<"users">;
 
+export async function editClient(data: NuevoClienteFormData) {
+  const supabase = createClient();
+
+  const { error } = await supabase.from("clients").update({
+    name: data.name,
+    legal_name: data.razonSocial,
+    email: data.email,
+    phone: data.telefono,
+    created_at: data.fechaAlta,
+    status: "active",
+  });
+
+  if (error) throw error;
+}
+
 export async function createNewClient(data: NuevoClienteFormData) {
   const supabase = createClient();
 

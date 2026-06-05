@@ -1,15 +1,20 @@
 "use client";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import PageHeader from "@/components/layout/PageHeader";
 import { Package, Mail, Phone, Calendar, MapPin } from "lucide-react";
 import {
+  editClient,
   getInitials,
   useClients,
   usePackageByClient,
 } from "@/hooks/middleware";
+import {
+  EditarClienteFormData,
+  EditarClienteModal,
+} from "@/components/modals/EditarClienteModal";
 
 interface Client {
   id: string;
@@ -18,7 +23,6 @@ interface Client {
   phone: string;
   status: "active" | "inactive";
   created_at: string;
-  city?: string;
 }
 
 interface ClientPackage {
@@ -31,16 +35,22 @@ interface ClientPackage {
 const ClientDetailPage = () => {
   const params = useParams();
   const clientId = params.id as string;
-
+  const [showEditarClienteModal, setShowEditarClienteModal] = useState(false);
   const { clients, loadingClients } = useClients();
   const { clientPackage, loadingClientPackage } = usePackageByClient(clientId);
 
   const client = clients.find((c) => c.id === clientId);
   const initials = getInitials(client?.name);
+  const router = useRouter();
 
   const handleActions = {
-    edit: () => console.log("Editar cliente"),
+    edit: () => setShowEditarClienteModal(true),
     assignPackage: () => console.log("Asignar paquete"),
+  };
+
+  const handleEditarCliente = async (data: EditarClienteFormData) => {
+    await editClient(data);
+    router.refresh();
   };
 
   if (!client)
@@ -54,7 +64,7 @@ const ClientDetailPage = () => {
     {
       label: "Editar",
       variant: "secondary" as const,
-      onClick: () => console.log("Editar"),
+      onClick: () => setShowEditarClienteModal(true),
     },
     {
       label: "Asignar paquete",
@@ -190,6 +200,12 @@ const ClientDetailPage = () => {
           )}
         </div>
       </main>
+      <EditarClienteModal
+        open={showEditarClienteModal}
+        onClose={() => setShowEditarClienteModal(false)}
+        client={client}
+        onSubmit={handleEditarCliente}
+      />
     </div>
   );
 };
