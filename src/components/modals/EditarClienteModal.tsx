@@ -5,7 +5,7 @@ import { BaseModal } from "./ModalBase";
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
-const nuevoClienteSchema = z.object({
+const editarClienteSchema = z.object({
   name: z
     .string()
     .min(1, "El nombre del cliente es requerido")
@@ -33,35 +33,54 @@ const nuevoClienteSchema = z.object({
       (date) => new Date(date) <= new Date(),
       "La fecha de alta no puede ser en el futuro",
     ),
+  status: z.enum(["active", "paused"] as const, {
+    message: "Selecciona un estado válido",
+  }),
 });
 
-export type NuevoClienteFormData = z.infer<typeof nuevoClienteSchema>;
-
-interface NuevoClienteModalProps {
-  open: boolean;
-  onClose: () => void;
-  onSubmit: (data: NuevoClienteFormData) => void | Promise<void>;
+interface Client {
+  id: string;
+  name: string;
+  email: string;
+  legal_name: string;
+  phone: string;
+  status: "active" | "paused";
+  created_at: string;
 }
 
-type FormErrors = Partial<Record<keyof NuevoClienteFormData, string>>;
+export type EditarClienteFormData = z.infer<typeof editarClienteSchema>;
 
-const initialForm: NuevoClienteFormData = {
-  name: "",
-  razonSocial: "",
-  email: "",
-  telefono: "",
-  fechaAlta: new Date().toISOString().split("T")[0],
-};
+interface EditarClienteModalProps {
+  open: boolean;
+  onClose: () => void;
+  client: Client;
+  onSubmit: (data: EditarClienteFormData) => void | Promise<void>;
+}
+
+type FormErrors = Partial<Record<keyof EditarClienteFormData, string>>;
+
+function buildInitialForm(client: Client): EditarClienteFormData {
+  return {
+    name: client.name ?? "",
+    razonSocial: client.legal_name ?? "",
+    email: client.email ?? "",
+    telefono: client.phone ?? "",
+    fechaAlta: client.created_at ? client.created_at.split("T")[0] : "",
+    status: client.status ?? "active",
+  };
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function validateField(
-  field: keyof NuevoClienteFormData,
+  field: keyof EditarClienteFormData,
   value?: string,
 ): string | undefined {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    nuevoClienteSchema.pick({ [field]: true } as any).parse({ [field]: value });
+    editarClienteSchema
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .pick({ [field]: true } as any)
+      .parse({ [field]: value });
     return undefined;
   } catch (err) {
     if (err instanceof z.ZodError) return err.issues[0]?.message;
@@ -69,14 +88,15 @@ function validateField(
   }
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
-
-export function NuevoClienteModal({
+export function EditarClienteModal({
   open,
   onClose,
+  client,
   onSubmit,
-}: NuevoClienteModalProps) {
-  const [form, setForm] = useState<NuevoClienteFormData>(initialForm);
+}: EditarClienteModalProps) {
+  const [form, setForm] = useState<EditarClienteFormData>(() =>
+    buildInitialForm(client),
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -84,20 +104,21 @@ export function NuevoClienteModal({
   // Reset al abrir
   useEffect(() => {
     if (open) {
-      setForm(initialForm);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setForm(buildInitialForm(client));
       setErrors({});
       setTouched({});
     }
-  }, [open]);
+  }, [open, client]);
 
-  function handleChange(field: keyof NuevoClienteFormData, value: string) {
+  function handleChange(field: keyof EditarClienteFormData, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (touched[field]) {
       setErrors((prev) => ({ ...prev, [field]: validateField(field, value) }));
     }
   }
 
-  function handleBlur(field: keyof NuevoClienteFormData) {
+  function handleBlur(field: keyof EditarClienteFormData) {
     setTouched((prev) => ({ ...prev, [field]: true }));
     setErrors((prev) => ({
       ...prev,
@@ -107,7 +128,7 @@ export function NuevoClienteModal({
 
   async function handleSubmit() {
     try {
-      const validatedData = nuevoClienteSchema.parse(form);
+      const validatedData = editarClienteSchema.parse(form);
       setErrors({});
       setLoading(true);
       await onSubmit(validatedData);
@@ -116,7 +137,7 @@ export function NuevoClienteModal({
       if (err instanceof z.ZodError) {
         const newErrors: FormErrors = {};
         err.issues.forEach((e) => {
-          const field = e.path[0] as keyof NuevoClienteFormData;
+          const field = e.path[0] as keyof EditarClienteFormData;
           newErrors[field] = e.message;
         });
         setErrors(newErrors);
@@ -126,6 +147,7 @@ export function NuevoClienteModal({
           email: true,
           telefono: true,
           fechaAlta: true,
+          status: true,
         });
       }
     } finally {
@@ -134,7 +156,7 @@ export function NuevoClienteModal({
   }
 
   // Clase de input reutilizable
-  function inputClass(field: keyof NuevoClienteFormData) {
+  function inputClass(field: keyof EditarClienteFormData) {
     return `w-full h-10 px-3 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-1 ${
       errors[field] && touched[field]
         ? "border-red-500 bg-red-50 focus:ring-red-200"
@@ -142,20 +164,33 @@ export function NuevoClienteModal({
     }`;
   }
 
+  const statusOptions = [
+    {
+      value: "active",
+      label: "Activo",
+      color: "bg-verde-kurve/10 text-verde-kurve",
+    },
+    {
+      value: "paused",
+      label: "Pausado",
+      color: "bg-gris-kurve-light/50 text-gris-kurve-dark",
+    },
+  ];
+
   return (
     <BaseModal
       open={open}
       onClose={onClose}
-      title="Nuevo cliente"
-      description="Empezá creando el cliente. Después le vas a poder asignar un paquete."
+      title="Editar cliente"
+      description="Modificá los datos del cliente."
       actions={[
         { label: "Cancelar", onClick: onClose, variant: "secondary" },
         {
-          label: "Crear cliente",
+          label: "Modificar cliente",
           onClick: handleSubmit,
           variant: "primary",
           loading,
-          loadingLabel: "Creando...",
+          loadingLabel: "Modificando...",
         },
       ]}
     >
@@ -249,6 +284,29 @@ export function NuevoClienteModal({
             <p className="text-xs text-red-500 mt-1">{errors.fechaAlta}</p>
           )}
         </div>
+      </div>
+
+      {/* Estado */}
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-1.5">
+          Estado <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={form.status}
+          onChange={(e) => handleChange("status", e.target.value)}
+          onBlur={() => handleBlur("status")}
+          className={inputClass("status")}
+        >
+          <option value="">Selecciona un estado</option>
+          {statusOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        {errors.status && touched.status && (
+          <p className="text-xs text-red-500 mt-1">{errors.status}</p>
+        )}
       </div>
     </BaseModal>
   );

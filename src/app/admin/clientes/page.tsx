@@ -3,6 +3,8 @@ import PageHeader from "@/components/layout/PageHeader";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import {
   createNewClient,
+  deleteClient,
+  editClient,
   getInitials,
   useClients,
   usePackages,
@@ -16,6 +18,20 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown } from "lucide-react";
+import {
+  EditarClienteFormData,
+  EditarClienteModal,
+} from "@/components/modals/EditarClienteModal";
+
+interface Client {
+  id: string;
+  name: string;
+  email: string;
+  legal_name: string;
+  phone: string;
+  status: "active" | "paused";
+  created_at: string;
+}
 
 interface ActionDropdownProps {
   onEdit?: () => void;
@@ -29,88 +45,93 @@ export function ActionDropdown({
   onDelete,
 }: ActionDropdownProps) {
   const [open, setOpen] = useState(false);
-  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (buttonRef.current && !buttonRef.current.contains(e.target as Node)) {
+      if (
+        menuRef.current &&
+        buttonRef.current &&
+        !menuRef.current.contains(e.target as Node) &&
+        !buttonRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
-  function handleOpen() {
-    if (!open && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setMenuPos({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.right + window.scrollX - 176,
-      });
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
-    setOpen((prev) => !prev);
-  }
-
-  const menu = (
-    <div
-      style={{ top: menuPos.top, left: menuPos.left }}
-      className="fixed z-50 w-44 rounded-lg border border-gray-100 bg-white shadow-md py-1"
-    >
-      <button
-        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-        onClick={() => {
-          setOpen(false);
-          onEdit?.();
-        }}
-      >
-        Editar
-      </button>
-      <button
-        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-        onClick={() => {
-          setOpen(false);
-          onView?.();
-        }}
-      >
-        Ver detalle
-      </button>
-      <button
-        className="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-50 transition-colors"
-        onClick={() => {
-          setOpen(false);
-          onDelete?.();
-        }}
-      >
-        Eliminar cliente
-      </button>
-    </div>
-  );
+  }, [open]);
 
   return (
     <td className="px-4 py-3.5">
-      <button
-        ref={buttonRef}
-        className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors"
-        onClick={handleOpen}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="w-4 h-4"
+      <div className="relative inline-block">
+        <button
+          ref={buttonRef}
+          onClick={() => setOpen(!open)}
+          className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
-          />
-        </svg>
-      </button>
-      {open && createPortal(menu, document.body)}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="w-4 h-4"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
+            />
+          </svg>
+        </button>
+
+        {open && (
+          <div
+            ref={menuRef}
+            className="absolute right-0 top-full mt-2 w-44 rounded-lg border border-gray-100 bg-white shadow-lg py-1 z-[9999]"
+          >
+            <button
+              type="button"
+              onClick={() => {
+                console.log("Click editar");
+                onEdit?.();
+                setOpen(false);
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Editar
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                console.log("Click ver detalle");
+                onView?.();
+                setOpen(false);
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Ver detalle
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                console.log("Click eliminar");
+                onDelete?.();
+                setOpen(false);
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-50 transition-colors"
+            >
+              Eliminar cliente
+            </button>
+          </div>
+        )}
+      </div>
     </td>
   );
 }
@@ -119,15 +140,23 @@ const ClientesPage = () => {
   const { clients, loadingClients } = useClients();
   const { packages, loadingPackages } = usePackages();
   const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "active" | "ended" | "paused"
-  >("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "paused">(
+    "all",
+  );
   const [openStatusDropdown, setOpenStatusDropdown] = useState(false);
+
   const [showNuevoClienteModal, setShowNuevoClienteModal] = useState(false);
+  const [showEditarClienteModal, setShowEditarClienteModal] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  const filteredClients = clients.filter((c) => {
+  const filteredClients = clients.filter(
+    (c) => c.status == "active" || c.status == "paused",
+  );
+
+  const searchedClients = filteredClients.filter((c) => {
     const matchesSearch = c.name.toLowerCase().includes(query.toLowerCase());
     const matchesStatus = statusFilter === "all" || c.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -146,14 +175,38 @@ const ClientesPage = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleDelete = (id: string) => {
-    console.log("eliminar", id);
+  const handleDelete = async (id: string) => {
+    if (confirm("¿Estás seguro de que quieres eliminar este cliente?")) {
+      await deleteClient(id);
+      router.refresh();
+    }
   };
 
   // Acá conectás con tu API/hook para crear el cliente
   const handleCrearCliente = async (data: NuevoClienteFormData) => {
     await createNewClient(data);
     router.refresh();
+  };
+
+  const handleOpenEditModal = (client: Client) => {
+    console.log("Abriendo modal para:", client);
+    setSelectedClient(client);
+    setShowEditarClienteModal(true);
+  };
+
+  const handleEditarCliente = async (data: EditarClienteFormData) => {
+    try {
+      if (!selectedClient) return;
+
+      console.log("Editando cliente:", selectedClient.id, data);
+      await editClient(selectedClient.id, data);
+
+      router.refresh();
+      setShowEditarClienteModal(false);
+      setSelectedClient(null);
+    } catch (error) {
+      console.error("Error al editar cliente:", error);
+    }
   };
 
   const actions = [
@@ -172,14 +225,13 @@ const ClientesPage = () => {
   const statusLabels = {
     all: "Todos los estados",
     active: "Activos",
-    ended: "Inactivos",
     paused: "Pausados",
   };
 
   return (
     <div className="min-h-screen w-full bg-muted flex">
       <SidebarAdmin />
-      <main className="flex-1 md:ml-24 lg:ml-64 px-5 py-8 md:p-8">
+      <main className="flex-1 md:ml-45 lg:ml-64 px-5 py-8 md:p-8">
         <PageHeader
           badge="Gestión de Clientes"
           title="Clientes"
@@ -195,8 +247,8 @@ const ClientesPage = () => {
                 Todos los clientes
               </span>
               <span className="text-sm text-gris-kurve-dark">
-                {filteredClients.length}{" "}
-                {filteredClients.length === 1 ? "registro" : "registros"}
+                {searchedClients.length}{" "}
+                {searchedClients.length === 1 ? "registro" : "registros"}
               </span>
             </div>
 
@@ -219,9 +271,7 @@ const ClientesPage = () => {
                       <button
                         key={value}
                         onClick={() => {
-                          setStatusFilter(
-                            value as "all" | "active" | "ended" | "paused",
-                          );
+                          setStatusFilter(value as "all" | "active" | "paused");
                           setOpenStatusDropdown(false);
                         }}
                         className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
@@ -238,7 +288,7 @@ const ClientesPage = () => {
               </div>
 
               {/* Search */}
-              <div className="relative w-full md:w-auto">
+              <div className="relative w-full md:w-auto ">
                 <svg
                   className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gris-kurve-dark pointer-events-none"
                   xmlns="http://www.w3.org/2000/svg"
@@ -258,14 +308,14 @@ const ClientesPage = () => {
                   placeholder="Buscar cliente..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="pl-8 pr-3 h-9 text-sm rounded-lg border border-border bg-muted text-foreground placeholder-gris-kurve-dark focus:outline-none focus:border-verde-kurve focus:bg-background transition-colors w-full"
+                  className="pl-8 pr-3 h-9 text-sm rounded-lg border border-border bg-gray-50 text-foreground placeholder-gris-kurve-dark focus:outline-none focus:border-verde-kurve focus:bg-background transition-colors w-full"
                 />
               </div>
             </div>
           </div>
 
           {/* Table */}
-          <div className="overflow-hidden">
+          <div className="overflow-visible">
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50">
@@ -282,7 +332,7 @@ const ClientesPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredClients.length === 0 ? (
+                {searchedClients.length === 0 ? (
                   <tr>
                     <td
                       colSpan={5}
@@ -294,16 +344,16 @@ const ClientesPage = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredClients.map((client, i) => (
+                  searchedClients.map((client, i) => (
                     <tr
                       key={client.id}
                       className={
-                        i < filteredClients.length - 1
+                        i < searchedClients.length - 1
                           ? "border-b border-border"
                           : ""
                       }
                     >
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-3.5 relative">
                         <div className="flex items-center gap-2.5">
                           <div className="w-9 h-9 rounded-lg bg-verde-kurve/10 flex items-center justify-center text-xs font-semibold text-verde-kurve">
                             {getInitials(client.name)}
@@ -323,14 +373,9 @@ const ClientesPage = () => {
                             Activo
                           </span>
                         ) : client.status === "paused" ? (
-                          <span className="inline-flex items-center gap-1.5 bg-gris-kurve-light/50 text-gris-kurve-dark text-xs font-medium px-2.5 py-1 rounded-full">
-                            <span className="w-1.5 h-1.5 rounded-full bg-gris-kurve-dark" />
+                          <span className="inline-flex items-center gap-1.5 bg-yellow-500/20 text-yellow-500 text-xs font-medium px-2.5 py-1 rounded-full">
+                            <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
                             Pausado
-                          </span>
-                        ) : client.status === "ended" ? (
-                          <span className="inline-flex items-center gap-1.5 bg-red-100 text-red-600 text-xs font-medium px-2.5 py-1 rounded-full">
-                            <span className="w-1.5 h-1.5 rounded-full bg-red-600" />
-                            Inactivo
                           </span>
                         ) : null}
                       </td>
@@ -355,9 +400,10 @@ const ClientesPage = () => {
                         )}
                       </td>
                       <ActionDropdown
-                        onEdit={() =>
-                          router.push(`/admin/clientes/${client.id}/edit`)
-                        }
+                        onEdit={() => {
+                          console.log("Click en editar");
+                          handleOpenEditModal(client);
+                        }}
                         onView={() =>
                           router.push(`/admin/clientes/${client.id}`)
                         }
@@ -378,6 +424,19 @@ const ClientesPage = () => {
         onClose={() => setShowNuevoClienteModal(false)}
         onSubmit={handleCrearCliente}
       />
+
+      {/* Modal editar cliente */}
+      {selectedClient && (
+        <EditarClienteModal
+          open={showEditarClienteModal}
+          client={selectedClient}
+          onClose={() => {
+            setShowEditarClienteModal(false);
+            setSelectedClient(null);
+          }}
+          onSubmit={handleEditarCliente}
+        />
+      )}
     </div>
   );
 };
