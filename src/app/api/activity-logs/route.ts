@@ -31,7 +31,7 @@ const createActivityLogSchema = z.object({
 });
 
 // GET /api/activity-logs
-// Planilla de tiempos para admin con filtros, paginación y exportación CSV
+// Planilla de tiempos para admin con filtros, cursor pagination y exportación CSV
 export async function GET(request: Request) {
   // Crear cliente Supabase
   const supabase = await createClient();
@@ -49,16 +49,12 @@ export async function GET(request: Request) {
 
   const toDate = searchParams.get("to");
 
-  const page = Number(searchParams.get("page") ?? 1);
+  const cursor = searchParams.get("cursor");
 
   const exportFormat = searchParams.get("export");
 
-  // Paginación de 50 registros por página
+  // Cursor pagination
   const limit = 50;
-
-  const from = (page - 1) * limit;
-
-  const to = from + limit - 1;
 
   // Query base con joins
   let query = supabase
@@ -103,9 +99,14 @@ export async function GET(request: Request) {
     query = query.lte("log_date", toDate);
   }
 
-  // Si no se exporta CSV, aplicar paginación normal
+  // Cursor pagination
+  if (cursor) {
+    query = query.lt("log_date", cursor);
+  }
+
+  // Limitar registros
   if (exportFormat !== "csv") {
-    query = query.range(from, to);
+    query = query.limit(limit);
   }
 
   // Ejecutar query
@@ -163,13 +164,20 @@ export async function GET(request: Request) {
     });
   }
 
+  // Obtener próximo cursor
+  const nextCursor =
+    activityLogs.length > 0
+      ? activityLogs[activityLogs.length - 1].log_date
+      : null;
+
   // Respuesta JSON normal
   return NextResponse.json(
     {
       data: activityLogs,
+
       pagination: {
-        page,
         limit,
+        nextCursor,
         hasMore: activityLogs.length === limit,
       },
     },

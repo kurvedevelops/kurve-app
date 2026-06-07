@@ -91,6 +91,32 @@ export async function POST(request: Request) {
     );
   }
 
+  // Validar que el cliente no tenga ya un paquete activo
+  const { data: activePackage, error: activePackageError } = await supabase
+    .from("packages")
+    .select("id")
+    .eq("client_id", parsed.data.client_id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (activePackageError) {
+    return NextResponse.json(
+      {
+        error: "Error al validar paquete activo del cliente",
+      },
+      { status: 500 }
+    );
+  }
+
+  if (activePackage) {
+    return NextResponse.json(
+      {
+        error: "El cliente ya tiene un paquete activo",
+      },
+      { status: 409 }
+    );
+  }
+
   // Crear paquete principal
   const { data: createdPackage, error: packageError } = await supabase
     .from("packages")
