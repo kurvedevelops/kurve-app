@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { BaseModal } from "./ModalBase";
+import { toast } from "sonner";
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
@@ -101,7 +102,6 @@ export function EditarClienteModal({
   const [loading, setLoading] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  // Reset al abrir
   useEffect(() => {
     if (open) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -132,6 +132,7 @@ export function EditarClienteModal({
       setErrors({});
       setLoading(true);
       await onSubmit(validatedData);
+      toast.success("Cliente editado exitosamente");
       onClose();
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -149,6 +150,9 @@ export function EditarClienteModal({
           fechaAlta: true,
           status: true,
         });
+        toast.error("Por favor, corrige los errores del formulario");
+      } else {
+        toast.error("Error al editar cliente");
       }
     } finally {
       setLoading(false);
