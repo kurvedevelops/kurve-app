@@ -11,7 +11,6 @@ export function useCurrentUser() {
   const [user, setUser] = useState<User | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -161,7 +160,7 @@ export function usePackageByClient(clientId: string) {
       }
     };
     fetchPackages();
-  }, [packages, clientId]);
+  }, [clientId]);
   return { packages, loadingPackages, error };
 }
 
@@ -200,17 +199,23 @@ type ActivityLogWithRelations = {
   hours: number;
   pieces_count: number;
   log_date: string;
-  status: "pending" | "approved" | "draft";
+  status: "delivered" | "in_progress";
   notes: string | null;
   is_draft: boolean;
   task_types: { id: string; name: string } | null;
   clients: { id: string; name: string } | null;
+  piece_categories: { id: string; name: string } | null;
 };
 
-export function useActivityLogs(userId: string) {
-  const [activityLogs, setActivityLogs] = useState<ActivityLogWithRelations[]>(
-    [],
-  );
+export function useActivityLogs(userId: string, filters?: {
+  client_id?: string;
+  status?: string;
+  from?: string;
+  to?: string;
+  page?: number;
+}) {
+  const [activityLogs, setActivityLogs] = useState<ActivityLogWithRelations[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loadingActivityLogs, setLoadingActivityLogs] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -218,29 +223,60 @@ export function useActivityLogs(userId: string) {
     const fetchActivityLogs = async () => {
       try {
         const supabase = createClient();
-        const { data: activityLogs } = await supabase
+        let query = supabase
           .from("activity_logs")
-          .select(
-            `
-    *,
-    task_types ( id, name ),
-    clients ( id, name )
-  `,
-          )
+          .select(`
+            *,
+            task_types ( id, name ),
+            clients ( id, name ),
+            piece_categories ( id, name )
+          `, { count: "exact" })
           .eq("user_id", userId)
-          .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false })
+          .range(
+            (filters?.page ?? 0) * 5,
+            (filters?.page ?? 0) * 5 + 4
+          );
 
-        if (error) throw error;
+        if (filters?.client_id) query = query.eq("client_id", filters.client_id);
+        if (filters?.status) query = query.eq("status", filters.status);
+        if (filters?.from) query = query.gte("log_date", filters.from);
+        if (filters?.to) query = query.lte("log_date", filters.to);
 
-        setActivityLogs(activityLogs || []);
+        const { data, count } = await query;
+        setActivityLogs(data || []);
+        setTotalCount(count || 0);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error desconocido");
       } finally {
         setLoadingActivityLogs(false);
       }
     };
-    if (userId) fetchActivityLogs();
-  }, [userId, activityLogs, error]);
 
-  return { activityLogs, loadingActivityLogs, error };
+    if (userId) fetchActivityLogs();
+  }, [userId, filters?.client_id, filters?.status, filters?.from, filters?.to, filters?.page]);
+
+  return { activityLogs, loadingActivityLogs, error, totalCount };
+}
+
+export function useActivityLogDates(userId: string) {
+  const [dates, setDates] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchDates = async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("activity_logs")
+        .select("log_date")
+        .eq("user_id", userId)
+        .order("log_date", { ascending: false });
+
+      const unique = [...new Set(data?.map((d) => d.log_date) || [])];
+      setDates(unique);
+    };
+
+    if (userId) fetchDates();
+  }, [userId]);
+
+  return { dates };
 }
