@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/supabase/guard";
 import { resend } from "@/lib/resend";
+
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "noreply@kurve.app";
 
 // POST /api/edit-requests/:id/reject
 // Admin rechaza una solicitud de corrección
@@ -8,24 +12,10 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = await requireAdmin();
+  if (guard.error) return guard.error;
+
   const supabase = await createClient();
-
-  // Obtener usuario autenticado
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // Validar sesión
-  if (!user) {
-    return NextResponse.json(
-      {
-        error: "No autenticado",
-      },
-      { status: 401 }
-    );
-  }
-
-  // Obtener ID de la solicitud
   const { id } = await params;
 
   // Buscar solicitud pendiente
@@ -36,7 +26,6 @@ export async function POST(
     .eq("status", "pending")
     .single();
 
-  // Validar existencia
   if (requestError || !editRequest) {
     return NextResponse.json(
       {
@@ -51,14 +40,13 @@ export async function POST(
     .from("edit_requests")
     .update({
       status: "rejected",
-      reviewed_by: user.id,
+      reviewed_by: guard.user.id,
       reviewed_at: new Date().toISOString(),
     })
     .eq("id", id)
     .select()
     .single();
 
-  // Manejar error
   if (rejectError || !rejectedRequest) {
     return NextResponse.json(
       {
@@ -68,7 +56,7 @@ export async function POST(
     );
   }
 
-  // Buscar usuario que pidió la corrección para enviar email
+  // Buscar usuario que pidió la corrección para notificarle
   const { data: requestedByUser } = await supabase
     .from("users")
     .select("id, email, full_name")
@@ -80,31 +68,23 @@ export async function POST(
   try {
     if (requestedByUser?.email) {
       await resend.emails.send({
-        from: "Kurve <onboarding@resend.dev>",
-
+        from: `Kurve <${FROM_EMAIL}>`,
         to: [requestedByUser.email],
-
         subject: "Tu solicitud de corrección fue rechazada",
-
         html: `
           <h2>Solicitud rechazada</h2>
-
           <p>Hola ${requestedByUser.full_name ?? ""},</p>
-
           <p>Tu solicitud de corrección fue rechazada.</p>
-
           <p><strong>Campo:</strong> ${editRequest.field_name}</p>
-
           <p><strong>Valor anterior:</strong> ${editRequest.old_value}</p>
-
           <p><strong>Valor solicitado:</strong> ${editRequest.new_value}</p>
         `,
       });
 
-      // Guardar notificación enviada
-      await supabase.from("notifications").insert({
+      const adminClient = createAdminClient();
+      await adminClient.from("notifications").insert({
         user_id: requestedByUser.id,
-        channel: "email",
+        channel: "email" as const,
         type: "edit_request_rejected",
         payload: {
           edit_request_id: editRequest.id,
@@ -117,7 +97,6 @@ export async function POST(
     console.error("Error enviando email de rechazo:", error);
   }
 
-  // Respuesta exitosa
   return NextResponse.json(
     {
       message: "Solicitud rechazada correctamente",
