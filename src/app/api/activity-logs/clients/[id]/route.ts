@@ -128,7 +128,7 @@ export async function PATCH(
 }
 
 // DELETE /api/clients/:id
-// Eliminar cliente
+// Soft delete del cliente: no se borra, se marca como ended
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -139,14 +139,23 @@ export async function DELETE(
   // Obtener ID
   const { id } = await params;
 
-  // Eliminar cliente
-  const { error } = await supabase.from("clients").delete().eq("id", id);
+  // No eliminamos físicamente el cliente.
+  // Lo marcamos como ended para conservar historial.
+  const { data: endedClient, error } = await supabase
+    .from("clients")
+    .update({
+      status: "ended",
+      end_date: new Date().toISOString().split("T")[0],
+    })
+    .eq("id", id)
+    .select()
+    .single();
 
   // Manejar error
-  if (error) {
+  if (error || !endedClient) {
     return NextResponse.json(
       {
-        error: "Error al eliminar cliente",
+        error: "Error al desactivar cliente",
       },
       { status: 500 }
     );
@@ -155,7 +164,8 @@ export async function DELETE(
   // Respuesta exitosa
   return NextResponse.json(
     {
-      message: "Cliente eliminado correctamente",
+      message: "Cliente desactivado correctamente",
+      data: endedClient,
     },
     { status: 200 }
   );

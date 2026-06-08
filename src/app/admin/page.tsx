@@ -1,6 +1,7 @@
 "use client";
 import PageHeader from "@/components/layout/PageHeader";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
+import { useClients } from "@/hooks/middleware";
 import RedirectedAlert from "@/hooks/redirectedAlert";
 import { Suspense } from "react";
 
@@ -12,18 +13,9 @@ const AlertWrapper = () => {
 };
 
 const AdminPage = () => {
-  const actions = [
-    {
-      label: "↓ Exportar",
-      variant: "secondary" as const,
-      onClick: () => console.log("Exportar"),
-    },
-    {
-      label: "+ Nuevo cliente",
-      variant: "primary" as const,
-      onClick: () => console.log("Nuevo cliente"),
-    },
-  ];
+  const { clients, loadingClients } = useClients();
+
+  const activeClients = clients.filter((client) => client.status === "active");
 
   return (
     <div className="min-h-screen w-full bg-muted flex">
@@ -63,7 +55,9 @@ const AdminPage = () => {
             </p>
             <div className="border-t border-border pt-3">
               <p className="text-sm text-verde-kurve font-medium">
-                Sin datos aún
+                {clients.length == 0
+                  ? "Sin datos aún"
+                  : activeClients.length + " clientes"}
               </p>
             </div>
           </div>
@@ -87,7 +81,7 @@ const AdminPage = () => {
             <p className="text-xs font-bold text-gris-kurve-dark uppercase tracking-wide mb-3">
               Integrantes
             </p>
-            <div className="mt-7 border-t border-border pt-3">
+            <div className="border-t border-border pt-3">
               <p className="text-sm text-verde-kurve font-medium">
                 Sin datos aún
               </p>
