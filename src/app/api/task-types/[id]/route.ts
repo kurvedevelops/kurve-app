@@ -36,10 +36,7 @@ export async function GET(
     );
   }
 
-  // task_subtypes no está en los tipos generados — actualizar tras TARJETA 8
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
-  const { data: subtypes } = await db
+  const { data: subtypes } = await supabase
     .from("task_subtypes")
     .select("*")
     .eq("task_type_id", id)
@@ -73,7 +70,6 @@ export async function PATCH(
     );
   }
 
-  // Verificar nombre duplicado si se manda name
   if (parsed.data.name) {
     const { data: existing } = await supabase
       .from("task_types")
@@ -90,10 +86,7 @@ export async function PATCH(
     }
   }
 
-  // counts_as_piece y allowed_roles no están en los tipos generados — actualizar tras TARJETA 8
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from("task_types")
     .update(parsed.data)
     .eq("id", id)
@@ -138,7 +131,6 @@ export async function DELETE(
     );
   }
 
-  // Verificar si tiene actividades registradas
   const { count, error: countError } = await supabase
     .from("activity_logs")
     .select("id", { count: "exact", head: true })

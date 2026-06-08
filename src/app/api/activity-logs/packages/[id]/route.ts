@@ -110,7 +110,6 @@ export async function PATCH(
   // Actualizar paquete principal
   const { data: updatedPackage, error: packageError } = await supabase
     .from("packages")
-    // @ts-expect-error tipos desactualizados de Supabase
     .update(packagePayload)
     .eq("id", id)
     .select()

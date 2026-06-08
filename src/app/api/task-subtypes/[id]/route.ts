@@ -30,10 +30,7 @@ export async function PATCH(
     );
   }
 
-  // task_subtypes no está en los tipos generados — actualizar tras TARJETA 8
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from("task_subtypes")
     .update(parsed.data)
     .eq("id", id)
@@ -64,10 +61,7 @@ export async function DELETE(
   const supabase = await createClient();
   const { id } = await params;
 
-  // task_subtypes no está en los tipos generados — actualizar tras TARJETA 8
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from("task_subtypes")
     .update({ active: false })
     .eq("id", id)

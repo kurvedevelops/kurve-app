@@ -65,10 +65,7 @@ export async function POST(request: Request) {
     );
   }
 
-  // counts_as_piece y allowed_roles no están en los tipos generados — actualizar tras TARJETA 8
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from("task_types")
     .insert({
       name: parsed.data.name,

@@ -20,11 +20,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const taskTypeId = searchParams.get("task_type_id");
 
-  // task_subtypes no está en los tipos generados — actualizar tras TARJETA 8
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
-
-  let query = db
+  let query = supabase
     .from("task_subtypes")
     .select("*")
     .order("display_order", { ascending: true });
@@ -76,10 +72,7 @@ export async function POST(request: Request) {
     );
   }
 
-  // task_subtypes no está en los tipos generados — actualizar tras TARJETA 8
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from("task_subtypes")
     .insert({
       task_type_id: parsed.data.task_type_id,
