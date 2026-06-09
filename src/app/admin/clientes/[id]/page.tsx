@@ -2,25 +2,33 @@
 import { useParams, useRouter } from "next/navigation";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import PageHeader from "@/components/layout/PageHeader";
-import { Package, Calendar } from "lucide-react";
+import { Package, Calendar, Mail, Phone, Plus } from "lucide-react";
 import {
+  assignPackage,
   editClient,
   getInitials,
   useClients,
   usePackageByClient,
+  usePackageConsumption,
 } from "@/hooks/middleware";
 import {
   EditarClienteFormData,
   EditarClienteModal,
 } from "@/components/modals/EditarClienteModal";
 import { useState } from "react";
+import {
+  AsignarPaqueteFormData,
+  AsignarPaqueteModal,
+} from "@/components/modals/AsignarPaquete";
 
 const ClientDetailPage = () => {
   const params = useParams();
   const clientId = params.id as string;
   const [showEditarClienteModal, setShowEditarClienteModal] = useState(false);
+  const [showAsignarPaqueteModal, setShowAsignarPaqueteModal] = useState(false);
   const { clients, loadingClients } = useClients();
-  const { clientPackage, loadingClientPackage } = usePackageByClient(clientId);
+  const { packageConsumption, loadingPackageConsumption } =
+    usePackageConsumption(clientId);
 
   const client = clients.find((c) => c.id === clientId);
   const initials = getInitials(client?.name);
@@ -28,7 +36,12 @@ const ClientDetailPage = () => {
 
   const handleActions = {
     edit: () => setShowEditarClienteModal(true),
-    assignPackage: () => console.log("Asignar paquete"),
+    assignPackage: () => setShowAsignarPaqueteModal(true),
+  };
+
+  const handleAsignarPaquete = async (data: AsignarPaqueteFormData) => {
+    await assignPackage(clientId, data);
+    router.refresh();
   };
 
   const handleEditarCliente = async (data: EditarClienteFormData) => {
@@ -52,14 +65,14 @@ const ClientDetailPage = () => {
     {
       label: "Asignar paquete",
       variant: "primary" as const,
-      onClick: () => console.log("Asignar paquete"),
+      onClick: () => setShowAsignarPaqueteModal(true),
     },
   ];
 
   const statusColor =
     client.status === "active"
       ? "bg-verde-kurve/10 text-verde-kurve"
-      : "bg-red-100 text-red-600";
+      : "bg-yellow-500/20 text-yellow-500";
 
   return (
     <div className="min-h-screen w-full bg-muted flex">
@@ -73,7 +86,7 @@ const ClientDetailPage = () => {
         />
 
         {/* Header Section */}
-        <div className="flex flex-col bg-white p-5 rounded-xl md:flex-row md:items-start md:justify-between gap-4 mb-8 mt-4 border border-border">
+        <div className="flex flex-col bg-white p-5 rounded-xl md:flex-row md:items-start md:justify-between gap-4 mb-4 mt-4 border border-border">
           <div className="flex items-start gap-4">
             {/* Client Avatar */}
             <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-verde-kurve-dark to-verde-kurve flex items-center justify-center text-white font-bold text-2xl">
@@ -92,7 +105,7 @@ const ClientDetailPage = () => {
                   <span
                     className={`text-xs font-bold px-3 py-1 rounded-full ${statusColor}`}
                   >
-                    {client.status === "active" ? "● Activo" : "● Inactivo"}
+                    {client.status === "active" ? "● Activo" : "● Pausado"}
                   </span>
                 </div>
 
@@ -114,16 +127,44 @@ const ClientDetailPage = () => {
                     </div>
                   )}
                 </div>
+
+                {client.email ? (
+                  <>
+                    <span className="flex flex-col gap-1 text-sm text-gris-kurve-dark">
+                      •
+                    </span>
+                    <div className="flex flex-col gap-1 text-sm text-gris-kurve-dark">
+                      <div className="flex items-center gap-2">
+                        <Mail size={16} />
+                        <span>{client.email}</span>
+                      </div>
+                    </div>
+                  </>
+                ) : null}
+
+                {client.phone ? (
+                  <>
+                    <span className="flex flex-col gap-1 text-sm text-gris-kurve-dark">
+                      •
+                    </span>
+                    <div className="flex flex-col gap-1 text-sm text-gris-kurve-dark">
+                      <div className="flex items-center gap-2">
+                        <Phone size={16} />
+                        <span>{client.phone}</span>
+                      </div>
+                    </div>
+                  </>
+                ) : null}
               </div>
             </div>
           </div>
         </div>
-
-        {/* clientPackage Section */}
+        <h1 className="text-2xl font-bold text-foreground mb-4 ml-5">
+          Paquetes activos
+        </h1>
+        {/* Paquete Section */}
         <div className="bg-background rounded-xl border border-border p-8">
-          <h3 className="text-xl font-bold text-foreground mb-4">Paquetes</h3>
-
-          {clientPackage.length === 0 ? (
+          {packageConsumption.length === 0 ? (
             // Empty State
             <div className="flex flex-col items-center justify-center py-20">
               <div className="w-16 h-16 rounded-full bg-verde-kurve/10 flex items-center justify-center mb-4">
@@ -147,47 +188,92 @@ const ClientDetailPage = () => {
               </button>
             </div>
           ) : (
-            // clientPackage List
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-1/2 lg:w-2/3 md:min-w-10/12">
-              {clientPackage.map((pkg) => (
-                <div
-                  key={pkg.id}
-                  className="relative border border-border rounded-lg p-4 hover:bg-muted hover:border-verde-kurve cursor-pointer transition-colors"
-                >
-                  <span
-                    className={`absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full ${
-                      pkg.status === "active"
-                        ? "bg-verde-kurve/10 text-verde-kurve"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    {pkg.status === "active" ? "Activo" : "Inactivo"}
-                  </span>
-
-                  <h4 className="font-semibold text-foreground mb-2">
-                    {pkg.name}
-                  </h4>
-                  <p className="text-sm text-gris-kurve-dark mb-1">
-                    {pkg.total_hours} horas contratadas
-                  </p>
-                  <div className="flex flex-col">
-                    <span className="text-sm text-gris-kurve-dark my-2">
-                      {new Date(pkg.start_date).toLocaleDateString("es-AR") +
-                        " - " +
-                        new Date(pkg.end_date).toLocaleDateString("es-AR")}
+            <>
+              {packageConsumption.map((pkg) => (
+                <div key={pkg.package_id} className="mb-5">
+                  {/* Package Header */}
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h4 className="text-xl font-bold text-foreground mb-1">
+                        {pkg.package_name}
+                      </h4>
+                      <p className="text-sm text-gris-kurve-dark">
+                        {pkg.start_date
+                          ? new Date(pkg.start_date).toLocaleDateString("es-AR")
+                          : "Indefinido"}{" "}
+                        -{" "}
+                        {pkg.end_date
+                          ? new Date(pkg.end_date).toLocaleDateString("es-AR")
+                          : "Indefinido"}
+                      </p>
+                    </div>
+                    <span className="px-3 py-1 mt-3 rounded-full text-xs font-bold bg-verde-kurve/10 text-verde-kurve">
+                      ●{" "}
+                      {pkg.package_status === "active" ? "Activo" : "Inactivo"}
                     </span>
+                  </div>
+
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-4 gap-4">
+                    {/* Horas */}
+                    <div className="bg-muted rounded-lg p-4">
+                      <p className="text-xs font-semibold text-gris-kurve-dark uppercase tracking-wide mb-2">
+                        Horas Totales
+                      </p>
+                      <p className="text-2xl font-bold text-foreground">
+                        {pkg.total_hours}
+                        <span className="text-sm ml-1 font-normal">hs</span>
+                      </p>
+                    </div>
+
+                    <div className="bg-muted rounded-lg p-4">
+                      <p className="text-xs font-semibold text-gris-kurve-dark uppercase tracking-wide mb-2">
+                        Horas Consumidas
+                      </p>
+                      <p className="text-2xl font-bold text-foreground">
+                        {pkg.consumed_hours}
+                        <span className="text-sm ml-1 font-normal">hs</span>
+                      </p>
+                    </div>
+
+                    {/* Posts */}
+                    <div className="bg-muted rounded-lg p-4">
+                      <p className="text-xs font-semibold text-gris-kurve-dark uppercase tracking-wide mb-2">
+                        Publicaciones totales
+                      </p>
+                      <p className="text-2xl font-bold text-foreground">
+                        {pkg.total_pieces || 0}
+                      </p>
+                    </div>
+
+                    <div className="bg-muted rounded-lg p-4">
+                      <p className="text-xs font-semibold text-gris-kurve-dark uppercase tracking-wide mb-2">
+                        Publicaciones consumidas
+                      </p>
+                      <p className="text-2xl font-bold text-foreground">
+                        {pkg.total_pieces || 0}
+                      </p>
+                    </div>
                   </div>
                 </div>
               ))}
-            </div>
+            </>
           )}
         </div>
       </main>
+
       <EditarClienteModal
         open={showEditarClienteModal}
         onClose={() => setShowEditarClienteModal(false)}
         client={client}
         onSubmit={handleEditarCliente}
+      />
+      <AsignarPaqueteModal
+        open={showAsignarPaqueteModal}
+        clientName={client.name}
+        clientId={client.id}
+        onClose={() => setShowAsignarPaqueteModal(false)}
+        onSubmit={handleAsignarPaquete}
       />
     </div>
   );

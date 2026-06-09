@@ -22,6 +22,8 @@ import {
   EditarClienteFormData,
   EditarClienteModal,
 } from "@/components/modals/EditarClienteModal";
+import { ConfirmDeleteModal } from "@/components/modals/BorrarClienteModal";
+import { toast } from "sonner";
 
 interface Client {
   id: string;
@@ -162,6 +164,13 @@ const ClientesPage = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    open: boolean;
+    clientId: string;
+    clientName: string;
+  }>({ open: false, clientId: "", clientName: "" });
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (
@@ -176,9 +185,16 @@ const ClientesPage = () => {
   }, []);
 
   const handleDelete = async (id: string) => {
-    if (confirm("¿Estás seguro de que quieres eliminar este cliente?")) {
+    try {
+      setDeletingId(id);
       await deleteClient(id);
+      setDeleteConfirm({ open: false, clientId: "", clientName: "" });
+      toast.success("Cliente eliminado exitosamente");
       router.refresh();
+    } catch {
+      toast.error("Error al eliminar cliente");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -401,13 +417,18 @@ const ClientesPage = () => {
                       </td>
                       <ActionDropdown
                         onEdit={() => {
-                          console.log("Click en editar");
                           handleOpenEditModal(client);
                         }}
                         onView={() =>
                           router.push(`/admin/clientes/${client.id}`)
                         }
-                        onDelete={() => handleDelete(client.id)}
+                        onDelete={() =>
+                          setDeleteConfirm({
+                            open: true,
+                            clientId: client.id,
+                            clientName: client.name,
+                          })
+                        }
                       />
                     </tr>
                   ))
@@ -437,6 +458,20 @@ const ClientesPage = () => {
           onSubmit={handleEditarCliente}
         />
       )}
+
+      <ConfirmDeleteModal
+        open={deleteConfirm.open}
+        clientName={deleteConfirm.clientName}
+        loading={deletingId === deleteConfirm.clientId}
+        onConfirm={() => handleDelete(deleteConfirm.clientId)}
+        onCancel={() =>
+          setDeleteConfirm({
+            open: false,
+            clientId: "",
+            clientName: "",
+          })
+        }
+      />
     </div>
   );
 };

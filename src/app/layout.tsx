@@ -1,5 +1,6 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 //nose
@@ -10,7 +11,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.variable}>
-      <body className="">{children}</body>
+      <body className="">
+        {children}
+        <Toaster position="top-right" />
+      </body>
     </html>
   );
 }
