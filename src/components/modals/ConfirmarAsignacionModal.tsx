@@ -8,10 +8,10 @@ interface ConfirmAsignarPaqueteModalProps {
   data: {
     nombrePaquete: string;
     horasTotales: number;
-    precio: number;
+    precio?: number;
     fechaInicio: string;
-    fechaFin: string;
-    publicaciones: Record<string, number>;
+    fechaFin?: string;
+    publicaciones?: Record<string, number>;
   };
   onConfirm: () => void;
   onCancel: () => void;
@@ -29,10 +29,9 @@ export function ConfirmAsignarPaqueteModal({
   if (!open) return null;
 
   // Calcular total de piezas
-  const totalPiezas = Object.values(data.publicaciones).reduce(
-    (acc, val) => acc + val,
-    0,
-  );
+  const totalPiezas = data.publicaciones
+    ? Object.values(data.publicaciones).reduce((acc, val) => acc + val, 0)
+    : 0;
 
   // Formatear fechas
   const formatDate = (dateStr: string) => {
@@ -102,28 +101,27 @@ export function ConfirmAsignarPaqueteModal({
             <div className="flex justify-between items-center">
               <span className="text-sm text-gris-kurve-dark">Período</span>
               <span className="text-sm font-semibold text-foreground">
-                {formatDate(data.fechaInicio)} - {formatDate(data.fechaFin)}
+                {formatDate(data.fechaInicio)} -{" "}
+                {data.fechaFin ? formatDate(data.fechaFin) : "No especificado"}
               </span>
             </div>
 
             <div className="flex justify-between items-center">
               <span className="text-sm text-gris-kurve-dark">Total piezas</span>
               <span className="text-sm font-semibold text-foreground">
-                {totalPiezas}
+                {totalPiezas == 0 ? "No especificado" : totalPiezas}
               </span>
             </div>
 
             {/* Precio (si existe) */}
-            {data.precio > 0 && (
-              <div className="flex justify-between items-center pt-2 border-t border-verde-kurve/20">
-                <span className="text-sm text-gris-kurve-dark">
-                  Precio (ARS)
-                </span>
-                <span className="text-sm font-semibold text-foreground">
-                  ${data.precio.toLocaleString("es-AR")}
-                </span>
-              </div>
-            )}
+            <div className="flex justify-between items-center pt-2 border-t border-verde-kurve/20">
+              <span className="text-sm text-gris-kurve-dark">Precio (ARS)</span>
+              <span className="text-sm font-semibold text-foreground">
+                {data.precio
+                  ? "$" + data.precio.toLocaleString("es-AR")
+                  : "No especificado"}
+              </span>
+            </div>
           </div>
         </div>
 
