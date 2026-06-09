@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/supabase/guard";
 import { resend } from "@/lib/resend";
 
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "noreply@kurve.app";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "kurvedevelops@gmail.com";
 
 // Schema para crear solicitud de corrección
 const createEditRequestSchema = z.object({
@@ -101,53 +102,47 @@ export async function POST(request: Request) {
     );
   }
 
-  // Intentar notificar admins por email
+  // Intentar notificar al admin por email
   // Si falla NO rompe el endpoint
   try {
     const adminClient = createAdminClient();
 
-    // Obtener todos los admins activos
-    const { data: admins } = await adminClient
+    await resend.emails.send({
+      from: `Kurve <${FROM_EMAIL}>`,
+      to: [ADMIN_EMAIL],
+      subject: "Nueva solicitud de corrección",
+      html: `
+        <h2>Nueva solicitud de corrección</h2>
+        <p><strong>Usuario:</strong> ${user.email}</p>
+        <p><strong>Campo:</strong> ${parsed.data.field_name}</p>
+        <p><strong>Valor anterior:</strong> ${oldValue}</p>
+        <p><strong>Nuevo valor:</strong> ${parsed.data.new_value}</p>
+        <p><strong>Motivo:</strong> ${parsed.data.reason ?? "-"}</p>
+      `,
+    });
+
+    // Buscar el user_id del admin para guardar la notificación
+    const { data: adminUser } = await adminClient
       .from("users")
-      .select("id, email")
-      .eq("role", "admin");
+      .select("id")
+      .eq("email", ADMIN_EMAIL)
+      .maybeSingle();
 
-    const adminEmails = (admins ?? [])
-      .map((a) => a.email)
-      .filter((e): e is string => Boolean(e));
-
-    if (adminEmails.length > 0) {
-      await resend.emails.send({
-        from: `Kurve <${FROM_EMAIL}>`,
-        to: adminEmails,
-        subject: "Nueva solicitud de corrección",
-        html: `
-          <h2>Nueva solicitud de corrección</h2>
-          <p><strong>Usuario:</strong> ${user.email}</p>
-          <p><strong>Campo:</strong> ${parsed.data.field_name}</p>
-          <p><strong>Valor anterior:</strong> ${oldValue}</p>
-          <p><strong>Nuevo valor:</strong> ${parsed.data.new_value}</p>
-          <p><strong>Motivo:</strong> ${parsed.data.reason ?? "-"}</p>
-        `,
+    if (adminUser) {
+      await adminClient.from("notifications").insert({
+        user_id: adminUser.id,
+        channel: "email" as const,
+        type: "edit_request_created",
+        payload: {
+          edit_request_id: editRequest.id,
+          activity_log_id: parsed.data.activity_log_id,
+          requested_by: user.id,
+        },
+        sent_at: new Date().toISOString(),
       });
-
-      // Guardar una notificación por cada admin
-      await adminClient.from("notifications").insert(
-        (admins ?? []).map((admin) => ({
-          user_id: admin.id,
-          channel: "email" as const,
-          type: "edit_request_created",
-          payload: {
-            edit_request_id: editRequest.id,
-            activity_log_id: parsed.data.activity_log_id,
-            requested_by: user.id,
-          },
-          sent_at: new Date().toISOString(),
-        }))
-      );
     }
   } catch (error) {
-    console.error("Error enviando email a admins:", error);
+    console.error("Error enviando email al admin:", error);
   }
 
   return NextResponse.json(
