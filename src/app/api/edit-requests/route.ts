@@ -3,9 +3,8 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/guard";
-import { resend } from "@/lib/resend";
+import { resend, FROM_EMAIL } from "@/lib/resend";
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "noreply@kurve.app";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "kurvedevelops@gmail.com";
 
 // Schema para crear solicitud de corrección

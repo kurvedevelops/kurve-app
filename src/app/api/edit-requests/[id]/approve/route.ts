@@ -2,9 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/guard";
-import { resend } from "@/lib/resend";
-
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "noreply@kurve.app";
+import { resend, FROM_EMAIL } from "@/lib/resend";
 
 // POST /api/edit-requests/:id/approve
 // Admin aprueba una solicitud de corrección

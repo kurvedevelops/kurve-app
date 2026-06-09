@@ -1,5 +1,10 @@
 import { Resend } from "resend";
 
+// Remitente: usar dominio propio verificado en Resend cuando esté disponible.
+// Mientras no haya dominio verificado, usar el sandbox de Resend.
+export const FROM_EMAIL =
+  process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
+
 // Inicialización lazy: el cliente se crea la primera vez que se usa,
 // no al importar el módulo (evita error en build si la env var no está disponible).
 let _client: Resend | null = null;
