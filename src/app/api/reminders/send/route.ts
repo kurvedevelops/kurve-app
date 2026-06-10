@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
-import type { Database, Tables } from "@/lib/supabase/database.types";
+import { createServiceClient } from "@/lib/supabase/service";
+import type { Tables } from "@/lib/supabase/database.types";
 
 type UserRow = Pick<Tables<"users">, "id" | "full_name" | "phone">;
 
@@ -16,11 +16,7 @@ export async function POST(request: Request) {
   }
 
   // Cliente con service role para leer todos los usuarios sin restricciones de RLS
-  const supabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } }
-  );
+  const supabase = createServiceClient();
 
   // Fecha de hoy en UTC (formato YYYY-MM-DD)
   const today = new Date().toISOString().split("T")[0];
