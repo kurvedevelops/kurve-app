@@ -127,7 +127,6 @@ export async function POST(request: Request) {
       start_date: parsed.data.start_date,
       end_date: parsed.data.end_date ?? null,
       total_hours: parsed.data.total_hours,
-      // @ts-expect-error campo nuevo pendiente de regenerar types
       total_pieces: parsed.data.total_pieces ?? null,
     })
     .select()

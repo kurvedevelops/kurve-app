@@ -5,10 +5,7 @@ import { Tables } from "@/lib/supabase/database.types";
 import { NuevoClienteFormData } from "@/components/modals/NuevoClienteModal";
 import { EditarClienteFormData } from "@/components/modals/EditarClienteModal";
 import { AsignarPaqueteFormData } from "@/components/modals/AsignarPaquete";
-import {
-  AprovedCorrectionData,
-  CorrectionFormData,
-} from "@/components/modals/member/CorrectionModal";
+import { CorrectionFormData } from "@/components/modals/member/CorrectionModal";
 
 type User = Tables<"users">;
 
@@ -584,18 +581,12 @@ export async function AproveEditRequest(
   if (reqError) throw reqError;
 }
 
-export async function RejectEditRequest(reqId: string, adminId: string) {
-  const supabase = createClient();
-
-  const { error } = await supabase
-    .from("edit_requests")
-    .update({
-      status: "rejected",
-      reviewed_by: adminId,
-      reviewed_at: new Date().toISOString().split("T")[0],
-    })
-    .eq("id", reqId);
-
-  if (error) throw error;
-  console.log(error);
+export async function RejectEditRequest(reqId: string, _adminId: string) {
+  const res = await fetch(`/api/edit-requests/${reqId}/reject`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "Error desconocido" }));
+    throw new Error(body.error ?? "Error desconocido");
+  }
 }
