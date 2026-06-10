@@ -197,7 +197,7 @@ export function CorrectionModal({
               >
                 <option value="">Selecciona la nueva tarea</option>
                 {tasks.map((tarea) => (
-                  <option key={tarea.id} value={tarea.name}>
+                  <option key={tarea.id} value={tarea.id}>
                     {tarea.name}
                   </option>
                 ))}
