@@ -539,14 +539,46 @@ export async function createCorrectionRequest(
   if (error) throw error;
 }
 
-export async function AproveEditRequest(requestId: string) {
-  const res = await fetch(`/api/edit-requests/${requestId}/approve`, {
-    method: "POST",
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: "Error desconocido" }));
-    throw new Error(body.error ?? "Error desconocido");
+export async function AproveEditRequest(
+  data: AprovedCorrectionData,
+  userId: string,
+) {
+  const supabase = createClient();
+
+  const numericFields = ["hours", "pieces_count"];
+  const parsedValue = numericFields.includes(data.field_name)
+    ? Number(data.new_value)
+    : data.new_value;
+
+  if (numericFields.includes(data.field_name) && isNaN(parsedValue as number)) {
+    throw new Error(
+      `Valor inválido para ${data.field_name}: ${data.new_value}`,
+    );
   }
+  console.log("field_name:", data.field_name);
+  console.log("parsedValue:", parsedValue);
+  console.log("activity_log_id:", data.activity_log_id);
+  console.log("userId recibido:", userId, typeof userId);
+
+  const { error: updateError } = await supabase
+    .from("activity_logs")
+    .update({ [data.field_name]: parsedValue })
+    .eq("id", data.activity_log_id);
+
+  if (updateError) throw updateError;
+
+  console.log("Update error:", JSON.stringify(updateError));
+
+  const { error: reqError } = await supabase
+    .from("edit_requests")
+    .update({
+      status: "approved",
+      reviewed_by: userId,
+      reviewed_at: new Date().toISOString(),
+    })
+    .eq("id", data.id);
+
+  if (reqError) throw reqError;
 }
 
 export async function RejectEditRequest(reqId: string, _adminId: string) {

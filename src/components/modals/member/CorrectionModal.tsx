@@ -34,7 +34,7 @@ export interface CorrectionFormData {
 }
 
 export interface AprovedCorrectionData {
-  req_id: string;
+  id: string;
   activity_log_id: string; // FK → activity_logs
   field_name: EditableField; // enum editable_field
   old_value: string; // valor actual (text)
