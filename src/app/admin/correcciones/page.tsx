@@ -40,7 +40,12 @@ const CorrecionesPage = () => {
   const { users, loadingUsers } = useUsers();
   const { tasks, loadingTasks } = useTaskTypes();
 
+  console.log("Usuarios:", users);
+  console.log("Tareas: ", tasks);
+  console.log("Activity Logs:", activityLogs);
+
   const { editRequests, loadingEditRequests } = useEditRequests();
+  console.log("Edit Req: ", editRequests);
 
   const router = useRouter();
 
@@ -116,7 +121,7 @@ const CorrecionesPage = () => {
               <TableHeader>
                 <TableRow className="bg-gray-50">
                   <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
-                    Cliente
+                    Miembro
                   </TableHead>
 
                   <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
@@ -152,7 +157,8 @@ const CorrecionesPage = () => {
                       className="border-b border-[#E4E4E4] hover:bg-transparent"
                     >
                       <TableCell className="px-6 py-6 font-semibold">
-                        {users.find((user) => user.id === req.requested_by)}
+                        {users.find((user) => user.id === req.requested_by)
+                          ?.full_name ?? "-"}
                       </TableCell>
 
                       <TableCell className="font-semibold">
@@ -161,8 +167,8 @@ const CorrecionesPage = () => {
                             task.id ===
                             activityLogs.find(
                               (log) => log.id === req.activity_log_id,
-                            ).task_type_id,
-                        )}
+                            )?.task_type_id,
+                        )?.name ?? "-"}
                       </TableCell>
 
                       <TableCell className="font-semibold">
@@ -193,20 +199,20 @@ const CorrecionesPage = () => {
 
                       <TableCell>
                         {req.status === "pending" && (
-                          <>
+                          <div className="flex gap-3 right-0">
                             <Button
                               variant="outline"
-                              className="h-9 rounded-lg text-sm hover:bg-gray-50"
+                              className="h-9 rounded-lg text-sm hover:bg-verde-kurve/60 hover:text-verde-kurve-dark 0 bg-verde-kurve/30 text-verde-kurve-dark"
                             >
                               Aprobar
                             </Button>
                             <Button
                               variant="outline"
-                              className="h-9 rounded-lg text-sm hover:bg-gray-50"
+                              className="h-9 rounded-lg text-sm hover:bg-red-600/70 hover:text-red-850 bg-red-600/50 text-red-800"
                             >
                               Rechazar
                             </Button>
-                          </>
+                          </div>
                         )}
                       </TableCell>
                     </TableRow>

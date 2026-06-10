@@ -5,6 +5,7 @@ import { Tables } from "@/lib/supabase/database.types";
 import { NuevoClienteFormData } from "@/components/modals/NuevoClienteModal";
 import { EditarClienteFormData } from "@/components/modals/EditarClienteModal";
 import { AsignarPaqueteFormData } from "@/components/modals/AsignarPaquete";
+import { CorrectionFormData } from "@/components/modals/member/CorrectionModal";
 
 type User = Tables<"users">;
 
@@ -363,7 +364,7 @@ export function useTaskTypes() {
   return { tasks, loadingTasks, error };
 }
 
-type ActivityLogWithRelations = {
+export type ActivityLogWithRelations = {
   id: string;
   hours: number;
   pieces_count: number;
@@ -517,4 +518,24 @@ export function useEditRequests() {
     fetchEditRequests();
   }, []);
   return { editRequests, loadingEditRequests, error };
+}
+
+export async function createCorrectionRequest(
+  data: CorrectionFormData,
+  userId: string,
+) {
+  const supabase = createClient();
+
+  const { error } = await supabase.from("edit_requests").insert({
+    activity_log_id: data.activity_log_id,
+    requested_by: userId,
+    field_name: data.field_name,
+    old_value: data.old_value,
+    new_value: data.new_value,
+    reason: data.reason,
+    status: "pending",
+    created_at: new Date().toISOString().split("T")[0],
+  });
+
+  if (error) throw error;
 }
