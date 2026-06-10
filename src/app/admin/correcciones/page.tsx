@@ -22,11 +22,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import {
+  AprovedCorrectionData,
+  CorrectionFormData,
+} from "@/components/modals/member/CorrectionModal";
 import { toast } from "sonner";
 
 const CorrecionesPage = () => {
-  const router = useRouter();
-
   const statusLabels = {
     pending: "Pendientes",
     approved: "Aprobadas",
@@ -62,18 +64,18 @@ const CorrecionesPage = () => {
 
   const userId = user?.id;
 
-  const handleAproveRequest = async (requestId: string) => {
+  const handleAproveRequest = async (
+    data: AprovedCorrectionData,
+    userId: string,
+  ) => {
     try {
       setAprovingReq(true);
-      await AproveEditRequest(requestId);
-      toast.success("Corrección aprobada", {
-        description: "El consumo del cliente se recalculó automáticamente.",
-      });
-      router.refresh();
-    } catch (err) {
-      toast.error("No se pudo aprobar", {
-        description: err instanceof Error ? err.message : "Error desconocido",
-      });
+      await AproveEditRequest(data, userId);
+      toast.success(
+        "Pedido de correccion aprobado, la actividad ha sido modificada",
+      );
+    } catch {
+      toast.error("Error al aprobar correccion");
     } finally {
       setAprovingReq(false);
     }
@@ -82,12 +84,11 @@ const CorrecionesPage = () => {
   const handleRejectReq = async (reqId: string, adminId: string) => {
     try {
       await RejectEditRequest(reqId, adminId);
-      toast.success("Corrección rechazada");
-      router.refresh();
-    } catch (err) {
-      toast.error("No se pudo rechazar", {
-        description: err instanceof Error ? err.message : "Error desconocido",
-      });
+      toast.success(
+        "Pedido de correccion rechazado, la actividad se mantiene igual",
+      );
+    } catch {
+      toast.error("Error al rechazar correccion");
     }
   };
 
@@ -259,7 +260,7 @@ const CorrecionesPage = () => {
                                   variant="outline"
                                   className="h-9 rounded-lg text-sm hover:bg-verde-kurve/60 hover:text-verde-kurve-dark bg-verde-kurve/30 text-verde-kurve-dark"
                                   onClick={() =>
-                                    handleAproveRequest(req.id)
+                                    handleAproveRequest(req, req.requested_by)
                                   }
                                 >
                                   Aprobar
@@ -308,7 +309,11 @@ const CorrecionesPage = () => {
                                 Valor nuevo
                               </p>
                               <p className="text-sm font-medium text-green-800">
-                                {req.new_value ?? "-"}
+                                {req.field_name === "task_type_id"
+                                  ? tasks.find(
+                                      (task) => task.id == req.new_value,
+                                    )?.name
+                                  : req.new_value}
                               </p>
                             </div>
 
