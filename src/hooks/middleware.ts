@@ -5,10 +5,7 @@ import { Tables } from "@/lib/supabase/database.types";
 import { NuevoClienteFormData } from "@/components/modals/NuevoClienteModal";
 import { EditarClienteFormData } from "@/components/modals/EditarClienteModal";
 import { AsignarPaqueteFormData } from "@/components/modals/AsignarPaquete";
-import {
-  AprovedCorrectionData,
-  CorrectionFormData,
-} from "@/components/modals/member/CorrectionModal";
+import { CorrectionFormData } from "@/components/modals/member/CorrectionModal";
 
 type User = Tables<"users">;
 
@@ -542,59 +539,22 @@ export async function createCorrectionRequest(
   if (error) throw error;
 }
 
-export async function AproveEditRequest(
-  data: AprovedCorrectionData,
-  userId: string,
-) {
-  const supabase = createClient();
-  const { data: session } = await supabase.auth.getSession();
-  console.log("Session:", session?.session?.user?.id);
-  console.log("Role from JWT:", session?.session?.user?.role);
-
-  const numericFields = ["hours", "pieces_count"];
-  const parsedValue = numericFields.includes(data.field_name)
-    ? Number(data.new_value)
-    : data.new_value;
-
-  if (numericFields.includes(data.field_name) && isNaN(parsedValue as number)) {
-    throw new Error(
-      `Valor inválido para ${data.field_name}: ${data.new_value}`,
-    );
+export async function AproveEditRequest(requestId: string) {
+  const res = await fetch(`/api/edit-requests/${requestId}/approve`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "Error desconocido" }));
+    throw new Error(body.error ?? "Error desconocido");
   }
-
-  const { error: updateError } = await supabase
-    .from("activity_logs")
-    .update({ [data.field_name]: parsedValue })
-    .eq("id", data.activity_log_id);
-
-  console.log("Update error:", JSON.stringify(updateError));
-
-  if (updateError) throw updateError;
-
-  const { error: reqError } = await supabase
-    .from("edit_requests")
-    .update({
-      status: "approved",
-      reviewed_by: userId,
-      reviewed_at: new Date().toISOString().split("T")[0],
-    })
-    .eq("id", data.req_id);
-
-  if (reqError) throw reqError;
 }
 
-export async function RejectEditRequest(reqId: string, adminId: string) {
-  const supabase = createClient();
-
-  const { error } = await supabase
-    .from("edit_requests")
-    .update({
-      status: "rejected",
-      reviewed_by: adminId,
-      reviewed_at: new Date().toISOString().split("T")[0],
-    })
-    .eq("id", reqId);
-
-  if (error) throw error;
-  console.log(error);
+export async function RejectEditRequest(reqId: string, _adminId: string) {
+  const res = await fetch(`/api/edit-requests/${reqId}/reject`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "Error desconocido" }));
+    throw new Error(body.error ?? "Error desconocido");
+  }
 }

@@ -22,13 +22,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import {
-  AprovedCorrectionData,
-  CorrectionFormData,
-} from "@/components/modals/member/CorrectionModal";
 import { toast } from "sonner";
 
 const CorrecionesPage = () => {
+  const router = useRouter();
+
   const statusLabels = {
     pending: "Pendientes",
     approved: "Aprobadas",
@@ -64,18 +62,18 @@ const CorrecionesPage = () => {
 
   const userId = user?.id;
 
-  const handleAproveRequest = async (
-    data: AprovedCorrectionData,
-    userId: string,
-  ) => {
+  const handleAproveRequest = async (requestId: string) => {
     try {
       setAprovingReq(true);
-      await AproveEditRequest(data, userId);
-      toast.success(
-        "Pedido de correccion aprobado, la actividad ha sido modificada",
-      );
-    } catch {
-      toast.error("Error al aprobar correccion");
+      await AproveEditRequest(requestId);
+      toast.success("Corrección aprobada", {
+        description: "El consumo del cliente se recalculó automáticamente.",
+      });
+      router.refresh();
+    } catch (err) {
+      toast.error("No se pudo aprobar", {
+        description: err instanceof Error ? err.message : "Error desconocido",
+      });
     } finally {
       setAprovingReq(false);
     }
@@ -84,11 +82,12 @@ const CorrecionesPage = () => {
   const handleRejectReq = async (reqId: string, adminId: string) => {
     try {
       await RejectEditRequest(reqId, adminId);
-      toast.success(
-        "Pedido de correccion rechazado, la actividad se mantiene igual",
-      );
-    } catch {
-      toast.error("Error al rechazar correccion");
+      toast.success("Corrección rechazada");
+      router.refresh();
+    } catch (err) {
+      toast.error("No se pudo rechazar", {
+        description: err instanceof Error ? err.message : "Error desconocido",
+      });
     }
   };
 
@@ -260,7 +259,7 @@ const CorrecionesPage = () => {
                                   variant="outline"
                                   className="h-9 rounded-lg text-sm hover:bg-verde-kurve/60 hover:text-verde-kurve-dark bg-verde-kurve/30 text-verde-kurve-dark"
                                   onClick={() =>
-                                    handleAproveRequest(req, req.requested_by)
+                                    handleAproveRequest(req.id)
                                   }
                                 >
                                   Aprobar
