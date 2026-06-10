@@ -5,7 +5,10 @@ import { Tables } from "@/lib/supabase/database.types";
 import { NuevoClienteFormData } from "@/components/modals/NuevoClienteModal";
 import { EditarClienteFormData } from "@/components/modals/EditarClienteModal";
 import { AsignarPaqueteFormData } from "@/components/modals/AsignarPaquete";
-import { CorrectionFormData } from "@/components/modals/member/CorrectionModal";
+import {
+  AprovedCorrectionData,
+  CorrectionFormData,
+} from "@/components/modals/member/CorrectionModal";
 
 type User = Tables<"users">;
 
@@ -352,7 +355,6 @@ export function useTaskTypes() {
         if (error) throw error;
 
         setTasks(data);
-        console.log(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error desconocido");
       } finally {
@@ -538,4 +540,61 @@ export async function createCorrectionRequest(
   });
 
   if (error) throw error;
+}
+
+export async function AproveEditRequest(
+  data: AprovedCorrectionData,
+  userId: string,
+) {
+  const supabase = createClient();
+  const { data: session } = await supabase.auth.getSession();
+  console.log("Session:", session?.session?.user?.id);
+  console.log("Role from JWT:", session?.session?.user?.role);
+
+  const numericFields = ["hours", "pieces_count"];
+  const parsedValue = numericFields.includes(data.field_name)
+    ? Number(data.new_value)
+    : data.new_value;
+
+  if (numericFields.includes(data.field_name) && isNaN(parsedValue as number)) {
+    throw new Error(
+      `Valor inválido para ${data.field_name}: ${data.new_value}`,
+    );
+  }
+
+  const { error: updateError } = await supabase
+    .from("activity_logs")
+    .update({ [data.field_name]: parsedValue })
+    .eq("id", data.activity_log_id);
+
+  console.log("Update error:", JSON.stringify(updateError));
+
+  if (updateError) throw updateError;
+
+  const { error: reqError } = await supabase
+    .from("edit_requests")
+    .update({
+      status: "approved",
+      reviewed_by: userId,
+      reviewed_at: new Date().toISOString().split("T")[0],
+    })
+    .eq("id", data.req_id);
+
+  if (reqError) throw reqError;
+}
+
+export async function RejectEditRequest(reqId: string, adminId: string) {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("edit_requests")
+    .update({
+      status: "rejected",
+      reviewed_by: adminId,
+      reviewed_at: new Date().toISOString().split("T")[0],
+    })
+    .eq("id", reqId);
+
+  if (error) throw error;
+  console.log(error);
 }
