@@ -51,7 +51,6 @@ const MisActividadesPage = () => {
   );
 
   const totalPages = Math.ceil(totalCount / 5);
-  const fechasUnicas = [...new Set(activityLogs.map((log) => log.log_date))];
 
   async function handleCorrectionSubmit(data: CorrectionFormData) {
     try {

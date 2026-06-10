@@ -77,7 +77,7 @@ const MembersPage = () => {
           </p>
         </div>
 
-        <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm overflow-x-auto">
+        <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm overflow-x-auto bg-white">
           <div className="flex items-center justify-between mb-5 gap-3 mt-4 ml-4 mr-4">
             <h2 className="text-base font-medium text-gray-900">
               Listado de Integrantes
