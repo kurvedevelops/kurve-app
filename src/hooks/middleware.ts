@@ -547,9 +547,6 @@ export async function AproveEditRequest(
   userId: string,
 ) {
   const supabase = createClient();
-  const { data: session } = await supabase.auth.getSession();
-  console.log("Session:", session?.session?.user?.id);
-  console.log("Role from JWT:", session?.session?.user?.role);
 
   const numericFields = ["hours", "pieces_count"];
   const parsedValue = numericFields.includes(data.field_name)
@@ -561,24 +558,28 @@ export async function AproveEditRequest(
       `Valor inválido para ${data.field_name}: ${data.new_value}`,
     );
   }
+  console.log("field_name:", data.field_name);
+  console.log("parsedValue:", parsedValue);
+  console.log("activity_log_id:", data.activity_log_id);
+  console.log("userId recibido:", userId, typeof userId);
 
   const { error: updateError } = await supabase
     .from("activity_logs")
     .update({ [data.field_name]: parsedValue })
     .eq("id", data.activity_log_id);
 
-  console.log("Update error:", JSON.stringify(updateError));
-
   if (updateError) throw updateError;
+
+  console.log("Update error:", JSON.stringify(updateError));
 
   const { error: reqError } = await supabase
     .from("edit_requests")
     .update({
       status: "approved",
       reviewed_by: userId,
-      reviewed_at: new Date().toISOString().split("T")[0],
+      reviewed_at: new Date().toISOString(),
     })
-    .eq("id", data.req_id);
+    .eq("id", data.id);
 
   if (reqError) throw reqError;
 }
