@@ -87,8 +87,8 @@ const MisActividadesPage = () => {
           </p>
         </div>
         <div className="flex flex-col gap-6">
-          <div className="p-6 bg-white rounded-lg shadow">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-6 bg-white border border-[#E4E4E4] overflow-hidden overflow-x-auto rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-4 mb-4">
                 <label className="font-semibold text-foreground">Fecha</label>
                 <select
@@ -127,20 +127,7 @@ const MisActividadesPage = () => {
                   ))}
                 </select>
               </div>
-              <div className="flex flex-col gap-4 mb-4">
-                <label className="font-semibold text-foreground">Estado</label>
-                <select
-                  className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
-                  value={filters.status}
-                  onChange={(e) =>
-                    setFilters({ ...filters, status: e.target.value })
-                  }
-                >
-                  <option value="">Seleccionar estado</option>
-                  <option value="delivered">Entregado</option>
-                  <option value="in_progress">En progreso</option>
-                </select>
-              </div>
+
               <div className="lg:col-span-4">
                 <Button
                   onClick={() => setAppliedFilters({ ...filters, page: 0 })}
@@ -161,7 +148,7 @@ const MisActividadesPage = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white border border-[#E4E4E4] rounded-2xl overflow-hidden shadow-sm overflow-x-auto">
+          <div className="bg-white border border-[#E4E4E4] overflow-hidden overflow-x-auto rounded-lg">
             <Table className="w-full">
               <TableHeader>
                 <TableRow className="bg-gray-50">

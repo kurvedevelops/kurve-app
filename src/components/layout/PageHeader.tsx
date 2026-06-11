@@ -46,18 +46,17 @@ const PageHeader = ({
 
       {/* Actions */}
       {(actions || children) && (
-        <div className="flex gap-3 w-full md:mt-5 md:w-[300px]">
+        <div className="flex gap-3 md:mt-5 max-w-65">
           {actions?.map((action, index) => (
             <button
               key={index}
               onClick={action.onClick}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors max-w-fit ${
                 action.variant === "primary"
                   ? "bg-verde-kurve text-white hover:bg-verde-kurve-dark"
                   : "border border-border bg-background hover:bg-gris-kurve-light text-foreground"
               }`}
             >
-              {action.icon}
               {action.label}
             </button>
           ))}

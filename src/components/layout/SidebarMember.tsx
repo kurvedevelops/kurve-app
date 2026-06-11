@@ -10,6 +10,7 @@ const SidebarMember = () => {
       links: [
         { label: "Registrar actividad", href: "/member/registrar" },
         { label: "Mis registros", href: "/member/mis-actividades" },
+        { label: "Mis solicitudes", href: "/member/mis-solicitudes" },
       ],
     },
     {
