@@ -67,8 +67,8 @@ const MemberDetail = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-          <Card className="lg:col-span-2 py-6 px-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8 ">
+          <Card className="bg-white lg:col-span-2 py-6 px-2">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-xl">Clientes asociados</CardTitle>
 
@@ -128,7 +128,7 @@ const MemberDetail = () => {
           </Card>
 
           <div className="flex flex-col gap-6">
-            <Card className="px-2 py-4">
+            <Card className="px-2 py-4 bg-white">
               <CardHeader>
                 <CardTitle className="textlg flex items-center gap-4">
                   <Link2 size={28} color="#0c4450" />
