@@ -5,21 +5,21 @@ import TaskTypesTable from "@/components/admin/TaskTypeTable";
 import PieceCategoriesTable from "@/components/admin/PieceCategoriesTable";
 
 const category = [
-    {
+  {
     id: 1,
     nombre: "Community Management",
     cuentaComoPieza: true,
     rolesPermitidos: ["Diseño", "Social Media"],
     activo: true,
   },
-      {
+  {
     id: 2,
     nombre: "Community Management",
     cuentaComoPieza: true,
     rolesPermitidos: ["Diseño", "Social Media"],
     activo: true,
   },
-]
+];
 
 const taskTypes = [
   {
@@ -39,8 +39,8 @@ const taskTypes = [
   {
     id: 3,
     nombre: "Reunión de coordinación",
-    cuentaComoPieza: true,
-    rolesPermitidos: ["Edicion de video"],
+    cuentaComoPieza: false,
+    rolesPermitidos: ["Todos"],
     activo: false,
   },
   {
@@ -105,11 +105,11 @@ const ConfigurationPage = () => {
             </TabsList>
 
             <TabsContent value="tarea">
-              <TaskTypesTable taskTypes={taskTypes}/>
+              <TaskTypesTable taskTypes={taskTypes} />
             </TabsContent>
 
             <TabsContent value="piezas">
-              <PieceCategoriesTable categories={category}/>
+              <PieceCategoriesTable categories={category} />
             </TabsContent>
           </Tabs>
         </div>
