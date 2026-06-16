@@ -26,6 +26,7 @@ export type Database = {
           notes: string | null
           pieces_count: number
           status: Database["public"]["Enums"]["activity_status"]
+          subtype_id: string | null
           task_type_id: string
           updated_at: string
           user_id: string
@@ -41,6 +42,7 @@ export type Database = {
           notes?: string | null
           pieces_count?: number
           status?: Database["public"]["Enums"]["activity_status"]
+          subtype_id?: string | null
           task_type_id: string
           updated_at?: string
           user_id: string
@@ -56,6 +58,7 @@ export type Database = {
           notes?: string | null
           pieces_count?: number
           status?: Database["public"]["Enums"]["activity_status"]
+          subtype_id?: string | null
           task_type_id?: string
           updated_at?: string
           user_id?: string
@@ -73,6 +76,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_logs_subtype_id_fkey"
+            columns: ["subtype_id"]
+            isOneToOne: false
+            referencedRelation: "task_subtypes"
             referencedColumns: ["id"]
           },
           {
@@ -204,6 +214,7 @@ export type Database = {
           consumed: number
           id: string
           package_id: string
+          task_type_id: string | null
           updated_at: string
         }
         Insert: {
@@ -211,6 +222,7 @@ export type Database = {
           consumed?: number
           id?: string
           package_id: string
+          task_type_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -218,6 +230,7 @@ export type Database = {
           consumed?: number
           id?: string
           package_id?: string
+          task_type_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -241,6 +254,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_client_consumption"
             referencedColumns: ["package_id"]
+          },
+          {
+            foreignKeyName: "consumption_summary_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "v_consumption_by_task_type"
+            referencedColumns: ["package_id"]
+          },
+          {
+            foreignKeyName: "consumption_summary_task_type_id_fkey"
+            columns: ["task_type_id"]
+            isOneToOne: false
+            referencedRelation: "task_types"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -390,6 +417,13 @@ export type Database = {
             referencedRelation: "v_client_consumption"
             referencedColumns: ["package_id"]
           },
+          {
+            foreignKeyName: "package_pieces_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "v_consumption_by_task_type"
+            referencedColumns: ["package_id"]
+          },
         ]
       }
       packages: {
@@ -403,6 +437,7 @@ export type Database = {
           start_date: string | null
           status: Database["public"]["Enums"]["client_status"]
           total_hours: number
+          total_pieces: number | null
         }
         Insert: {
           client_id: string
@@ -414,6 +449,7 @@ export type Database = {
           start_date?: string | null
           status?: Database["public"]["Enums"]["client_status"]
           total_hours: number
+          total_pieces?: number | null
         }
         Update: {
           client_id?: string
@@ -425,6 +461,7 @@ export type Database = {
           start_date?: string | null
           status?: Database["public"]["Enums"]["client_status"]
           total_hours?: number
+          total_pieces?: number | null
         }
         Relationships: [
           {
@@ -457,21 +494,65 @@ export type Database = {
         }
         Relationships: []
       }
+      task_subtypes: {
+        Row: {
+          active: boolean
+          created_at: string
+          display_order: number
+          id: string
+          name: string
+          task_type_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          display_order?: number
+          id?: string
+          name: string
+          task_type_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          display_order?: number
+          id?: string
+          name?: string
+          task_type_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_subtypes_task_type_id_fkey"
+            columns: ["task_type_id"]
+            isOneToOne: false
+            referencedRelation: "task_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_types: {
         Row: {
           active: boolean
+          allowed_roles: Database["public"]["Enums"]["user_role"][]
+          counts_as_piece: boolean
           created_at: string
           id: string
           name: string
         }
         Insert: {
           active?: boolean
+          allowed_roles?: Database["public"]["Enums"]["user_role"][]
+          counts_as_piece?: boolean
           created_at?: string
           id?: string
           name: string
         }
         Update: {
           active?: boolean
+          allowed_roles?: Database["public"]["Enums"]["user_role"][]
+          counts_as_piece?: boolean
           created_at?: string
           id?: string
           name?: string
@@ -521,6 +602,32 @@ export type Database = {
           traffic_light: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "packages_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_consumption_by_task_type: {
+        Row: {
+          client_id: string | null
+          consumed_hours: number | null
+          package_id: string | null
+          percent_of_total: number | null
+          task_name: string | null
+          task_type_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumption_summary_task_type_id_fkey"
+            columns: ["task_type_id"]
+            isOneToOne: false
+            referencedRelation: "task_types"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "packages_client_id_fkey"
             columns: ["client_id"]

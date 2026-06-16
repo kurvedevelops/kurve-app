@@ -63,7 +63,7 @@ const ClientDetailPage = () => {
       onClick: () => setShowEditarClienteModal(true),
     },
     {
-      label: "Asignar paquete",
+      label: "+ Asignar paquete",
       variant: "primary" as const,
       onClick: () => setShowAsignarPaqueteModal(true),
     },

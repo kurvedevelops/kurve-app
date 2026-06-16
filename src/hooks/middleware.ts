@@ -5,6 +5,10 @@ import { Tables } from "@/lib/supabase/database.types";
 import { NuevoClienteFormData } from "@/components/modals/NuevoClienteModal";
 import { EditarClienteFormData } from "@/components/modals/EditarClienteModal";
 import { AsignarPaqueteFormData } from "@/components/modals/AsignarPaquete";
+import {
+  AprovedCorrectionData,
+  CorrectionFormData,
+} from "@/components/modals/member/CorrectionModal";
 
 type User = Tables<"users">;
 
@@ -159,6 +163,32 @@ export function useClientsByUser(userId: string) {
   }, [userId]);
 
   return { clientsId, loadingClientsId, error };
+}
+
+export function useUsers() {
+  const [users, setUsers] = useState<any[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.from("users").select("*");
+
+        if (error) throw error;
+
+        setUsers(data || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  return { users, loadingUsers, error };
 }
 
 export function useClients() {
@@ -325,7 +355,6 @@ export function useTaskTypes() {
         if (error) throw error;
 
         setTasks(data);
-        console.log(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error desconocido");
       } finally {
@@ -337,7 +366,7 @@ export function useTaskTypes() {
   return { tasks, loadingTasks, error };
 }
 
-type ActivityLogWithRelations = {
+export type ActivityLogWithRelations = {
   id: string;
   hours: number;
   pieces_count: number;
@@ -350,14 +379,19 @@ type ActivityLogWithRelations = {
   piece_categories: { id: string; name: string } | null;
 };
 
-export function useActivityLogs(userId: string, filters?: {
-  client_id?: string;
-  status?: string;
-  from?: string;
-  to?: string;
-  page?: number;
-}) {
-  const [activityLogs, setActivityLogs] = useState<ActivityLogWithRelations[]>([]);
+export function useActivityLogs(
+  userId: string,
+  filters?: {
+    client_id?: string;
+    status?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+  },
+) {
+  const [activityLogs, setActivityLogs] = useState<ActivityLogWithRelations[]>(
+    [],
+  );
   const [totalCount, setTotalCount] = useState(0);
   const [loadingActivityLogs, setLoadingActivityLogs] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -368,20 +402,21 @@ export function useActivityLogs(userId: string, filters?: {
         const supabase = createClient();
         let query = supabase
           .from("activity_logs")
-          .select(`
+          .select(
+            `
             *,
             task_types ( id, name ),
             clients ( id, name ),
             piece_categories ( id, name )
-          `, { count: "exact" })
+          `,
+            { count: "exact" },
+          )
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
-          .range(
-            (filters?.page ?? 0) * 5,
-            (filters?.page ?? 0) * 5 + 4
-          );
+          .range((filters?.page ?? 0) * 5, (filters?.page ?? 0) * 5 + 4);
 
-        if (filters?.client_id) query = query.eq("client_id", filters.client_id);
+        if (filters?.client_id)
+          query = query.eq("client_id", filters.client_id);
         if (filters?.status) query = query.eq("status", filters.status);
         if (filters?.from) query = query.gte("log_date", filters.from);
         if (filters?.to) query = query.lte("log_date", filters.to);
@@ -397,7 +432,14 @@ export function useActivityLogs(userId: string, filters?: {
     };
 
     if (userId) fetchActivityLogs();
-  }, [userId, filters?.client_id, filters?.status, filters?.from, filters?.to, filters?.page]);
+  }, [
+    userId,
+    filters?.client_id,
+    filters?.status,
+    filters?.from,
+    filters?.to,
+    filters?.page,
+  ]);
 
   return { activityLogs, loadingActivityLogs, error, totalCount };
 }
@@ -422,4 +464,164 @@ export function useActivityLogDates(userId: string) {
   }, [userId]);
 
   return { dates };
+}
+
+export function useActivityLogsForRequests() {
+  const [activityLogs, setActivityLogs] = useState<any[]>([]);
+  const [loadingActivityLogs, setLoadingActivityLogs] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchActivityLogs = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("activity_logs")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        setActivityLogs(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingActivityLogs(false);
+      }
+    };
+    fetchActivityLogs();
+  }, []);
+  return { activityLogs, loadingActivityLogs, error };
+}
+
+export function useEditRequests() {
+  const [editRequests, setEditRequests] = useState<any[]>([]);
+  const [loadingEditRequests, setLoadingEditRequests] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchEditRequests = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("edit_requests")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        setEditRequests(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingEditRequests(false);
+      }
+    };
+    fetchEditRequests();
+  }, []);
+  return { editRequests, loadingEditRequests, error };
+}
+
+export function useEditRequestsById(userId: string) {
+  const [editRequests, setEditRequests] = useState<any[]>([]);
+  const [loadingEditRequests, setLoadingEditRequests] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchEditRequests = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("edit_requests")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .eq("requested_by", userId);
+
+        if (error) throw error;
+
+        setEditRequests(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingEditRequests(false);
+      }
+    };
+    fetchEditRequests();
+  }, [userId]);
+  return { editRequests, loadingEditRequests, error };
+}
+
+export async function createCorrectionRequest(
+  data: CorrectionFormData,
+  userId: string,
+) {
+  const supabase = createClient();
+
+  const { error } = await supabase.from("edit_requests").insert({
+    activity_log_id: data.activity_log_id,
+    requested_by: userId,
+    field_name: data.field_name,
+    old_value: data.old_value,
+    new_value: data.new_value,
+    reason: data.reason,
+    status: "pending",
+    created_at: new Date().toISOString().split("T")[0],
+  });
+
+  if (error) throw error;
+}
+
+export async function AproveEditRequest(
+  data: AprovedCorrectionData,
+  userId: string,
+) {
+  const supabase = createClient();
+  console.log(data);
+
+  const numericFields = ["hours", "pieces_count"];
+  const parsedValue = numericFields.includes(data.field_name)
+    ? Number(data.new_value)
+    : data.new_value;
+
+  if (numericFields.includes(data.field_name) && isNaN(parsedValue as number)) {
+    throw new Error(
+      `Valor inválido para ${data.field_name}: ${data.new_value}`,
+    );
+  }
+
+  const { error: updateError } = await supabase
+    .from("activity_logs")
+    .update({ [data.field_name]: parsedValue })
+    .eq("id", data.activity_log_id);
+
+  console.log("Update error:", JSON.stringify(updateError));
+
+  if (updateError) throw updateError;
+
+  const { error: reqError } = await supabase
+    .from("edit_requests")
+    .update({
+      status: "approved",
+      reviewed_by: userId,
+      reviewed_at: new Date().toISOString().split("T")[0],
+    })
+    .eq("id", data.id);
+
+  if (reqError) throw reqError;
+}
+
+export async function RejectEditRequest(reqId: string, adminId: string) {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("edit_requests")
+    .update({
+      status: "rejected",
+      reviewed_by: adminId,
+      reviewed_at: new Date().toISOString().split("T")[0],
+    })
+    .eq("id", reqId);
+
+  if (error) throw error;
+  console.log(error);
 }

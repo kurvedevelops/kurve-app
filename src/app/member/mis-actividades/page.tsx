@@ -16,9 +16,15 @@ import {
   useActivityLogs,
   useClients,
   useActivityLogDates,
+  createCorrectionRequest,
 } from "@/hooks/middleware";
 import Link from "next/link";
 import { useState } from "react";
+import { toast } from "sonner";
+import {
+  CorrectionFormData,
+  CorrectionModal,
+} from "@/components/modals/member/CorrectionModal";
 
 const MisActividadesPage = () => {
   const { user } = useCurrentUser();
@@ -35,12 +41,27 @@ const MisActividadesPage = () => {
   const [filters, setFilters] = useState(defaultFilters);
   const [appliedFilters, setAppliedFilters] = useState(defaultFilters);
 
+  const [correctionActivity, setCorrectionActivity] = useState<
+    (typeof activityLogs)[number] | null
+  >(null);
+
   const { activityLogs, loadingActivityLogs, totalCount } = useActivityLogs(
     user?.id || "",
     appliedFilters,
   );
 
   const totalPages = Math.ceil(totalCount / 5);
+
+  async function handleCorrectionSubmit(data: CorrectionFormData) {
+    try {
+      await createCorrectionRequest(data, user?.id || "");
+      toast.success("Solicitud de corrección enviada con éxito");
+    } catch {
+      toast.error("Error al enviar la solicitud de corrección");
+    } finally {
+      setCorrectionActivity(null);
+    }
+  }
 
   return (
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
@@ -66,8 +87,8 @@ const MisActividadesPage = () => {
           </p>
         </div>
         <div className="flex flex-col gap-6">
-          <div className="p-6 bg-white rounded-lg shadow">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-6 bg-white border border-[#E4E4E4] overflow-hidden overflow-x-auto rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-4 mb-4">
                 <label className="font-semibold text-foreground">Fecha</label>
                 <select
@@ -106,20 +127,7 @@ const MisActividadesPage = () => {
                   ))}
                 </select>
               </div>
-              <div className="flex flex-col gap-4 mb-4">
-                <label className="font-semibold text-foreground">Estado</label>
-                <select
-                  className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
-                  value={filters.status}
-                  onChange={(e) =>
-                    setFilters({ ...filters, status: e.target.value })
-                  }
-                >
-                  <option value="">Seleccionar estado</option>
-                  <option value="delivered">Entregado</option>
-                  <option value="in_progress">En progreso</option>
-                </select>
-              </div>
+
               <div className="lg:col-span-4">
                 <Button
                   onClick={() => setAppliedFilters({ ...filters, page: 0 })}
@@ -140,39 +148,27 @@ const MisActividadesPage = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white border border-[#E4E4E4] rounded-2xl overflow-hidden shadow-sm overflow-x-auto">
-            <Table>
+          <div className="bg-white border border-[#E4E4E4] overflow-hidden overflow-x-auto rounded-lg">
+            <Table className="w-full">
               <TableHeader>
-                <TableRow className="bg-white hover:bg-white border-b border-[#E4E4E4]">
-                  <TableHead className="h-12 px-6 text-[14px] font-semibold text-black">
+                <TableRow className="bg-gray-50">
+                  <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
                     Cliente
                   </TableHead>
 
-                  <TableHead className="text-sm font-semibold text-black">
+                  <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
                     Tarea
                   </TableHead>
 
-                  <TableHead className="text-sm font-semibold text-black">
-                    Categoría
-                  </TableHead>
-
-                  <TableHead className="text-sm font-semibold text-black">
+                  <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
                     Horas
                   </TableHead>
 
-                  <TableHead className="text-sm font-semibold text-black">
-                    Piezas
-                  </TableHead>
-
-                  <TableHead className="text-sm font-semibold text-black">
-                    Estado
-                  </TableHead>
-
-                  <TableHead className="text-sm font-semibold text-black">
+                  <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
                     Fecha
                   </TableHead>
 
-                  <TableHead className="text-sm font-semibold text-black">
+                  <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
                     Acciones
                   </TableHead>
                 </TableRow>
@@ -210,33 +206,7 @@ const MisActividadesPage = () => {
                       </TableCell>
 
                       <TableCell className="font-semibold">
-                        {activity.piece_categories?.name || "-"}
-                      </TableCell>
-
-                      <TableCell className="font-semibold">
                         {activity.hours}
-                      </TableCell>
-
-                      <TableCell className="font-semibold">
-                        {activity.pieces_count}
-                      </TableCell>
-
-                      <TableCell>
-                        <span
-                          className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${
-                            activity.status === "delivered"
-                              ? "bg-green-100 text-green-800"
-                              : activity.status === "in_progress"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {activity.status === "delivered"
-                            ? "Entregado"
-                            : activity.status === "in_progress"
-                              ? "En progreso"
-                              : activity.status}
-                        </span>
                       </TableCell>
 
                       <TableCell className="text-[15px]">
@@ -247,6 +217,7 @@ const MisActividadesPage = () => {
                         <Button
                           variant="outline"
                           className="h-9 rounded-lg text-sm hover:bg-gray-50"
+                          onClick={() => setCorrectionActivity(activity)}
                         >
                           Solicitar corrección
                         </Button>
@@ -292,6 +263,12 @@ const MisActividadesPage = () => {
             )}
           </div>
         </div>
+        <CorrectionModal
+          open={correctionActivity !== null}
+          onClose={() => setCorrectionActivity(null)}
+          onSubmit={handleCorrectionSubmit}
+          activity={correctionActivity}
+        />
       </main>
     </div>
   );

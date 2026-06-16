@@ -26,7 +26,10 @@ const asignarPaqueteSchema = z.object({
       (date) => new Date(date) <= new Date(),
       "La fecha no puede ser en el futuro",
     ),
-  fechaFin: z.string().optional().or(z.literal("")),
+  fechaFin: z
+    .string()
+    .optional()
+    .or(z.literal("").transform((v) => v ?? "")),
   publicaciones: z.record(
     z.string(),
     z.number().min(0, "No puede ser negativo"),
@@ -263,6 +266,7 @@ export function AsignarPaqueteModal({
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">
               Inicio
+              <span className="ml-1 text-red-500">*</span>
             </label>
             <input
               type="date"
