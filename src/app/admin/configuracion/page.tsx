@@ -39,8 +39,8 @@ const taskTypes = [
   {
     id: 3,
     nombre: "Reunión de coordinación",
-    cuentaComoPieza: true,
-    rolesPermitidos: ["Edicion de video"],
+    cuentaComoPieza: false,
+    rolesPermitidos: ["Todos"],
     activo: false,
   },
   {
