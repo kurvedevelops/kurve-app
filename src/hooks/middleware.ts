@@ -522,6 +522,35 @@ export function useEditRequests() {
   return { editRequests, loadingEditRequests, error };
 }
 
+export function useEditRequestsById(userId: string) {
+  const [editRequests, setEditRequests] = useState<any[]>([]);
+  const [loadingEditRequests, setLoadingEditRequests] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchEditRequests = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("edit_requests")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .eq("requested_by", userId);
+
+        if (error) throw error;
+
+        setEditRequests(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingEditRequests(false);
+      }
+    };
+    fetchEditRequests();
+  }, [userId]);
+  return { editRequests, loadingEditRequests, error };
+}
+
 export async function createCorrectionRequest(
   data: CorrectionFormData,
   userId: string,

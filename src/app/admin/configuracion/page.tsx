@@ -5,9 +5,20 @@ import TaskTypesTable from "@/components/admin/TaskTypeTable";
 import PieceCategoriesTable from "@/components/admin/PieceCategoriesTable";
 
 const category = [
-  { id: 1, nombre: "Post feed", activo: true },
-  { id: 2, nombre: "Story", activo: true },
-  { id: 3, nombre: "Reel", activo: false },
+    {
+    id: 1,
+    nombre: "Community Management",
+    cuentaComoPieza: true,
+    rolesPermitidos: ["Diseño", "Social Media"],
+    activo: true,
+  },
+      {
+    id: 2,
+    nombre: "Community Management",
+    cuentaComoPieza: true,
+    rolesPermitidos: ["Diseño", "Social Media"],
+    activo: true,
+  },
 ]
 
 const taskTypes = [
@@ -72,8 +83,8 @@ const ConfigurationPage = () => {
             Define los parametros vase para la operacion del sistema
           </p>
         </div>
-        <div className="mt-10 ">
-          <Tabs defaultValue="tarea" className="mt-10 ">
+        <div className="mt-10">
+          <Tabs defaultValue="tarea" className="mt-10">
             <TabsList
               variant="line"
               className="gap-5 border-b border-gray-300/40"
@@ -108,4 +119,3 @@ const ConfigurationPage = () => {
 };
 
 export default ConfigurationPage;
-
