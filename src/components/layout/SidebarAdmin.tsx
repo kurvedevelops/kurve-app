@@ -21,13 +21,13 @@ const SidebarAdmin = () => {
     {
       title: "Operacion",
       links: [
-        { label: "Planilla de tiempos", href: "/admin" },
+        { label: "Planilla de tiempos", href: "/admin/planilla" },
         { label: "Correcciones", href: "/admin" },
       ],
     },
     {
       title: "Configuracion",
-      links: [{ label: "Ajustes", href: "/admin" }],
+      links: [{ label: "Ajustes", href: "/admin/configuracion" }],
     },
   ];
 

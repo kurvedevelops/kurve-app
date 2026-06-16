@@ -41,7 +41,6 @@ const MisActividadesPage = () => {
   );
 
   const totalPages = Math.ceil(totalCount / 5);
-  const fechasUnicas = [...new Set(activityLogs.map((log) => log.log_date))];
 
   return (
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
