@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 "use client";
+=======
+>>>>>>> e3521a7 (feat(api): add member creation endpoint with Supabase integration)
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,8 +12,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+<<<<<<< HEAD
 import { useState } from "react";
 import EditTaskTypeModal from "../modals/admin/configuracion/EditTaskTypeModal";
+=======
+>>>>>>> e3521a7 (feat(api): add member creation endpoint with Supabase integration)
 
 type TaskType = {
   id: number;
@@ -24,6 +30,7 @@ interface TaskTypesTableProps {
   taskTypes: TaskType[];
 }
 
+<<<<<<< HEAD
 const TaskTypesTable = ({
   taskTypes: initialTaskTypes,
 }: TaskTypesTableProps) => {
@@ -46,6 +53,9 @@ const TaskTypesTable = ({
       prev.map((t) => (t.id === updated.id ? updated : t)),
     );
   };
+=======
+const TaskTypesTable = ({ taskTypes }: TaskTypesTableProps) => {
+>>>>>>> e3521a7 (feat(api): add member creation endpoint with Supabase integration)
   return (
     <div className="bg-white rounded-xl overflow-hidden shadow-sm overflow-x-auto mt-10 md:mx-20">
       <div className="flex items-center justify-between mb-5 gap-3 mt-4 ml-4 mr-4">
@@ -56,7 +66,10 @@ const TaskTypesTable = ({
         <Button
           className="flex items-center bg-verde-kurve text-white px-4 py-5 hover:bg-verde-kurve-dark hover:text-white"
           variant="outline"
+<<<<<<< HEAD
           onClick={() => setAddModalOpen(true)}
+=======
+>>>>>>> e3521a7 (feat(api): add member creation endpoint with Supabase integration)
         >
           + Agregar una nueva tarea
         </Button>
@@ -102,7 +115,11 @@ const TaskTypesTable = ({
                   type="checkbox"
                   checked={task.cuentaComoPieza}
                   readOnly
+<<<<<<< HEAD
                   className="ml-12 accent-verde-kurve-dark w-5 h-5"
+=======
+                  className="ml-12"
+>>>>>>> e3521a7 (feat(api): add member creation endpoint with Supabase integration)
                 />
               </TableCell>
 
@@ -123,7 +140,11 @@ const TaskTypesTable = ({
                 <span
                   className={`px-2 py-1 text-xs rounded-full font-medium ${
                     task.activo
+<<<<<<< HEAD
                       ? "bg-verde-kurve-light text-verde-kurve"
+=======
+                      ? "bg-green-100 text-green-700"
+>>>>>>> e3521a7 (feat(api): add member creation endpoint with Supabase integration)
                       : "bg-gray-100 text-gray-600"
                   }`}
                 >
@@ -132,12 +153,16 @@ const TaskTypesTable = ({
               </TableCell>
 
               <TableCell className="w-75">
+<<<<<<< HEAD
                 <Button
                   variant="ghost"
                   size="icon"
                   className="cursor-pointer"
                   onClick={() => handleEditClick(task)}
                 >
+=======
+                <Button variant="ghost" size="icon" className="cursor-pointer">
+>>>>>>> e3521a7 (feat(api): add member creation endpoint with Supabase integration)
                   <Pencil className="h-4 w-4" />
                 </Button>
               </TableCell>
@@ -145,6 +170,7 @@ const TaskTypesTable = ({
           ))}
         </TableBody>
       </Table>
+<<<<<<< HEAD
       <EditTaskTypeModal
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
@@ -158,6 +184,8 @@ const TaskTypesTable = ({
         taskType={null}
         onSave={handleAdd}
       />
+=======
+>>>>>>> e3521a7 (feat(api): add member creation endpoint with Supabase integration)
     </div>
   );
 };
