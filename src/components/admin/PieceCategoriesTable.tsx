@@ -28,14 +28,19 @@ const mockPackages = [
   { id: "2", name: "Pack Premium", cat1_name: "Reel", cat2_name: "Post feed" },
 ];
 
-
-const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategoriesTableProps) => {
+const PieceCategoriesTable = ({
+  categories: initialCategories,
+}: PieceCategoriesTableProps) => {
   const [categories, setCategories] = useState(initialCategories);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+    null,
+  );
   const [pendingUpdate, setPendingUpdate] = useState<Category | null>(null);
-  const [affectedPackages, setAffectedPackages] = useState<{ id: string; name: string }[]>([]);
+  const [affectedPackages, setAffectedPackages] = useState<
+    { id: string; name: string }[]
+  >([]);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
 
@@ -48,9 +53,8 @@ const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategories
     const estaDesactivando = selectedCategory?.activo && !updated.activo;
 
     if (estaDesactivando) {
-      // Simula la consulta a Supabase con mock data
       const afectados = mockPackages.filter((pkg) =>
-        [pkg.cat1_name, pkg.cat2_name].includes(updated.nombre)
+        [pkg.cat1_name, pkg.cat2_name].includes(updated.nombre),
       );
 
       if (afectados.length > 0) {
@@ -70,7 +74,6 @@ const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategories
     if (!pendingUpdate) return;
     setConfirmLoading(true);
 
-    // Simula delay de red
     await new Promise((res) => setTimeout(res, 800));
 
     guardarCategoria(pendingUpdate);
@@ -79,10 +82,9 @@ const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategories
     setPendingUpdate(null);
   };
 
-  // Actualiza el estado local (cuando conectes el back, acá también hacés el update en Supabase)
   const guardarCategoria = (updated: Category) => {
     setCategories((prev) =>
-      prev.map((c) => (c.id === updated.id ? updated : c))
+      prev.map((c) => (c.id === updated.id ? updated : c)),
     );
   };
 
@@ -112,8 +114,12 @@ const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategories
             <TableHead className="h-12 px-3 font-semibold text-gray-400">
               NOMBRE DE CATEGORÍA
             </TableHead>
-            <TableHead className="font-semibold text-gray-400">ESTADO</TableHead>
-            <TableHead className="font-semibold text-gray-400">ACCIONES</TableHead>
+            <TableHead className="font-semibold text-gray-400">
+              ESTADO
+            </TableHead>
+            <TableHead className="font-semibold text-gray-400">
+              ACCIONES
+            </TableHead>
           </TableRow>
         </TableHeader>
 
@@ -140,7 +146,6 @@ const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategories
               </TableCell>
 
               <TableCell>
-                {/* onClick conectado */}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -154,8 +159,6 @@ const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategories
           ))}
         </TableBody>
       </Table>
-
-      {/* Modales al final del JSX */}
       <EditCategoryModal
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
