@@ -1,6 +1,6 @@
 import Modal from "@/components/modals/Modal";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface Category {
   id: number;
@@ -15,24 +15,34 @@ interface EditCategoryModalProps {
   onSave: (updated: Category) => Promise<void>;
 }
 
-const EditCategoryModal = ({ isOpen, onClose, category, onSave }: EditCategoryModalProps) => {
+const EditCategoryModal = ({
+  isOpen,
+  onClose,
+  category,
+  onSave,
+}: EditCategoryModalProps) => {
+  const esNuevo = category === null;
   const [nombre, setNombre] = useState("");
   const [activo, setActivo] = useState(true);
   const [loading, setLoading] = useState(false);
-  useEffect(() => {
-  }, [category]);
 
   const handleSave = async () => {
-    if (!category || !nombre.trim()) return;
+    if (!nombre.trim()) return;
     setLoading(true);
-    await onSave({ ...category, nombre: nombre.trim(), activo });
+    await onSave({
+      id: category?.id ?? Date.now(),
+      nombre: nombre.trim(),
+      activo,
+    });
     setLoading(false);
+    setNombre("")
+    onClose();
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <h2 className="text-lg font-semibold text-gray-900 mb-6">
-        Editar categoría
+        {esNuevo ? "Agregar nueva categoria" : "Editar categoría"}
       </h2>
 
       <div className="space-y-5">
@@ -80,7 +90,7 @@ const EditCategoryModal = ({ isOpen, onClose, category, onSave }: EditCategoryMo
           onClick={handleSave}
           disabled={loading || !nombre.trim()}
         >
-          {loading ? "Guardando..." : "Guardar cambios"}
+          {loading ? "Guardando..." : esNuevo ? "Agregar categoría" : "Guardar cambios"}
         </Button>
       </div>
     </Modal>

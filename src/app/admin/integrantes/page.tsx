@@ -142,7 +142,7 @@ const MembersPage = () => {
                   <TableRow key={member.id} className="border-b border-gray-100 ">
                   <TableCell className="text-sm px-4 py-3.5">
                   <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-verde-kurve-light flex items-center justify-center text-verde-kurve-dark text-xs font-bold shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-verde-kurve-light flex items-center justify-center text-verde-kurve text-xs font-bold shrink-0">
                   {member.name
                     .split(" ")
                     .slice(0, 2)
@@ -160,13 +160,13 @@ const MembersPage = () => {
                           {member.role}
                           </TableCell>
                           <TableCell className="px-4 py-6 text-sm">
-                          <div className="w-6 h-6 rounded-full bg-verde-kurve-light flex items-center justify-center text-verde-kurve-dark text-xs font-bold shrink-0">
+                          <div className="w-6 h-6 rounded-full bg-verde-kurve-light flex items-center justify-center text-verde-kurve text-xs font-bold shrink-0">
                           {member.assignedClients}
                           </div>
                           </TableCell>
                           <TableCell className="px-4 py-6 text-sm">
                           {member.status === "active" ? (
-                            <span className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">
+                            <span className="inline-flex items-center gap-1.5 bg-green-50 text-verde-kurve text-xs font-medium px-2.5 py-1 rounded-full">
                         <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
                         Activo
                       </span>
@@ -179,7 +179,7 @@ const MembersPage = () => {
                     </TableCell>
                     <TableCell className="px-4 py-6 text-sm">
                     <Link href={`/admin/integrantes/id`}>
-                    <Button className="text-white bg-verde-kurve-dark hover:bg-verde-kurve-dark/90 px-3 py-2 rounded-md text-xs font-medium cursor-pointer">
+                    <Button className="text-white bg-verde-kurve px-3 py-2 rounded-md text-xs font-medium cursor-pointer">
                     Ver detalle
                     </Button>
                     </Link>
