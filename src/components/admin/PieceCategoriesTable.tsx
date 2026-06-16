@@ -10,8 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import ConfirmDeactivateModal from "../modals/admin/ConfirmDeactivateModal";
-import EditCategoryModal from "../modals/admin/EditCategoryModal";
+import ConfirmDeactivateModal from "../modals/admin/configuracion/ConfirmDeactivateModal";
+import EditCategoryModal from "../modals/admin/configuracion/EditCategoryModal";
 
 type Category = {
   id: number;
@@ -37,6 +37,7 @@ const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategories
   const [pendingUpdate, setPendingUpdate] = useState<Category | null>(null);
   const [affectedPackages, setAffectedPackages] = useState<{ id: string; name: string }[]>([]);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
 
   const handleEditClick = (category: Category) => {
     setSelectedCategory(category);
@@ -83,6 +84,10 @@ const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategories
     setCategories((prev) =>
       prev.map((c) => (c.id === updated.id ? updated : c))
     );
+  };
+
+  const handleAdd = async (nueva: Category) => {
+    setCategories((prev) => [...prev, nueva]);
   };
 
   return (
@@ -156,6 +161,14 @@ const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategories
         onClose={() => setEditModalOpen(false)}
         category={selectedCategory}
         onSave={handleSave}
+      />
+
+      <EditCategoryModal
+        key="new-category"
+        isOpen={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        category={null}
+        onSave={handleAdd}
       />
 
       <ConfirmDeactivateModal
