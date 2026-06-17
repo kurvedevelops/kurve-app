@@ -1,17 +1,12 @@
 "use client";
 import PageHeader from "@/components/layout/PageHeader";
-import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import {
-  AproveEditRequest,
-  RejectEditRequest,
   useActivityLogsForRequests,
   useCurrentUser,
-  useEditRequests,
+  useEditRequestsById,
   useTaskTypes,
-  useUsers,
 } from "@/hooks/middleware";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { Fragment, useRef, useState } from "react";
 import {
   Table,
@@ -21,14 +16,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import {
-  AprovedCorrectionData,
-  CorrectionFormData,
-} from "@/components/modals/member/CorrectionModal";
-import { toast } from "sonner";
+import SidebarMember from "@/components/layout/SidebarMember";
 
-const CorrecionesPage = () => {
+const MisSolicitudesPage = () => {
   const statusLabels = {
     pending: "Pendientes",
     approved: "Aprobadas",
@@ -42,57 +32,13 @@ const CorrecionesPage = () => {
   const [openStatusDropdown, setOpenStatusDropdown] = useState(false);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
 
-  const [aprovingReq, setAprovingReq] = useState(false);
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-
-  const toggleRow = (id: string) => {
-    setExpandedRows((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
-
   const { activityLogs, loadingActivityLogs } = useActivityLogsForRequests();
   const { user, loadingUser } = useCurrentUser();
-  const { users, loadingUsers } = useUsers();
   const { tasks, loadingTasks } = useTaskTypes();
 
-  const userId = user?.id;
-
-  const handleAproveRequest = async (
-    data: AprovedCorrectionData,
-    userId: string,
-  ) => {
-    try {
-      setAprovingReq(true);
-      await AproveEditRequest(data, userId);
-      toast.success(
-        "Pedido de correccion aprobado, la actividad ha sido modificada",
-      );
-    } catch {
-      toast.error("Error al aprobar correccion");
-    } finally {
-      setAprovingReq(false);
-    }
-  };
-
-  const handleRejectReq = async (reqId: string, adminId: string) => {
-    try {
-      await RejectEditRequest(reqId, adminId);
-      toast.success(
-        "Pedido de correccion rechazado, la actividad se mantiene igual",
-      );
-    } catch {
-      toast.error("Error al rechazar correccion");
-    }
-  };
-
-  const { editRequests, loadingEditRequests } = useEditRequests();
+  const { editRequests, loadingEditRequests } = useEditRequestsById(
+    user?.id || "",
+  );
 
   const filteredRequests =
     statusFilter === "all"
@@ -101,12 +47,12 @@ const CorrecionesPage = () => {
 
   return (
     <div className="min-h-screen w-full bg-muted flex">
-      <SidebarAdmin />
+      <SidebarMember />
       <main className="flex-1 md:ml-45 lg:ml-64 px-5 py-8 md:p-8">
         <PageHeader
-          badge="Revision de Correcciones"
-          title="Correcciones"
-          subtitle="Administra las correcciones pendientes y su estado"
+          badge="Solicitudes de correccion"
+          title="Listado de solicitudes"
+          subtitle="Revisa las correcciones pendientes y su estado"
         />
 
         <div className="bg-background rounded-xl border border-border mt-4">
@@ -171,10 +117,6 @@ const CorrecionesPage = () => {
               <TableHeader>
                 <TableRow className="bg-gray-50">
                   <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
-                    Miembro
-                  </TableHead>
-
-                  <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
                     Tarea
                   </TableHead>
 
@@ -187,7 +129,7 @@ const CorrecionesPage = () => {
                   </TableHead>
 
                   <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
-                    Acciones
+                    Solicitado
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -196,7 +138,7 @@ const CorrecionesPage = () => {
                 {filteredRequests.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="h-80 text-center text-lg">
-                      No hay correcciones para revisar.
+                      Todas tus solicitudes fueron revisadas.
                       <br />
                     </TableCell>
                   </TableRow>
@@ -205,15 +147,9 @@ const CorrecionesPage = () => {
                     <Fragment key={req.id}>
                       <TableRow
                         key={req.id}
-                        className="border-b border-[#E4E4E4] hover:bg-muted/40 cursor-pointer"
-                        onClick={() => toggleRow(req.id)}
+                        className="border-b border-[#E4E4E4] hover:bg-muted/40"
                       >
                         <TableCell className="px-6 py-6 font-semibold">
-                          {users.find((user) => user.id === req.requested_by)
-                            ?.full_name ?? "-"}
-                        </TableCell>
-
-                        <TableCell className="font-semibold">
                           {tasks.find(
                             (task) =>
                               task.id ===
@@ -248,37 +184,8 @@ const CorrecionesPage = () => {
                                 : "Rechazada"}
                           </span>
                         </TableCell>
-
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            {req.status === "pending" && (
-                              <div
-                                className="flex gap-3"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <Button
-                                  variant="outline"
-                                  className="h-9 rounded-lg text-sm hover:bg-verde-kurve/60 hover:text-verde-kurve-dark bg-verde-kurve/30 text-verde-kurve-dark"
-                                  onClick={() =>
-                                    handleAproveRequest(req, req.requested_by)
-                                  }
-                                >
-                                  Aprobar
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  className="h-9 rounded-lg text-sm hover:bg-red-600/70 hover:text-red-850 bg-red-600/50 text-red-800"
-                                  onClick={() => {
-                                    if (user) {
-                                      handleRejectReq(req.id, user.id);
-                                    }
-                                  }}
-                                >
-                                  Rechazar
-                                </Button>
-                              </div>
-                            )}
-                          </div>
+                        <TableCell className="font-semibold">
+                          {req.created_at.split("T")[0]}
                         </TableCell>
                       </TableRow>
 
@@ -343,4 +250,4 @@ const CorrecionesPage = () => {
   );
 };
 
-export default CorrecionesPage;
+export default MisSolicitudesPage;

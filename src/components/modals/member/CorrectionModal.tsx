@@ -34,7 +34,7 @@ export interface CorrectionFormData {
 }
 
 export interface AprovedCorrectionData {
-  req_id: string;
+  id: string;
   activity_log_id: string; // FK → activity_logs
   field_name: EditableField; // enum editable_field
   old_value: string; // valor actual (text)
@@ -197,7 +197,7 @@ export function CorrectionModal({
               >
                 <option value="">Selecciona la nueva tarea</option>
                 {tasks.map((tarea) => (
-                  <option key={tarea.id} value={tarea.name}>
+                  <option key={tarea.id} value={tarea.id}>
                     {tarea.name}
                   </option>
                 ))}
