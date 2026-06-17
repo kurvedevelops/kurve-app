@@ -1,0 +1,7 @@
+-- Índice aplicado manualmente en Supabase el 2026-06-10.
+-- Verificar el SQL exacto en Supabase Dashboard → Database → Indexes
+-- antes de correr esta migración en un entorno nuevo.
+--
+-- Ejemplo probable (reemplazar con el SQL real):
+-- CREATE INDEX IF NOT EXISTS idx_consumption_summary_consumed
+--   ON consumption_summary (package_id, consumed);
