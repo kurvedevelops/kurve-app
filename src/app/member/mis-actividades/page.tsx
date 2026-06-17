@@ -51,7 +51,15 @@ const MisActividadesPage = () => {
   );
 
   const totalPages = Math.ceil(totalCount / 5);
+<<<<<<< HEAD
   const fechasUnicas = [...new Set(activityLogs.map((log) => log.log_date))];
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+  const fechasUnicas = [...new Set(activityLogs.map((log) => log.log_date))];
+>>>>>>> c9f12d4 (Vista de mis solicitudes)
+>>>>>>> 7b3e45a (Vista de mis solicitudes)
 
   async function handleCorrectionSubmit(data: CorrectionFormData) {
     try {
