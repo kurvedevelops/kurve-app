@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 
 interface ConfirmDeleteModalProps {
   open: boolean;
-  clientName: string;
+  entityName: string;
   onConfirm: () => void;
   onCancel: () => void;
   loading?: boolean;
@@ -12,7 +12,7 @@ interface ConfirmDeleteModalProps {
 
 export function ConfirmDeleteModal({
   open,
-  clientName,
+  entityName,
   onConfirm,
   onCancel,
   loading = false,
@@ -28,20 +28,20 @@ export function ConfirmDeleteModal({
     >
       <div className="bg-background w-full max-w-[400px] rounded-2xl border border-border shadow-xl">
         {/* Header */}
-        <div className="px-6 pt-6 pb-0 flex items-center justify-between">
+        <div className="px-6 pt-6 pb-0 flex items-start justify-between">
           <div className="flex flex-col">
             <h2 className="text-xl font-medium text-foreground mb-1">
-              ¿Eliminar cliente?
+              ¿Eliminar entidad?
             </h2>
             <p className="text-sm text-gris-kurve-dark mb-4">
               Se eliminará permanentemente{" "}
-              <span className="font-semibold">{clientName}</span> y todos sus
+              <span className="font-semibold">{entityName}</span> y todos sus
               datos asociados.
             </p>
           </div>
           <button
             onClick={onCancel}
-            className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-gris-kurve-dark hover:bg-muted transition-colors"
+            className="w-8 h-8 flex items-center justify-center text-gris-kurve-dark cursor-pointer"
             aria-label="Cerrar"
           >
             <X size={16} />
@@ -56,7 +56,7 @@ export function ConfirmDeleteModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 px-6 py-4">
+        <div className="flex items-center justify-between gap-2 px-6 py-4">
           <button
             onClick={onCancel}
             disabled={loading}
@@ -69,7 +69,7 @@ export function ConfirmDeleteModal({
             disabled={loading}
             className="h-9 px-4 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Eliminando..." : "Eliminar cliente"}
+            {loading ? "Eliminando..." : "Eliminar"}
           </button>
         </div>
       </div>

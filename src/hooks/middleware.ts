@@ -9,6 +9,7 @@ import {
   AprovedCorrectionData,
   CorrectionFormData,
 } from "@/components/modals/member/CorrectionModal";
+import { Member } from "@/app/admin/integrantes/page";
 
 type User = Tables<"users">;
 
@@ -46,6 +47,20 @@ export async function deleteClient(clientId: string) {
   if (error) throw error;
 }
 
+export async function deleteMember(memberId?: string) {
+  if (!memberId) return;
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("users")
+    .update({
+      active: false,
+    })
+    .eq("id", memberId);
+
+  if (error) throw error;
+}
+
 export async function createNewClient(data: NuevoClienteFormData) {
   const supabase = createClient();
 
@@ -68,6 +83,23 @@ export async function checkClientExists(name: string) {
     .from("clients")
     .select("id")
     .eq("name", name)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error al verificar cliente:", error);
+    return false;
+  }
+
+  return !!data;
+}
+
+export async function checkMemberExists(name: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("users")
+    .select("id")
+    .eq("full_name", name)
     .single();
 
   if (error && error.code !== "PGRST116") {
@@ -94,6 +126,18 @@ export async function assignPackage(
     total_pieces: data.publicaciones.total || null,
     created_at: new Date().toISOString().split("T")[0],
     status: "active",
+  });
+
+  if (error) throw error;
+}
+
+export async function assignClientToUser(clientId: string, memberId?: string) {
+  if (!memberId) return;
+  const supabase = createClient();
+
+  const { error } = await supabase.from("client_users").insert({
+    user_id: memberId,
+    client_id: clientId,
   });
 
   if (error) throw error;
@@ -135,14 +179,22 @@ export function useCurrentUser() {
   return { user, loadingUser, error };
 }
 
-type ClientUser = Tables<"client_users">;
+type Client = Tables<"clients">;
 
-export function useClientsByUser(userId: string) {
-  const [clientsId, setClientsId] = useState<any[]>([]);
+interface UserClient {
+  id: string;
+  client_id: string;
+  user_id: string;
+  created_at: string;
+}
+
+export function useClientsByUser(userId?: string) {
+  const [clientsId, setClientsId] = useState<UserClient[]>([]);
   const [loadingClientsId, setLoadingClientsId] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!userId) return;
     const fetchClients = async () => {
       try {
         const supabase = createClient();
@@ -166,7 +218,7 @@ export function useClientsByUser(userId: string) {
 }
 
 export function useUsers() {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -192,7 +244,7 @@ export function useUsers() {
 }
 
 export function useClients() {
-  const [clients, setClients] = useState<any[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [loadingClients, setLoadingClients] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -216,6 +268,34 @@ export function useClients() {
   }, []);
 
   return { clients, loadingClients, error };
+}
+
+export function useMembers() {
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("users")
+          .select("*")
+          .eq("role", "member");
+
+        if (error) throw error;
+        setMembers(data || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingMembers(false);
+      }
+    };
+    fetchMembers();
+  }, []);
+
+  return { members, loadingMembers, error };
 }
 
 export function getInitials(fullName?: string) {
@@ -380,7 +460,7 @@ export type ActivityLogWithRelations = {
 };
 
 export function useActivityLogs(
-  userId: string,
+  userId?: string,
   filters?: {
     client_id?: string;
     status?: string;
@@ -397,6 +477,7 @@ export function useActivityLogs(
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!userId) return;
     const fetchActivityLogs = async () => {
       try {
         const supabase = createClient();

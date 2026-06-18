@@ -16,24 +16,14 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
 import { ChevronDown } from "lucide-react";
 import {
+  Client,
   EditarClienteFormData,
   EditarClienteModal,
 } from "@/components/modals/EditarClienteModal";
-import { ConfirmDeleteModal } from "@/components/modals/BorrarClienteModal";
+import { ConfirmDeleteModal } from "@/components/modals/BorrarEntidadModal";
 import { toast } from "sonner";
-
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  legal_name: string;
-  phone: string;
-  status: "active" | "paused";
-  created_at: string;
-}
 
 interface ActionDropdownProps {
   onEdit?: () => void;
@@ -198,14 +188,12 @@ const ClientesPage = () => {
     }
   };
 
-  // Acá conectás con tu API/hook para crear el cliente
   const handleCrearCliente = async (data: NuevoClienteFormData) => {
     await createNewClient(data);
     router.refresh();
   };
 
   const handleOpenEditModal = (client: Client) => {
-    console.log("Abriendo modal para:", client);
     setSelectedClient(client);
     setShowEditarClienteModal(true);
   };
@@ -213,8 +201,6 @@ const ClientesPage = () => {
   const handleEditarCliente = async (data: EditarClienteFormData) => {
     try {
       if (!selectedClient) return;
-
-      console.log("Editando cliente:", selectedClient.id, data);
       await editClient(selectedClient.id, data);
 
       router.refresh();
@@ -461,7 +447,7 @@ const ClientesPage = () => {
 
       <ConfirmDeleteModal
         open={deleteConfirm.open}
-        clientName={deleteConfirm.clientName}
+        entityName={deleteConfirm.clientName}
         loading={deletingId === deleteConfirm.clientId}
         onConfirm={() => handleDelete(deleteConfirm.clientId)}
         onCancel={() =>
