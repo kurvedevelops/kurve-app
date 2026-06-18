@@ -275,7 +275,7 @@ export function usePackages() {
       }
     };
     fetchPackages();
-  }, [packages]);
+  }, []);
   return { packages, loadingPackages };
 }
 
@@ -304,7 +304,7 @@ export function usePackageByClient(clientId: string) {
       }
     };
     fetchPackages();
-  }, [clientPackage, clientId]);
+  }, [clientId]);
   return { clientPackage, loadingClientPackage };
 }
 

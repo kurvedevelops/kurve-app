@@ -137,33 +137,8 @@ const AdminPage = () => {
           </div>
         </div>
 
-        {/* Empty State */}
         <div className="bg-background p-12 rounded-lg border border-border flex flex-col items-center justify-center min-h-96">
-          <div className="w-20 h-20 bg-verde-kurve/10 rounded-full flex items-center justify-center mb-6">
-            <svg
-              width="40"
-              height="40"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#65B32E"
-              strokeWidth="2"
-            >
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-              <line x1="8" y1="21" x2="16" y2="21" />
-              <line x1="12" y1="17" x2="12" y2="21" />
-            </svg>
-          </div>
-          <h3 className="text-xl text-center font-bold text-azul-kurve mb-2">
-            Estructura lista, sin datos todavía
-          </h3>
-          <p className="text-sm text-gris-kurve-dark text-center max-w-md">
-            El layout y la estructura de navegación están construidos. Las
-            funcionalidades de gestión y los datos reales se incorporarán en las
-            próximas fases del desarrollo.
-          </p>
-          <button className="mt-6 px-6 py-2 bg-verde-kurve text-white rounded-full text-sm font-medium hover:bg-verde-kurve-dark transition-colors">
-            FASE 1 — INFRAESTRUCTURA COMPLETA
-          </button>
+          
         </div>
       </main>
     </div>
