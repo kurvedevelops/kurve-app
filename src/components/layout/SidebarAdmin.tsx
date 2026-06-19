@@ -22,11 +22,7 @@ const SidebarAdmin = () => {
       title: "Operacion",
       links: [
         { label: "Planilla de tiempos", href: "/admin/planilla" },
-<<<<<<< HEAD
         { label: "Correcciones", href: "/admin/correcciones" },
-=======
-        { label: "Correcciones", href: "/admin" },
->>>>>>> e3521a7 (feat(api): add member creation endpoint with Supabase integration)
       ],
     },
     {

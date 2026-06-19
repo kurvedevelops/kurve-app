@@ -10,21 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-<<<<<<< HEAD
 import ConfirmDeactivateModal from "../modals/admin/configuracion/ConfirmDeactivateModal";
 import EditCategoryModal from "../modals/admin/configuracion/EditCategoryModal";
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-import ConfirmDeactivateModal from "../modals/admin/configuracion/ConfirmDeactivateModal";
-import EditCategoryModal from "../modals/admin/configuracion/EditCategoryModal";
-=======
->>>>>>> e3521a7 (feat(api): add member creation endpoint with Supabase integration)
-=======
-import ConfirmDeactivateModal from "../modals/admin/configuracion/ConfirmDeactivateModal";
-import EditCategoryModal from "../modals/admin/configuracion/EditCategoryModal";
->>>>>>> 10d8c8a (feat(admin): reorganizar importaciones y agregar funcionalidad para añadir categorías)
->>>>>>> 42e0d90 (feat(admin): reorganizar importaciones y agregar funcionalidad para añadir categorías)
 
 type Category = {
   id: number;
@@ -105,15 +92,6 @@ const PieceCategoriesTable = ({
     setCategories((prev) => [...prev, nueva]);
   };
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-const PieceCategoriesTable = ({ categories }: PieceCategoriesTableProps) => {
->>>>>>> e3521a7 (feat(api): add member creation endpoint with Supabase integration)
-=======
->>>>>>> 10d8c8a (feat(admin): reorganizar importaciones y agregar funcionalidad para añadir categorías)
->>>>>>> 42e0d90 (feat(admin): reorganizar importaciones y agregar funcionalidad para añadir categorías)
   return (
     <div className="bg-white rounded-xl overflow-hidden shadow-sm overflow-x-auto mt-10 md:mx-20">
       <div className="flex items-center justify-between mb-5 gap-3 mt-4 ml-4 mr-4">

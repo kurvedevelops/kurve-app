@@ -51,7 +51,6 @@ const MisActividadesPage = () => {
   );
 
   const totalPages = Math.ceil(totalCount / 5);
-  const fechasUnicas = [...new Set(activityLogs.map((log) => log.log_date))];
 
   async function handleCorrectionSubmit(data: CorrectionFormData) {
     try {
@@ -67,7 +66,7 @@ const MisActividadesPage = () => {
   return (
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
       <SidebarMember />
-      <main className="flex-1 mt-10 md:mt-0 md:ml-47 lg:ml-64 px-5 py-8 md:p-8">
+      <main className="flex-1 md:ml-47 lg:ml-64 px-5 py-8 md:p-8">
         <div className="hidden md:block mb-3">
           <PageHeader
             badge="MIS ACTIVIDADES"
@@ -88,14 +87,12 @@ const MisActividadesPage = () => {
           </p>
         </div>
         <div className="flex flex-col gap-6">
-          <div className="p-5 bg-gray-50 border border-[#E4E4E4] rounded-lg">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gris-kurve-dark uppercase tracking-wide">
-                  Fecha
-                </label>
+          <div className="p-6 bg-white border border-[#E4E4E4] overflow-hidden overflow-x-auto rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-4 mb-4">
+                <label className="font-semibold text-foreground">Fecha</label>
                 <select
-                  className="px-3 py-2 text-sm border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve/40 focus:border-verde-kurve transition-colors"
+                  className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
                   value={filters.from}
                   onChange={(e) =>
                     setFilters({
@@ -113,12 +110,10 @@ const MisActividadesPage = () => {
                   ))}
                 </select>
               </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-gris-kurve-dark uppercase tracking-wide">
-                  Cliente
-                </label>
+              <div className="flex flex-col gap-4 mb-4">
+                <label className="font-semibold text-foreground">Cliente</label>
                 <select
-                  className="px-3 py-2 text-sm border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve/40 focus:border-verde-kurve transition-colors"
+                  className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
                   value={filters.client_id}
                   onChange={(e) =>
                     setFilters({ ...filters, client_id: e.target.value })
@@ -133,10 +128,10 @@ const MisActividadesPage = () => {
                 </select>
               </div>
 
-              <div className="flex gap-2 justify-center md:col-span-2 lg:col-span-2 lg:justify-end lg:self-center">
+              <div className="lg:col-span-4">
                 <Button
                   onClick={() => setAppliedFilters({ ...filters, page: 0 })}
-                  className="flex-1 md:flex-none cursor-pointer px-4 py-2 text-sm bg-verde-kurve text-white font-medium rounded-md hover:bg-verde-kurve-dark transition-colors"
+                  className="w-full md:w-fit cursor-pointer px-8 py-6 bg-verde-kurve text-white font-semibold rounded-lg hover:bg-verde-kurve-dark transition-colors"
                 >
                   Filtrar
                 </Button>
@@ -146,125 +141,92 @@ const MisActividadesPage = () => {
                     setAppliedFilters(defaultFilters);
                   }}
                   variant="outline"
-                  className="flex-1 md:flex-none px-4 py-2 text-sm rounded-md cursor-pointer"
+                  className="w-full md:w-fit px-8 py-6 rounded-lg md:ml-3 cursor-pointer"
                 >
                   Limpiar
                 </Button>
               </div>
             </div>
           </div>
-          <div className="bg-white border border-[#E4E4E4] overflow-hidden rounded-lg">
-            {activityLogs.length === 0 ? (
-              <div className="h-80 flex flex-col items-center justify-center text-center text-lg font-semibold px-4">
-                No hay actividades registradas.
-                <Link
-                  href="/member/registrar"
-                  className="text-verde-kurve-dark font-semibold text-sm mt-1"
-                >
-                  Registrar una actividad
-                </Link>
-              </div>
-            ) : (
-              <>
-                {/* Mobile cards (sm and below) */}
-                <div className="md:hidden divide-y divide-[#E4E4E4]">
-                  {activityLogs.map((activity) => (
-                    <div key={activity.id} className="p-4 flex flex-col gap-2">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-base">
-                          {activity.clients?.name}
-                        </span>
-                        <span className="text-[15px] text-gris-kurve-dark">
-                          {activity.log_date}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="font-semibold">
-                          {activity.task_types?.name}
-                        </span>
-                        <span className="font-semibold">
-                          {activity.hours} hs
-                        </span>
-                      </div>
-                      <Button
-                        variant="outline"
-                        className="h-9 rounded-lg text-sm hover:bg-gray-50 w-full mt-1"
-                        onClick={() => setCorrectionActivity(activity)}
+          <div className="bg-white border border-[#E4E4E4] overflow-hidden overflow-x-auto rounded-lg">
+            <Table className="w-full">
+              <TableHeader>
+                <TableRow className="bg-gray-50">
+                  <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
+                    Cliente
+                  </TableHead>
+
+                  <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
+                    Tarea
+                  </TableHead>
+
+                  <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
+                    Horas
+                  </TableHead>
+
+                  <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
+                    Fecha
+                  </TableHead>
+
+                  <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
+                    Acciones
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {activityLogs.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={8}
+                      className="h-80 text-center text-lg font-semibold"
+                    >
+                      No hay actividades registradas.
+                      <br />
+                      <Link
+                        href="/member/registrar"
+                        className="text-verde-kurve-dark font-semibold text-sm"
                       >
-                        Solicitar corrección
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+                        Registrar una actividad
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  activityLogs.map((activity) => (
+                    <TableRow
+                      key={activity.id}
+                      className="border-b border-[#E4E4E4] hover:bg-transparent"
+                    >
+                      <TableCell className="px-6 py-6 font-semibold">
+                        {activity.clients?.name}
+                      </TableCell>
 
-                {/* Table (md and above) */}
-                <div className="hidden md:block overflow-x-auto">
-                  <Table className="w-full">
-                    <TableHeader>
-                      <TableRow className="bg-gray-50">
-                        <TableHead className="px-4 py-3 text-center text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
-                          Cliente
-                        </TableHead>
+                      <TableCell className="font-semibold">
+                        {activity.task_types?.name}
+                      </TableCell>
 
-                        <TableHead className="px-4 py-3 text-center text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
-                          Tarea
-                        </TableHead>
+                      <TableCell className="font-semibold">
+                        {activity.hours}
+                      </TableCell>
 
-                        <TableHead className="px-4 py-3 text-center text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
-                          Horas
-                        </TableHead>
+                      <TableCell className="text-[15px]">
+                        {activity.log_date}
+                      </TableCell>
 
-                        <TableHead className="px-4 py-3 text-center text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
-                          Fecha
-                        </TableHead>
-
-                        <TableHead className="px-4 py-3 text-center text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
-                          Acciones
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-
-                    <TableBody>
-                      {activityLogs.map((activity) => (
-                        <TableRow
-                          key={activity.id}
-                          className="border-b border-[#E4E4E4] hover:bg-muted/40"
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          className="h-9 rounded-lg text-sm hover:bg-gray-50"
+                          onClick={() => setCorrectionActivity(activity)}
                         >
-                          <TableCell className="px-4 py-4 text-center font-semibold">
-                            {activity.clients?.name}
-                          </TableCell>
-
-                          <TableCell className="px-4 py-4 text-center font-semibold">
-                            {activity.task_types?.name}
-                          </TableCell>
-
-                          {/* whitespace-nowrap evita que el número se parta si hay un símbolo al lado */}
-                          <TableCell className="px-4 py-4 text-center font-semibold whitespace-nowrap">
-                            {activity.hours}
-                          </TableCell>
-
-                          {/* whitespace-nowrap asegura que la fecha se mantenga en una línea */}
-                          <TableCell className="px-4 py-4 text-center text-[15px] whitespace-nowrap">
-                            {activity.log_date}
-                          </TableCell>
-
-                          {/* Alineado a la derecha para empujar el botón al borde final */}
-                          <TableCell className="px-4 py-4 text-center">
-                            <Button
-                              variant="outline"
-                              className="h-9 rounded-lg text-sm hover:bg-gray-50 whitespace-nowrap"
-                              onClick={() => setCorrectionActivity(activity)}
-                            >
-                              Solicitar corrección
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </>
-            )}
+                          Solicitar corrección
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
             {activityLogs.length > 0 && (
               <div className="h-14 px-6 py-6 border-t border-gray-200 gap-4 flex items-center text-sm text-muted-foreground">
                 <h4 className="font-semibold">
