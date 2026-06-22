@@ -13,6 +13,12 @@ import { Member } from "@/app/admin/integrantes/page";
 
 type User = Tables<"users">;
 
+export const formatDate = (date: string | null) => {
+  if (!date) return "Indefinido";
+  const [y, m, d] = date.split("-");
+  return `${d}/${m}/${y}`;
+};
+
 export async function editClient(
   clientId: string,
   data: EditarClienteFormData,
@@ -343,7 +349,10 @@ export function usePackages() {
     const fetchPackages = async () => {
       try {
         const supabase = createClient();
-        const { data, error } = await supabase.from("packages").select("*");
+        const { data, error } = await supabase
+          .from("packages")
+          .select("*")
+          .eq("status", "active");
 
         if (error) throw error;
 
@@ -357,6 +366,53 @@ export function usePackages() {
     fetchPackages();
   }, []);
   return { packages, loadingPackages };
+}
+
+export interface Package {
+  id: string;
+  client_id: string;
+  name: string;
+  total_hours: number;
+  price: number;
+  status: "active" | "paused" | "ended";
+  start_date: string | null;
+  end_date: string | null;
+  created_at: string;
+  total_pieces: number | null;
+}
+
+export async function deletePackage(id: string) {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("packages")
+    .update({
+      status: "ended",
+    })
+    .eq("id", id);
+
+  if (error) throw error;
+}
+
+export async function editPackage(data: Package, id: string) {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("packages")
+    .update({
+      client_id: data.client_id,
+      name: data.name,
+      total_hours: data.total_hours,
+      price: data.price,
+      status: data.status,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      created_at: data.created_at,
+      total_pieces: data.total_pieces,
+    })
+    .eq("id", id);
+
+  if (error) throw error;
 }
 
 export function usePackageByClient(clientId: string) {
@@ -558,8 +614,17 @@ export function useActivityLogsForRequests() {
         const supabase = createClient();
         const { data, error } = await supabase
           .from("activity_logs")
-          .select("*")
-          .order("created_at", { ascending: false });
+          .select(
+            `
+            *,
+            users (id, full_name),
+            task_types ( id, name ),
+            clients ( id, name ),
+            piece_categories ( id, name )
+          `,
+            { count: "exact" },
+          )
+          .order("log_date", { ascending: false });
 
         if (error) throw error;
 

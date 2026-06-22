@@ -1,20 +1,25 @@
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "../ui/button";
+import { ActivityLogWithRelations, formatDate } from "@/hooks/middleware";
+import { useRouter } from "next/navigation";
 
 interface TimeActivityDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   activity: {
     id: string;
-    cliente: string;
-    integrante: string;
-    fecha: string;
-    estado: string;
-    tarea: string;
-    pieza: string;
-    horas: number;
-    observaciones: string | null;
-  } | null;
+    hours: number;
+    pieces_count: number;
+    log_date: string;
+    status: "delivered" | "in_progress";
+    notes: string | null;
+    is_draft: boolean;
+    users: { id: string; full_name: string } | null;
+    task_types: { id: string; name: string } | null;
+    clients: { id: string; name: string } | null;
+    piece_categories: { id: string; name: string } | null;
+    created_at: string;
+  };
 }
 
 const TimeActivityDrawer = ({
@@ -22,15 +27,19 @@ const TimeActivityDrawer = ({
   onOpenChange,
   activity,
 }: TimeActivityDrawerProps) => {
+  const router = useRouter();
   if (!activity) return null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent showCloseButton={false} className="overflow-y-auto bg-white border-l-0!">
+      <SheetContent
+        showCloseButton={false}
+        className="overflow-y-auto bg-white border-l-0!"
+      >
         <div className="px-4 py-8 border-b border-gray-200/90">
-          <h2 className="text-2xl font-bold text-azul-kurve">
+          <SheetTitle className="text-2xl font-bold text-azul-kurve">
             Detalle de actividad
-          </h2>
+          </SheetTitle>
         </div>
 
         <div className="px-6 py-2 space-y-6">
@@ -44,7 +53,9 @@ const TimeActivityDrawer = ({
                 <label className="text-sm font-bold uppercase tracking-wide text-gray-400">
                   Cliente
                 </label>
-                <p className="mt-1 text-xs font-semibold">{activity.cliente}</p>
+                <p className="mt-1 text-xs font-semibold">
+                  {activity.clients?.name}
+                </p>
               </div>
 
               <div>
@@ -52,7 +63,7 @@ const TimeActivityDrawer = ({
                   Integrante
                 </label>
                 <p className="mt-1 text-xs font-semibold">
-                  {activity.integrante}
+                  {activity.users?.full_name}
                 </p>
               </div>
 
@@ -60,17 +71,8 @@ const TimeActivityDrawer = ({
                 <label className="text-sm font-bold uppercase tracking-wide text-gray-400">
                   Fecha
                 </label>
-                <p className="mt-1 text-xs font-semibold">{activity.fecha}</p>
-              </div>
-
-              <div>
-                <label className="text-sm font-bold uppercase tracking-wide text-gray-400">
-                  Estado
-                </label>
-                <p className="mt-1 text-xs text-azul-kurve font-semibold bg-green-300/70 h-4.5 w-20 flex justify-center items-center rounded-full">
-                  {activity.estado === "delivered"
-                    ? "Entregado"
-                    : "En progreso"}
+                <p className="mt-1 text-xs font-semibold">
+                  {formatDate(activity.log_date)}
                 </p>
               </div>
             </div>
@@ -85,14 +87,20 @@ const TimeActivityDrawer = ({
                 <label className="text-sm font-bold uppercase tracking-wide text-gray-400">
                   Tarea
                 </label>
-                <p className="mt-1 text-xs font-semibold">{activity.tarea}</p>
+                <p className="mt-1 text-xs font-semibold">
+                  {activity.task_types?.name}
+                </p>
               </div>
 
               <div>
                 <label className="text-sm font-bold uppercase tracking-wide text-gray-400">
-                  Pieza
+                  Cantidad de piezas
                 </label>
-                <p className="mt-1 text-xs font-semibold">{activity.pieza}</p>
+                <p className="mt-1 text-xs font-semibold">
+                  {activity.pieces_count
+                    ? activity.pieces_count
+                    : "No entrego piezas"}
+                </p>
               </div>
 
               <div>
@@ -100,7 +108,7 @@ const TimeActivityDrawer = ({
                   Horas registradas
                 </label>
                 <p className="mt-1 text-xs font-semibold">
-                  {activity.horas} hs
+                  {activity.hours} hs
                 </p>
               </div>
 
@@ -110,7 +118,7 @@ const TimeActivityDrawer = ({
                 </label>
 
                 <div className="mt-2 rounded-lg bg-gris-kurve-light border border-gris-kurve p-3 text-gray-500 font-semibold">
-                  {activity.observaciones || "-"}
+                  {activity.notes || "No hay comentarios sobre la actividad"}
                 </div>
               </div>
             </div>
@@ -125,21 +133,29 @@ const TimeActivityDrawer = ({
                 <label className="text-sm font-bold uppercase tracking-wide text-gray-400">
                   Fecha de registro
                 </label>
-                <p className="mt-1 text-xs font-semibold">07/06/2026</p>
+                <p className="mt-1 text-xs font-semibold">
+                  {formatDate(activity.log_date)}
+                </p>
               </div>
 
               <div>
                 <label className="text-sm font-bold uppercase tracking-wide text-gray-400">
                   Hora de registro
                 </label>
-                <p className="mt-1 text-xs font-semibold">14:32:05</p>
+                <p className="mt-1 text-xs font-semibold">
+                  {activity.created_at.slice(11, 16)}
+                </p>
               </div>
             </div>
           </section>
           <section>
             <div className="flex items-center justify-between border-b border-gray-200/90 pb-3 mb-5">
-              <h3 className="text-lg text-azul-kurve font-semibold text-end">Historial de correcciones</h3>
-              <p className="text-xs pt-2 text-muted-foreground font-semibold text-azul-kurve">Últimas 2</p>
+              <h3 className="text-lg text-azul-kurve font-semibold text-end">
+                Historial de correcciones
+              </h3>
+              <p className="text-xs pt-2 text-muted-foreground font-semibold text-azul-kurve">
+                Últimas 2
+              </p>
             </div>
 
             <div className="space-y-3">
@@ -183,7 +199,10 @@ const TimeActivityDrawer = ({
             Cerrar
           </Button>
 
-          <Button className="cursor-pointer px-8 py-6 bg-verde-kurve text-white font-semibold rounded-lg hover:bg-verde-kurve-dark transition-colors">
+          <Button
+            className="cursor-pointer px-8 py-6 bg-verde-kurve text-white font-semibold rounded-lg hover:bg-verde-kurve-dark transition-colors"
+            onClick={() => router.push("/admin/correcciones")}
+          >
             Ver historial completo
           </Button>
         </div>

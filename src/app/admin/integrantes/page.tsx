@@ -240,6 +240,7 @@ const MembersPage = () => {
                     <TableCell className="px-4 py-6 text-sm">
                       {member.phone ? member.phone : "No especificado"}
                     </TableCell>
+                    <TableCell>–</TableCell>
                     <TableCell className="px-4 py-6 text-sm">
                       {member.active === true ? (
                         <span className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">

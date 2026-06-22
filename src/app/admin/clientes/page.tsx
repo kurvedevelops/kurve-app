@@ -144,8 +144,10 @@ const ClientesPage = () => {
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
+  type ActiveClient = Omit<Client, "status"> & { status: "active" | "paused" };
+
   const filteredClients = clients.filter(
-    (c) => c.status == "active" || c.status == "paused",
+    (c): c is ActiveClient => c.status === "active" || c.status === "paused",
   );
 
   const searchedClients = filteredClients.filter((c) => {
