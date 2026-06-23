@@ -428,6 +428,7 @@ export type Database = {
       }
       packages: {
         Row: {
+          block_on_limit: boolean
           client_id: string
           created_at: string
           end_date: string | null
@@ -440,6 +441,7 @@ export type Database = {
           total_pieces: number | null
         }
         Insert: {
+          block_on_limit?: boolean
           client_id: string
           created_at?: string
           end_date?: string | null
@@ -452,6 +454,7 @@ export type Database = {
           total_pieces?: number | null
         }
         Update: {
+          block_on_limit?: boolean
           client_id?: string
           created_at?: string
           end_date?: string | null
