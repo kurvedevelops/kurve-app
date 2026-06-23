@@ -265,6 +265,38 @@ export async function POST(request: Request) {
     );
   }
 
+  // Tipo transitorio hasta que database.types.ts se regenere con block_on_limit
+  type PackageWithLimit = { block_on_limit: boolean };
+
+  // Consultar consumo del paquete activo para este cliente
+  const { data: consumo } = await supabase
+    .from("v_client_consumption")
+    .select("package_id, hours_percent")
+    .eq("client_id", parsed.data.client_id)
+    .eq("package_status", "active")
+    .maybeSingle();
+
+  const hoursPercent = consumo?.hours_percent ?? 0;
+
+  if (consumo?.package_id) {
+    // Consultar si el paquete bloquea la carga al agotar horas
+    const { data: pkg } = await supabase
+      .from("packages")
+      .select("block_on_limit")
+      .eq("id", consumo.package_id)
+      .single() as unknown as { data: PackageWithLimit | null };
+
+    if (pkg?.block_on_limit && hoursPercent >= 100) {
+      return NextResponse.json(
+        {
+          error: "Paquete sin horas disponibles",
+          hours_percent: hoursPercent,
+        },
+        { status: 409 }
+      );
+    }
+  }
+
   // Buscar si existe un borrador pendiente del usuario
   const { data: existingDraft } = await supabase
     .from("activity_logs")
@@ -341,7 +373,7 @@ export async function POST(request: Request) {
     );
   }
 
-  // Devolver actividad publicada al frontend
+  // Devolver actividad publicada al frontend (con advertencia si el paquete supera el 70%)
   return NextResponse.json(
     {
       message:
@@ -349,6 +381,7 @@ export async function POST(request: Request) {
           ? "Borrador publicado correctamente"
           : "Actividad creada correctamente",
       data: activityLog,
+      ...(hoursPercent >= 70 ? { warning: true, hours_percent: hoursPercent } : {}),
     },
     { status: responseStatus }
   );
