@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 // Schema de validación para crear/publicar una actividad
 const createActivityLogSchema = z.object({
@@ -201,6 +202,15 @@ export async function POST(request: Request) {
         error: "No autenticado",
       },
       { status: 401 }
+    );
+  }
+
+  // Rate limiting: máximo 30 requests por minuto por usuario
+  const { limited } = checkRateLimit(user.id);
+  if (limited) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes, intentá en un momento" },
+      { status: 429 }
     );
   }
 
