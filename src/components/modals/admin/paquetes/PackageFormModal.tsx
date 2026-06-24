@@ -34,7 +34,11 @@ const PackageFormModal = ({
       name: name.trim(),
       total_hours: Number(hours),
       total_pieces: piezas ? Number(piezas) : null,
-      price: precio ? Number(precio) : null,
+      status: pkg?.status ?? "active",
+      price: precio ? Number(precio) : 0,
+      start_date: pkg?.start_date ?? "",
+      end_date: pkg?.end_date ?? "",
+      created_at: pkg?.created_at ?? "",
     });
     onClose();
   };

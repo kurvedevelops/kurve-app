@@ -181,16 +181,17 @@ const PackagesPage = () => {
         onSave={handleSave}
       />
 
-      {/* Modal de confirmación de borrado */}
-      <ConfirmDeleteModal
-        open={deleteModalOpen}
-        onCancel={() => {
-          setDeleteModalOpen(false);
-          setSelectedPackage(null);
-        }}
-        onConfirm={handleConfirmDelete}
-        entityName={selectedPackage?.name}
-      />
+      {selectedPackage && (
+        <ConfirmDeleteModal
+          open={deleteModalOpen}
+          onCancel={() => {
+            setDeleteModalOpen(false);
+            setSelectedPackage(null);
+          }}
+          onConfirm={handleConfirmDelete}
+          entityName={selectedPackage.name}
+        />
+      )}
     </div>
   );
 };

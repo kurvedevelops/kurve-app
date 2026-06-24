@@ -200,7 +200,7 @@ const SidebarBase = ({
         </nav>
 
         {/* User Section */}
-        <div className="mt-auto pt-4">
+        <div className="mt-auto pt-4 cursor-default">
           <div className="flex items-center gap-3 p-3 rounded-lg border border-gris-kurve-light hover:bg-muted transition-colors">
             {/* Avatar */}
             <div className="hidden w-10 h-10 rounded-full bg-verde-kurve lg:flex items-center justify-center text-white font-bold text-sm">

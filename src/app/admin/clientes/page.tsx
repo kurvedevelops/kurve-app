@@ -357,7 +357,12 @@ const ClientesPage = () => {
                           : ""
                       }
                     >
-                      <td className="px-4 py-3.5 relative">
+                      <td
+                        className="px-4 py-3.5 relative cursor-pointer"
+                        onClick={() =>
+                          router.push(`/admin/clientes/${client.id}`)
+                        }
+                      >
                         <div className="flex items-center gap-2.5">
                           <div className="w-9 h-9 rounded-lg bg-verde-kurve/10 flex items-center justify-center text-xs font-semibold text-verde-kurve">
                             {getInitials(client.name)}

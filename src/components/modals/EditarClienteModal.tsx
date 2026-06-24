@@ -34,7 +34,7 @@ const editarClienteSchema = z.object({
       (date) => new Date(date) <= new Date(),
       "La fecha de alta no puede ser en el futuro",
     ),
-  status: z.enum(["active", "paused"] as const, {
+  status: z.enum(["active", "paused", "ended"] as const, {
     message: "Selecciona un estado válido",
   }),
 });
@@ -45,7 +45,7 @@ export interface Client {
   email: string | null;
   legal_name: string | null;
   phone: string | null;
-  status: "active" | "paused";
+  status: "active" | "paused" | "ended";
   created_at: string;
   start_date: string | null;
   end_date: string | null;
