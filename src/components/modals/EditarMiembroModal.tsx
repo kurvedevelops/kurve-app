@@ -1,4 +1,4 @@
-"use client";
+"use member";
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { BaseModal } from "./ModalBase";
@@ -6,23 +6,18 @@ import { toast } from "sonner";
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
-const editarClienteSchema = z.object({
-  name: z
+const editarMiembroSchema = z.object({
+  full_name: z
     .string()
-    .min(1, "El nombre del cliente es requerido")
+    .min(1, "El nombre del miembro es requerido")
     .min(3, "El nombre debe tener al menos 3 caracteres")
     .max(100, "El nombre no puede exceder 100 caracteres"),
-  razonSocial: z
-    .string()
-    .max(100, "La razón social no puede exceder 100 caracteres")
-    .optional()
-    .or(z.literal("")),
   email: z
     .string()
     .email("El email debe ser válido")
     .optional()
     .or(z.literal("")),
-  telefono: z
+  phone: z
     .string()
     .regex(/^[\d\s\-\+\(\)]*$/, "El teléfono contiene caracteres inválidos")
     .optional()
@@ -34,53 +29,46 @@ const editarClienteSchema = z.object({
       (date) => new Date(date) <= new Date(),
       "La fecha de alta no puede ser en el futuro",
     ),
-  status: z.enum(["active", "paused", "ended"] as const, {
-    message: "Selecciona un estado válido",
-  }),
 });
 
-export interface Client {
+interface Member {
   id: string;
-  name: string;
-  email: string | null;
-  legal_name: string | null;
-  phone: string | null;
-  status: "active" | "paused" | "ended";
+  full_name: string;
+  email: string;
+  role: string;
+  phone: string;
+  active: boolean;
   created_at: string;
-  start_date: string | null;
-  end_date: string | null;
 }
 
-export type EditarClienteFormData = z.infer<typeof editarClienteSchema>;
+export type EditarMiembroFormData = z.infer<typeof editarMiembroSchema>;
 
-interface EditarClienteModalProps {
+interface EditarmiembroModalProps {
   open: boolean;
   onClose: () => void;
-  client: Client;
-  onSubmit: (data: EditarClienteFormData) => void | Promise<void>;
+  member: Member;
+  onSubmit: (data: EditarMiembroFormData) => void | Promise<void>;
 }
 
-type FormErrors = Partial<Record<keyof EditarClienteFormData, string>>;
+type FormErrors = Partial<Record<keyof EditarMiembroFormData, string>>;
 
-function buildInitialForm(client: Client): EditarClienteFormData {
+function buildInitialForm(member: Member): EditarMiembroFormData {
   return {
-    name: client.name ?? "",
-    razonSocial: client.legal_name ?? "",
-    email: client.email ?? "",
-    telefono: client.phone ?? "",
-    fechaAlta: client.created_at ? client.created_at.split("T")[0] : "",
-    status: client.status ?? "active",
+    full_name: member.full_name ?? "",
+    email: member.email ?? "",
+    phone: member.phone ?? "",
+    fechaAlta: member.created_at ? member.created_at.split("T")[0] : "",
   };
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function validateField(
-  field: keyof EditarClienteFormData,
+  field: keyof EditarMiembroFormData,
   value?: string,
 ): string | undefined {
   try {
-    editarClienteSchema
+    editarMiembroSchema
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .pick({ [field]: true } as any)
       .parse({ [field]: value });
@@ -91,14 +79,14 @@ function validateField(
   }
 }
 
-export function EditarClienteModal({
+export function EditarmiembroModal({
   open,
   onClose,
-  client,
+  member,
   onSubmit,
-}: EditarClienteModalProps) {
-  const [form, setForm] = useState<EditarClienteFormData>(() =>
-    buildInitialForm(client),
+}: EditarmiembroModalProps) {
+  const [form, setForm] = useState<EditarMiembroFormData>(() =>
+    buildInitialForm(member),
   );
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
@@ -107,20 +95,20 @@ export function EditarClienteModal({
   useEffect(() => {
     if (open) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setForm(buildInitialForm(client));
+      setForm(buildInitialForm(member));
       setErrors({});
       setTouched({});
     }
-  }, [open, client]);
+  }, [open, member]);
 
-  function handleChange(field: keyof EditarClienteFormData, value: string) {
+  function handleChange(field: keyof EditarMiembroFormData, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (touched[field]) {
       setErrors((prev) => ({ ...prev, [field]: validateField(field, value) }));
     }
   }
 
-  function handleBlur(field: keyof EditarClienteFormData) {
+  function handleBlur(field: keyof EditarMiembroFormData) {
     setTouched((prev) => ({ ...prev, [field]: true }));
     setErrors((prev) => ({
       ...prev,
@@ -130,31 +118,29 @@ export function EditarClienteModal({
 
   async function handleSubmit() {
     try {
-      const validatedData = editarClienteSchema.parse(form);
+      const validatedData = editarMiembroSchema.parse(form);
       setErrors({});
       setLoading(true);
       await onSubmit(validatedData);
-      toast.success("Cliente editado exitosamente");
+      toast.success("miembro editado exitosamente");
       onClose();
     } catch (err) {
       if (err instanceof z.ZodError) {
         const newErrors: FormErrors = {};
         err.issues.forEach((e) => {
-          const field = e.path[0] as keyof EditarClienteFormData;
+          const field = e.path[0] as keyof EditarMiembroFormData;
           newErrors[field] = e.message;
         });
         setErrors(newErrors);
         setTouched({
-          name: true,
-          razonSocial: true,
+          full_name: true,
           email: true,
-          telefono: true,
+          phone: true,
           fechaAlta: true,
-          status: true,
         });
         toast.error("Por favor, corrige los errores del formulario");
       } else {
-        toast.error("Error al editar cliente");
+        toast.error("Error al editar miembro");
       }
     } finally {
       setLoading(false);
@@ -162,7 +148,7 @@ export function EditarClienteModal({
   }
 
   // Clase de input reutilizable
-  function inputClass(field: keyof EditarClienteFormData) {
+  function inputClass(field: keyof EditarMiembroFormData) {
     return `w-full h-10 px-3 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-1 ${
       errors[field] && touched[field]
         ? "border-red-500 bg-red-50 focus:ring-red-200"
@@ -170,29 +156,16 @@ export function EditarClienteModal({
     }`;
   }
 
-  const statusOptions = [
-    {
-      value: "active",
-      label: "Activo",
-      color: "bg-verde-kurve/10 text-verde-kurve",
-    },
-    {
-      value: "paused",
-      label: "Pausado",
-      color: "bg-gris-kurve-light/50 text-gris-kurve-dark",
-    },
-  ];
-
   return (
     <BaseModal
       open={open}
       onClose={onClose}
-      title="Editar cliente"
-      description="Modificá los datos del cliente."
+      title="Editar miembro"
+      description="Modificá los datos del miembro."
       actions={[
         { label: "Cancelar", onClick: onClose, variant: "secondary" },
         {
-          label: "Modificar cliente",
+          label: "Modificar miembro",
           onClick: handleSubmit,
           variant: "primary",
           loading,
@@ -203,18 +176,18 @@ export function EditarClienteModal({
       {/* Nombre */}
       <div>
         <label className="block text-sm font-medium text-foreground mb-1.5">
-          Nombre del cliente <span className="text-red-500">*</span>
+          Nombre del miembro <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
           placeholder="Ej: Estudio Norte"
-          value={form.name}
-          onChange={(e) => handleChange("name", e.target.value)}
-          onBlur={() => handleBlur("name")}
-          className={inputClass("name")}
+          value={form.full_name}
+          onChange={(e) => handleChange("full_name", e.target.value)}
+          onBlur={() => handleBlur("full_name")}
+          className={inputClass("full_name")}
         />
-        {errors.name && touched.name && (
-          <p className="text-xs text-red-500 mt-1">{errors.name}</p>
+        {errors.full_name && touched.name && (
+          <p className="text-xs text-red-500 mt-1">{errors.full_name}</p>
         )}
         <p className="text-xs text-gris-kurve-dark mt-1">
           Este nombre se mostrará en todo el sistema.
@@ -223,22 +196,6 @@ export function EditarClienteModal({
 
       {/* Razón social + Email */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">
-            Razón social
-          </label>
-          <input
-            type="text"
-            placeholder="Razón social (opcional)"
-            value={form.razonSocial}
-            onChange={(e) => handleChange("razonSocial", e.target.value)}
-            onBlur={() => handleBlur("razonSocial")}
-            className={inputClass("razonSocial")}
-          />
-          {errors.razonSocial && touched.razonSocial && (
-            <p className="text-xs text-red-500 mt-1">{errors.razonSocial}</p>
-          )}
-        </div>
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">
             Email de contacto
@@ -255,10 +212,6 @@ export function EditarClienteModal({
             <p className="text-xs text-red-500 mt-1">{errors.email}</p>
           )}
         </div>
-      </div>
-
-      {/* Teléfono + Fecha */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">
             Teléfono
@@ -266,52 +219,31 @@ export function EditarClienteModal({
           <input
             type="tel"
             placeholder="+54 11 0000-0000"
-            value={form.telefono}
-            onChange={(e) => handleChange("telefono", e.target.value)}
-            onBlur={() => handleBlur("telefono")}
-            className={inputClass("telefono")}
+            value={form.phone}
+            onChange={(e) => handleChange("phone", e.target.value)}
+            onBlur={() => handleBlur("phone")}
+            className={inputClass("phone")}
           />
-          {errors.telefono && touched.telefono && (
-            <p className="text-xs text-red-500 mt-1">{errors.telefono}</p>
-          )}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">
-            Fecha de alta <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="date"
-            value={form.fechaAlta}
-            onChange={(e) => handleChange("fechaAlta", e.target.value)}
-            onBlur={() => handleBlur("fechaAlta")}
-            className={inputClass("fechaAlta")}
-          />
-          {errors.fechaAlta && touched.fechaAlta && (
-            <p className="text-xs text-red-500 mt-1">{errors.fechaAlta}</p>
+          {errors.phone && touched.telefono && (
+            <p className="text-xs text-red-500 mt-1">{errors.phone}</p>
           )}
         </div>
       </div>
 
-      {/* Estado */}
+      {/* Teléfono + Fecha */}
       <div>
         <label className="block text-sm font-medium text-foreground mb-1.5">
-          Estado <span className="text-red-500">*</span>
+          Fecha de alta <span className="text-red-500">*</span>
         </label>
-        <select
-          value={form.status}
-          onChange={(e) => handleChange("status", e.target.value)}
-          onBlur={() => handleBlur("status")}
-          className={inputClass("status")}
-        >
-          <option value="">Selecciona un estado</option>
-          {statusOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        {errors.status && touched.status && (
-          <p className="text-xs text-red-500 mt-1">{errors.status}</p>
+        <input
+          type="date"
+          value={form.fechaAlta}
+          onChange={(e) => handleChange("fechaAlta", e.target.value)}
+          onBlur={() => handleBlur("fechaAlta")}
+          className={inputClass("fechaAlta")}
+        />
+        {errors.fechaAlta && touched.fechaAlta && (
+          <p className="text-xs text-red-500 mt-1">{errors.fechaAlta}</p>
         )}
       </div>
     </BaseModal>

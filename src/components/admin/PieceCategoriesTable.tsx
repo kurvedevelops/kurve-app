@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { useState } from "react";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import ConfirmDeactivateModal from "../modals/admin/ConfirmDeactivateModal";
-import EditCategoryModal from "../modals/admin/EditCategoryModal";
+import ConfirmDeactivateModal from "../modals/admin/configuracion/ConfirmDeactivateModal";
+import EditCategoryModal from "../modals/admin/configuracion/EditCategoryModal";
 
 type Category = {
   id: number;
@@ -28,15 +28,21 @@ const mockPackages = [
   { id: "2", name: "Pack Premium", cat1_name: "Reel", cat2_name: "Post feed" },
 ];
 
-
-const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategoriesTableProps) => {
+const PieceCategoriesTable = ({
+  categories: initialCategories,
+}: PieceCategoriesTableProps) => {
   const [categories, setCategories] = useState(initialCategories);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+    null,
+  );
   const [pendingUpdate, setPendingUpdate] = useState<Category | null>(null);
-  const [affectedPackages, setAffectedPackages] = useState<{ id: string; name: string }[]>([]);
+  const [affectedPackages, setAffectedPackages] = useState<
+    { id: string; name: string }[]
+  >([]);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
 
   const handleEditClick = (category: Category) => {
     setSelectedCategory(category);
@@ -47,9 +53,8 @@ const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategories
     const estaDesactivando = selectedCategory?.activo && !updated.activo;
 
     if (estaDesactivando) {
-      // Simula la consulta a Supabase con mock data
       const afectados = mockPackages.filter((pkg) =>
-        [pkg.cat1_name, pkg.cat2_name].includes(updated.nombre)
+        [pkg.cat1_name, pkg.cat2_name].includes(updated.nombre),
       );
 
       if (afectados.length > 0) {
@@ -69,7 +74,6 @@ const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategories
     if (!pendingUpdate) return;
     setConfirmLoading(true);
 
-    // Simula delay de red
     await new Promise((res) => setTimeout(res, 800));
 
     guardarCategoria(pendingUpdate);
@@ -78,11 +82,14 @@ const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategories
     setPendingUpdate(null);
   };
 
-  // Actualiza el estado local (cuando conectes el back, acá también hacés el update en Supabase)
   const guardarCategoria = (updated: Category) => {
     setCategories((prev) =>
-      prev.map((c) => (c.id === updated.id ? updated : c))
+      prev.map((c) => (c.id === updated.id ? updated : c)),
     );
+  };
+
+  const handleAdd = async (nueva: Category) => {
+    setCategories((prev) => [...prev, nueva]);
   };
 
   return (
@@ -91,9 +98,11 @@ const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategories
         <h2 className="text-base font-medium text-gray-900">
           Categorías de piezas
         </h2>
+
         <Button
           className="flex items-center bg-verde-kurve text-white px-4 py-5 hover:bg-verde-kurve-dark hover:text-white"
           variant="outline"
+          onClick={() => setAddModalOpen(true)}
         >
           + Agregar categoría
         </Button>
@@ -105,8 +114,12 @@ const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategories
             <TableHead className="h-12 px-3 font-semibold text-gray-400">
               NOMBRE DE CATEGORÍA
             </TableHead>
-            <TableHead className="font-semibold text-gray-400">ESTADO</TableHead>
-            <TableHead className="font-semibold text-gray-400">ACCIONES</TableHead>
+            <TableHead className="font-semibold text-gray-400">
+              ESTADO
+            </TableHead>
+            <TableHead className="font-semibold text-gray-400">
+              ACCIONES
+            </TableHead>
           </TableRow>
         </TableHeader>
 
@@ -116,7 +129,7 @@ const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategories
               key={category.id}
               className="border-b border-gray-100 hover:bg-muted/50 transition-colors"
             >
-              <TableCell className="text-sm px-4 py-6 md:w-[480px]">
+              <TableCell className="text-sm px-4 py-6 md:w-120">
                 {category.nombre}
               </TableCell>
 
@@ -124,7 +137,7 @@ const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategories
                 <span
                   className={`px-2 py-1 text-xs rounded-full font-medium ${
                     category.activo
-                      ? "bg-green-100 text-green-700"
+                      ? "bg-green-100 text-verde-kurve"
                       : "bg-gray-100 text-gray-600"
                   }`}
                 >
@@ -133,7 +146,6 @@ const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategories
               </TableCell>
 
               <TableCell>
-                {/* onClick conectado */}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -147,13 +159,19 @@ const PieceCategoriesTable = ({ categories: initialCategories }: PieceCategories
           ))}
         </TableBody>
       </Table>
-
-      {/* Modales al final del JSX */}
       <EditCategoryModal
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
         category={selectedCategory}
         onSave={handleSave}
+      />
+
+      <EditCategoryModal
+        key="new-category"
+        isOpen={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        category={null}
+        onSave={handleAdd}
       />
 
       <ConfirmDeactivateModal

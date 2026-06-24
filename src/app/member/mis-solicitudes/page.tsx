@@ -128,7 +128,7 @@ const MisSolicitudesPage = () => {
                     Estado
                   </TableHead>
 
-                  <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
+                  <TableHead className="px-4 py-3 text-center text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
                     Solicitado
                   </TableHead>
                 </TableRow>
@@ -184,7 +184,7 @@ const MisSolicitudesPage = () => {
                                 : "Rechazada"}
                           </span>
                         </TableCell>
-                        <TableCell className="font-semibold">
+                        <TableCell className="font-semibold text-center">
                           {req.created_at.split("T")[0]}
                         </TableCell>
                       </TableRow>
