@@ -4,8 +4,20 @@ import { createClient } from "@/lib/supabase/client";
 import { Tables } from "@/lib/supabase/database.types";
 import { NuevoClienteFormData } from "@/components/modals/NuevoClienteModal";
 import { EditarClienteFormData } from "@/components/modals/EditarClienteModal";
+import { AsignarPaqueteFormData } from "@/components/modals/AsignarPaquete";
+import {
+  AprovedCorrectionData,
+  CorrectionFormData,
+} from "@/components/modals/member/CorrectionModal";
+import { Member } from "@/app/admin/integrantes/page";
 
 type User = Tables<"users">;
+
+export const formatDate = (date: string | null) => {
+  if (!date) return "Indefinido";
+  const [y, m, d] = date.split("-");
+  return `${d}/${m}/${y}`;
+};
 
 export async function editClient(
   clientId: string,
@@ -41,6 +53,20 @@ export async function deleteClient(clientId: string) {
   if (error) throw error;
 }
 
+export async function deleteMember(memberId?: string) {
+  if (!memberId) return;
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("users")
+    .update({
+      active: false,
+    })
+    .eq("id", memberId);
+
+  if (error) throw error;
+}
+
 export async function createNewClient(data: NuevoClienteFormData) {
   const supabase = createClient();
 
@@ -56,11 +82,77 @@ export async function createNewClient(data: NuevoClienteFormData) {
   if (error) throw error;
 }
 
+export async function checkClientExists(name: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("clients")
+    .select("id")
+    .eq("name", name)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error al verificar cliente:", error);
+    return false;
+  }
+
+  return !!data;
+}
+
+export async function checkMemberExists(name: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("users")
+    .select("id")
+    .eq("full_name", name)
+    .single();
+
+  if (error && error.code !== "PGRST116") {
+    console.error("Error al verificar cliente:", error);
+    return false;
+  }
+
+  return !!data;
+}
+
+export async function assignPackage(
+  clientId: string,
+  data: AsignarPaqueteFormData,
+) {
+  const supabase = createClient();
+
+  const { error } = await supabase.from("packages").insert({
+    name: data.nombrePaquete,
+    client_id: clientId,
+    price: data.precio || 0,
+    total_hours: data.horasTotales,
+    start_date: data.fechaInicio || null,
+    end_date: data.fechaFin || null,
+    total_pieces: data.publicaciones.total || null,
+    created_at: new Date().toISOString().split("T")[0],
+    status: "active",
+  });
+
+  if (error) throw error;
+}
+
+export async function assignClientToUser(clientId: string, memberId?: string) {
+  if (!memberId) return;
+  const supabase = createClient();
+
+  const { error } = await supabase.from("client_users").insert({
+    user_id: memberId,
+    client_id: clientId,
+  });
+
+  if (error) throw error;
+}
+
 export function useCurrentUser() {
   const [user, setUser] = useState<User | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -93,14 +185,22 @@ export function useCurrentUser() {
   return { user, loadingUser, error };
 }
 
-type ClientUser = Tables<"client_users">;
+type Client = Tables<"clients">;
 
-export function useClientsByUser(userId: string) {
-  const [clientsId, setClientsId] = useState<any[]>([]);
+interface UserClient {
+  id: string;
+  client_id: string;
+  user_id: string;
+  created_at: string;
+}
+
+export function useClientsByUser(userId?: string) {
+  const [clientsId, setClientsId] = useState<UserClient[]>([]);
   const [loadingClientsId, setLoadingClientsId] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!userId) return;
     const fetchClients = async () => {
       try {
         const supabase = createClient();
@@ -123,8 +223,34 @@ export function useClientsByUser(userId: string) {
   return { clientsId, loadingClientsId, error };
 }
 
+export function useUsers() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.from("users").select("*");
+
+        if (error) throw error;
+
+        setUsers(data || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  return { users, loadingUsers, error };
+}
+
 export function useClients() {
-  const [clients, setClients] = useState<any[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [loadingClients, setLoadingClients] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -150,8 +276,36 @@ export function useClients() {
   return { clients, loadingClients, error };
 }
 
+export function useMembers() {
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("users")
+          .select("*")
+          .eq("role", "member");
+
+        if (error) throw error;
+        setMembers(data || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingMembers(false);
+      }
+    };
+    fetchMembers();
+  }, []);
+
+  return { members, loadingMembers, error };
+}
+
 export function getInitials(fullName?: string) {
-  if (!fullName) return "U";
+  if (!fullName) return "";
   const parts = fullName.trim().split(" ");
   if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
@@ -195,7 +349,10 @@ export function usePackages() {
     const fetchPackages = async () => {
       try {
         const supabase = createClient();
-        const { data, error } = await supabase.from("packages").select("*");
+        const { data, error } = await supabase
+          .from("packages")
+          .select("*")
+          .eq("status", "active");
 
         if (error) throw error;
 
@@ -207,11 +364,59 @@ export function usePackages() {
       }
     };
     fetchPackages();
-  }, [packages]);
+  }, []);
   return { packages, loadingPackages };
 }
 
+export interface Package {
+  id: string;
+  client_id: string;
+  name: string;
+  total_hours: number;
+  price: number;
+  status: "active" | "paused" | "ended";
+  start_date: string | null;
+  end_date: string | null;
+  created_at: string;
+  total_pieces: number | null;
+}
+
+export async function deletePackage(id: string) {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("packages")
+    .update({
+      status: "ended",
+    })
+    .eq("id", id);
+
+  if (error) throw error;
+}
+
+export async function editPackage(data: Package, id: string) {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("packages")
+    .update({
+      client_id: data.client_id,
+      name: data.name,
+      total_hours: data.total_hours,
+      price: data.price,
+      status: data.status,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      created_at: data.created_at,
+      total_pieces: data.total_pieces,
+    })
+    .eq("id", id);
+
+  if (error) throw error;
+}
+
 export function usePackageByClient(clientId: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [clientPackage, setClientPackage] = useState<any[]>([]);
   const [loadingClientPackage, setLoadingClientPackage] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -235,8 +440,37 @@ export function usePackageByClient(clientId: string) {
       }
     };
     fetchPackages();
-  }, [clientPackage, clientId]);
+  }, [clientId]);
   return { clientPackage, loadingClientPackage };
+}
+
+export function usePackageConsumption(clientId: string) {
+  const [packageConsumption, setPackageConsumption] = useState<any[]>([]);
+  const [loadingPackageConsumption, setLoadingPackageConsumption] =
+    useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPackageConsumption = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("v_client_consumption")
+          .select("*")
+          .eq("client_id", clientId);
+
+        if (error) throw error;
+
+        setPackageConsumption(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingPackageConsumption(false);
+      }
+    };
+    fetchPackageConsumption();
+  }, [clientId]);
+  return { packageConsumption, loadingPackageConsumption };
 }
 
 export function useTaskTypes() {
@@ -257,7 +491,6 @@ export function useTaskTypes() {
         if (error) throw error;
 
         setTasks(data);
-        console.log(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error desconocido");
       } finally {
@@ -269,22 +502,109 @@ export function useTaskTypes() {
   return { tasks, loadingTasks, error };
 }
 
-type ActivityLogWithRelations = {
+export type ActivityLogWithRelations = {
   id: string;
   hours: number;
   pieces_count: number;
   log_date: string;
-  status: "pending" | "approved" | "draft";
+  status: "delivered" | "in_progress";
   notes: string | null;
   is_draft: boolean;
   task_types: { id: string; name: string } | null;
   clients: { id: string; name: string } | null;
+  piece_categories: { id: string; name: string } | null;
 };
 
-export function useActivityLogs(userId: string) {
+export function useActivityLogs(
+  userId?: string,
+  filters?: {
+    client_id?: string;
+    status?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+  },
+) {
   const [activityLogs, setActivityLogs] = useState<ActivityLogWithRelations[]>(
     [],
   );
+  const [totalCount, setTotalCount] = useState(0);
+  const [loadingActivityLogs, setLoadingActivityLogs] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!userId) return;
+    const fetchActivityLogs = async () => {
+      try {
+        const supabase = createClient();
+        let query = supabase
+          .from("activity_logs")
+          .select(
+            `
+            *,
+            task_types ( id, name ),
+            clients ( id, name ),
+            piece_categories ( id, name )
+          `,
+            { count: "exact" },
+          )
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .range((filters?.page ?? 0) * 5, (filters?.page ?? 0) * 5 + 4);
+
+        if (filters?.client_id)
+          query = query.eq("client_id", filters.client_id);
+        if (filters?.status) query = query.eq("status", filters.status);
+        if (filters?.from) query = query.gte("log_date", filters.from);
+        if (filters?.to) query = query.lte("log_date", filters.to);
+
+        const { data, count } = await query;
+        setActivityLogs(data || []);
+        setTotalCount(count || 0);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingActivityLogs(false);
+      }
+    };
+
+    if (userId) fetchActivityLogs();
+  }, [
+    userId,
+    filters?.client_id,
+    filters?.status,
+    filters?.from,
+    filters?.to,
+    filters?.page,
+  ]);
+
+  return { activityLogs, loadingActivityLogs, error, totalCount };
+}
+
+export function useActivityLogDates(userId: string) {
+  const [dates, setDates] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchDates = async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("activity_logs")
+        .select("log_date")
+        .eq("user_id", userId)
+        .order("log_date", { ascending: false });
+
+      const unique = [...new Set(data?.map((d) => d.log_date) || [])];
+      setDates(unique);
+    };
+
+    if (userId) fetchDates();
+  }, [userId]);
+
+  return { dates };
+}
+
+export function useActivityLogsForRequests() {
+  const [activityLogs, setActivityLogs] = useState<any[]>([]);
   const [loadingActivityLogs, setLoadingActivityLogs] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -292,29 +612,190 @@ export function useActivityLogs(userId: string) {
     const fetchActivityLogs = async () => {
       try {
         const supabase = createClient();
-        const { data: activityLogs } = await supabase
+        const { data, error } = await supabase
           .from("activity_logs")
           .select(
             `
-    *,
-    task_types ( id, name ),
-    clients ( id, name )
-  `,
+            *,
+            users (id, full_name),
+            task_types ( id, name ),
+            clients ( id, name ),
+            piece_categories ( id, name )
+          `,
+            { count: "exact" },
           )
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false });
+          .order("log_date", { ascending: false });
 
         if (error) throw error;
 
-        setActivityLogs(activityLogs || []);
+        setActivityLogs(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error desconocido");
       } finally {
         setLoadingActivityLogs(false);
       }
     };
-    if (userId) fetchActivityLogs();
-  }, [userId, activityLogs, error]);
-
+    fetchActivityLogs();
+  }, []);
   return { activityLogs, loadingActivityLogs, error };
+}
+
+export function useEditRequests() {
+  const [editRequests, setEditRequests] = useState<any[]>([]);
+  const [loadingEditRequests, setLoadingEditRequests] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchEditRequests = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("edit_requests")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        setEditRequests(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingEditRequests(false);
+      }
+    };
+    fetchEditRequests();
+  }, []);
+  return { editRequests, loadingEditRequests, error };
+}
+
+export function useEditRequestsById(userId: string) {
+  const [editRequests, setEditRequests] = useState<any[]>([]);
+  const [loadingEditRequests, setLoadingEditRequests] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchEditRequests = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("edit_requests")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .eq("requested_by", userId);
+
+        if (error) throw error;
+
+        setEditRequests(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingEditRequests(false);
+      }
+    };
+    fetchEditRequests();
+  }, [userId]);
+  return { editRequests, loadingEditRequests, error };
+}
+
+export function useEditRequestsByLog(activityLogId: string | null) {
+  const [editRequests, setEditRequests] = useState<any[]>([]);
+  const [loadingEditRequests, setLoadingEditRequests] = useState(true);
+
+  useEffect(() => {
+    if (!activityLogId) {
+      return;
+    }
+
+    const fetchEditRequests = async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("edit_requests")
+        .select("*")
+        .eq("activity_log_id", activityLogId)
+        .order("created_at", { ascending: false })
+        .limit(2);
+
+      if (!error && data) setEditRequests(data);
+      setLoadingEditRequests(false);
+    };
+
+    fetchEditRequests();
+  }, [activityLogId]);
+
+  return { editRequests, loadingEditRequests };
+}
+
+export async function createCorrectionRequest(
+  data: CorrectionFormData,
+  userId: string,
+) {
+  const supabase = createClient();
+
+  const { error } = await supabase.from("edit_requests").insert({
+    activity_log_id: data.activity_log_id,
+    requested_by: userId,
+    field_name: data.field_name,
+    old_value: data.old_value,
+    new_value: data.new_value,
+    reason: data.reason,
+    status: "pending",
+    created_at: new Date().toISOString().split("T")[0],
+  });
+
+  if (error) throw error;
+}
+
+export async function AproveEditRequest(
+  data: AprovedCorrectionData,
+  userId: string,
+) {
+  const supabase = createClient();
+  console.log(data);
+
+  const numericFields = ["hours", "pieces_count"];
+  const parsedValue = numericFields.includes(data.field_name)
+    ? Number(data.new_value)
+    : data.new_value;
+
+  if (numericFields.includes(data.field_name) && isNaN(parsedValue as number)) {
+    throw new Error(
+      `Valor inválido para ${data.field_name}: ${data.new_value}`,
+    );
+  }
+
+  const { error: updateError } = await supabase
+    .from("activity_logs")
+    .update({ [data.field_name]: parsedValue })
+    .eq("id", data.activity_log_id);
+
+  console.log("Update error:", JSON.stringify(updateError));
+
+  if (updateError) throw updateError;
+
+  const { error: reqError } = await supabase
+    .from("edit_requests")
+    .update({
+      status: "approved",
+      reviewed_by: userId,
+      reviewed_at: new Date().toISOString().split("T")[0],
+    })
+    .eq("id", data.id);
+
+  if (reqError) throw reqError;
+}
+
+export async function RejectEditRequest(reqId: string, adminId: string) {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("edit_requests")
+    .update({
+      status: "rejected",
+      reviewed_by: adminId,
+      reviewed_at: new Date().toISOString().split("T")[0],
+    })
+    .eq("id", reqId);
+
+  if (error) throw error;
+  console.log(error);
 }

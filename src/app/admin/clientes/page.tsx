@@ -16,22 +16,14 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
 import { ChevronDown } from "lucide-react";
 import {
+  Client,
   EditarClienteFormData,
   EditarClienteModal,
 } from "@/components/modals/EditarClienteModal";
-
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  legal_name: string;
-  phone: string;
-  status: "active" | "paused";
-  created_at: string;
-}
+import { ConfirmDeleteModal } from "@/components/modals/BorrarEntidadModal";
+import { toast } from "sonner";
 
 interface ActionDropdownProps {
   onEdit?: () => void;
@@ -152,8 +144,10 @@ const ClientesPage = () => {
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
+  type ActiveClient = Omit<Client, "status"> & { status: "active" | "paused" };
+
   const filteredClients = clients.filter(
-    (c) => c.status == "active" || c.status == "paused",
+    (c): c is ActiveClient => c.status === "active" || c.status === "paused",
   );
 
   const searchedClients = filteredClients.filter((c) => {
@@ -161,6 +155,13 @@ const ClientesPage = () => {
     const matchesStatus = statusFilter === "all" || c.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    open: boolean;
+    clientId: string;
+    clientName: string;
+  }>({ open: false, clientId: "", clientName: "" });
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -176,20 +177,25 @@ const ClientesPage = () => {
   }, []);
 
   const handleDelete = async (id: string) => {
-    if (confirm("¿Estás seguro de que quieres eliminar este cliente?")) {
+    try {
+      setDeletingId(id);
       await deleteClient(id);
+      setDeleteConfirm({ open: false, clientId: "", clientName: "" });
+      toast.success("Cliente eliminado exitosamente");
       router.refresh();
+    } catch {
+      toast.error("Error al eliminar cliente");
+    } finally {
+      setDeletingId(null);
     }
   };
 
-  // Acá conectás con tu API/hook para crear el cliente
   const handleCrearCliente = async (data: NuevoClienteFormData) => {
     await createNewClient(data);
     router.refresh();
   };
 
   const handleOpenEditModal = (client: Client) => {
-    console.log("Abriendo modal para:", client);
     setSelectedClient(client);
     setShowEditarClienteModal(true);
   };
@@ -197,8 +203,6 @@ const ClientesPage = () => {
   const handleEditarCliente = async (data: EditarClienteFormData) => {
     try {
       if (!selectedClient) return;
-
-      console.log("Editando cliente:", selectedClient.id, data);
       await editClient(selectedClient.id, data);
 
       router.refresh();
@@ -353,7 +357,12 @@ const ClientesPage = () => {
                           : ""
                       }
                     >
-                      <td className="px-4 py-3.5 relative">
+                      <td
+                        className="px-4 py-3.5 relative cursor-pointer"
+                        onClick={() =>
+                          router.push(`/admin/clientes/${client.id}`)
+                        }
+                      >
                         <div className="flex items-center gap-2.5">
                           <div className="w-9 h-9 rounded-lg bg-verde-kurve/10 flex items-center justify-center text-xs font-semibold text-verde-kurve">
                             {getInitials(client.name)}
@@ -401,13 +410,18 @@ const ClientesPage = () => {
                       </td>
                       <ActionDropdown
                         onEdit={() => {
-                          console.log("Click en editar");
                           handleOpenEditModal(client);
                         }}
                         onView={() =>
                           router.push(`/admin/clientes/${client.id}`)
                         }
-                        onDelete={() => handleDelete(client.id)}
+                        onDelete={() =>
+                          setDeleteConfirm({
+                            open: true,
+                            clientId: client.id,
+                            clientName: client.name,
+                          })
+                        }
                       />
                     </tr>
                   ))
@@ -437,6 +451,20 @@ const ClientesPage = () => {
           onSubmit={handleEditarCliente}
         />
       )}
+
+      <ConfirmDeleteModal
+        open={deleteConfirm.open}
+        entityName={deleteConfirm.clientName}
+        loading={deletingId === deleteConfirm.clientId}
+        onConfirm={() => handleDelete(deleteConfirm.clientId)}
+        onCancel={() =>
+          setDeleteConfirm({
+            open: false,
+            clientId: "",
+            clientName: "",
+          })
+        }
+      />
     </div>
   );
 };

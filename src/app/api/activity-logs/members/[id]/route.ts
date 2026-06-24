@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 
 // Schema para editar integrantes
 const updateMemberSchema = z.object({
@@ -18,7 +18,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   // Crear cliente Supabase
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   // Obtener ID desde params
   const { id } = await params;
@@ -57,7 +57,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   // Crear cliente Supabase
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   // Obtener ID desde params
   const { id } = await params;
@@ -134,7 +134,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   // Crear cliente Supabase
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   // Obtener ID desde params
   const { id } = await params;

@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { resend } from "@/lib/resend";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/supabase/guard";
+import { resend, FROM_EMAIL } from "@/lib/resend";
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "kurvedevelops@gmail.com";
 
 // Schema para crear solicitud de corrección
 const createEditRequestSchema = z.object({
@@ -53,7 +57,7 @@ export async function POST(request: Request) {
     );
   }
 
-  // Buscar actividad original
+  // Buscar actividad original (debe pertenecer al usuario)
   const { data: activityLog, error: activityError } = await supabase
     .from("activity_logs")
     .select("*")
@@ -97,43 +101,47 @@ export async function POST(request: Request) {
     );
   }
 
-  // Intentar enviar email al admin
+  // Intentar notificar al admin por email
   // Si falla NO rompe el endpoint
   try {
+    const adminClient = createAdminClient();
+
     await resend.emails.send({
-      from: "Kurve <onboarding@resend.dev>",
-
-      to: ["admin@kurveapp.com"],
-
+      from: `Kurve <${FROM_EMAIL}>`,
+      to: [ADMIN_EMAIL],
       subject: "Nueva solicitud de corrección",
-
       html: `
         <h2>Nueva solicitud de corrección</h2>
-
         <p><strong>Usuario:</strong> ${user.email}</p>
-
         <p><strong>Campo:</strong> ${parsed.data.field_name}</p>
-
         <p><strong>Valor anterior:</strong> ${oldValue}</p>
-
         <p><strong>Nuevo valor:</strong> ${parsed.data.new_value}</p>
-
         <p><strong>Motivo:</strong> ${parsed.data.reason ?? "-"}</p>
       `,
     });
 
-    // Guardar notificación enviada
-    await supabase.from("notifications").insert({
-      channel: "email",
-      type: "edit_request_created",
-      payload: {
-        activity_log_id: parsed.data.activity_log_id,
-        requested_by: user.id,
-      },
-      sent_at: new Date().toISOString(),
-    } as never);
+    // Buscar el user_id del admin para guardar la notificación
+    const { data: adminUser } = await adminClient
+      .from("users")
+      .select("id")
+      .eq("email", ADMIN_EMAIL)
+      .maybeSingle();
+
+    if (adminUser) {
+      await adminClient.from("notifications").insert({
+        user_id: adminUser.id,
+        channel: "email" as const,
+        type: "edit_request_created",
+        payload: {
+          edit_request_id: editRequest.id,
+          activity_log_id: parsed.data.activity_log_id,
+          requested_by: user.id,
+        },
+        sent_at: new Date().toISOString(),
+      });
+    }
   } catch (error) {
-    console.error("Error enviando email:", error);
+    console.error("Error enviando email al admin:", error);
   }
 
   return NextResponse.json(
@@ -148,9 +156,11 @@ export async function POST(request: Request) {
 // GET /api/edit-requests
 // Admin lista solicitudes pendientes
 export async function GET() {
+  const guard = await requireAdmin();
+  if (guard.error) return guard.error;
+
   const supabase = await createClient();
 
-  // Obtener solicitudes pendientes con relaciones
   const { data: editRequests, error } = await supabase
     .from("edit_requests")
     .select(

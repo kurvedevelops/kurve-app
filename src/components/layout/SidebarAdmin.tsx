@@ -21,13 +21,13 @@ const SidebarAdmin = () => {
     {
       title: "Operacion",
       links: [
-        { label: "Planilla de tiempos", href: "/admin" },
-        { label: "Correcciones", href: "/admin" },
+        { label: "Planilla de tiempos", href: "/admin/planilla" },
+        { label: "Correcciones", href: "/admin/correcciones" },
       ],
     },
     {
       title: "Configuracion",
-      links: [{ label: "Ajustes", href: "/admin" }],
+      links: [{ label: "Ajustes", href: "/admin/configuracion" }],
     },
   ];
 
@@ -35,7 +35,7 @@ const SidebarAdmin = () => {
     <SidebarBase
       navSections={navSections}
       userAvatar={getInitials(user?.full_name)}
-      userName={user?.full_name?.toString() || "U"}
+      userName={user?.full_name?.toString() || "Cargando.."}
       userRole="Administrador"
       showLogout={true}
     />

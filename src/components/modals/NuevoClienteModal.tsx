@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { BaseModal } from "./ModalBase";
+import { toast } from "sonner";
+import { checkClientExists } from "@/hooks/middleware";
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
@@ -10,7 +12,11 @@ const nuevoClienteSchema = z.object({
     .string()
     .min(1, "El nombre del cliente es requerido")
     .min(3, "El nombre debe tener al menos 3 caracteres")
-    .max(100, "El nombre no puede exceder 100 caracteres"),
+    .max(100, "El nombre no puede exceder 100 caracteres")
+    .refine(async (name) => {
+      const exists = await checkClientExists(name);
+      return !exists;
+    }, "Este cliente ya existe"),
   razonSocial: z
     .string()
     .max(100, "La razón social no puede exceder 100 caracteres")
@@ -55,13 +61,15 @@ const initialForm: NuevoClienteFormData = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function validateField(
+async function validateField(
   field: keyof NuevoClienteFormData,
   value?: string,
-): string | undefined {
+): Promise<string | undefined> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    nuevoClienteSchema.pick({ [field]: true } as any).parse({ [field]: value });
+    await nuevoClienteSchema
+      .pick({ [field]: true } as any)
+      .parseAsync({ [field]: value });
     return undefined;
   } catch (err) {
     if (err instanceof z.ZodError) return err.issues[0]?.message;
@@ -84,33 +92,37 @@ export function NuevoClienteModal({
   // Reset al abrir
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm(initialForm);
       setErrors({});
       setTouched({});
     }
   }, [open]);
 
-  function handleChange(field: keyof NuevoClienteFormData, value: string) {
+  async function handleChange(
+    field: keyof NuevoClienteFormData,
+    value: string,
+  ) {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (touched[field]) {
-      setErrors((prev) => ({ ...prev, [field]: validateField(field, value) }));
+      const error = await validateField(field, value);
+      setErrors((prev) => ({ ...prev, [field]: error }));
     }
   }
 
-  function handleBlur(field: keyof NuevoClienteFormData) {
+  async function handleBlur(field: keyof NuevoClienteFormData) {
     setTouched((prev) => ({ ...prev, [field]: true }));
-    setErrors((prev) => ({
-      ...prev,
-      [field]: validateField(field, form[field]),
-    }));
+    const error = await validateField(field, form[field]);
+    setErrors((prev) => ({ ...prev, [field]: error }));
   }
 
   async function handleSubmit() {
     try {
-      const validatedData = nuevoClienteSchema.parse(form);
+      const validatedData = await nuevoClienteSchema.parseAsync(form);
       setErrors({});
       setLoading(true);
       await onSubmit(validatedData);
+      toast.success("Cliente creado exitosamente");
       onClose();
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -127,9 +139,11 @@ export function NuevoClienteModal({
           telefono: true,
           fechaAlta: true,
         });
+        toast.error("Por favor, corrige los errores en el formulario");
+      } else {
+        console.error("Error al crear cliente:", err); // para ver el error real mientras debugueás
+        toast.error("Error al crear cliente");
       }
-    } finally {
-      setLoading(false);
     }
   }
 

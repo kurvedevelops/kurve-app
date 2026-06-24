@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { BaseModal } from "./ModalBase";
+import { toast } from "sonner";
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
@@ -33,19 +34,21 @@ const editarClienteSchema = z.object({
       (date) => new Date(date) <= new Date(),
       "La fecha de alta no puede ser en el futuro",
     ),
-  status: z.enum(["active", "paused"] as const, {
+  status: z.enum(["active", "paused", "ended"] as const, {
     message: "Selecciona un estado válido",
   }),
 });
 
-interface Client {
+export interface Client {
   id: string;
   name: string;
-  email: string;
-  legal_name: string;
-  phone: string;
-  status: "active" | "paused";
+  email: string | null;
+  legal_name: string | null;
+  phone: string | null;
+  status: "active" | "paused" | "ended";
   created_at: string;
+  start_date: string | null;
+  end_date: string | null;
 }
 
 export type EditarClienteFormData = z.infer<typeof editarClienteSchema>;
@@ -101,7 +104,6 @@ export function EditarClienteModal({
   const [loading, setLoading] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  // Reset al abrir
   useEffect(() => {
     if (open) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -132,6 +134,7 @@ export function EditarClienteModal({
       setErrors({});
       setLoading(true);
       await onSubmit(validatedData);
+      toast.success("Cliente editado exitosamente");
       onClose();
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -149,6 +152,9 @@ export function EditarClienteModal({
           fechaAlta: true,
           status: true,
         });
+        toast.error("Por favor, corrige los errores del formulario");
+      } else {
+        toast.error("Error al editar cliente");
       }
     } finally {
       setLoading(false);
