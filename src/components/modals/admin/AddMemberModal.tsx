@@ -1,5 +1,6 @@
 import Modal from "@/components/modals/Modal";
 import { useFormik } from "formik";
+import { toast } from "sonner";
 import { z } from "zod";
 
 type AddMemberFormValues = {
@@ -66,10 +67,10 @@ const AddMemberModal = ({
       });
       const result = await response.json();
       if (!result.success) {
-        console.error("Error al crear miembro:", result.error);
-        // acá podés setear un estado de error para mostrar en el modal
+        toast.error("No se ha podido crear el integrante");
         return;
       }
+      toast.success("Integrante creado con exito");
     },
   });
 
@@ -78,7 +79,7 @@ const AddMemberModal = ({
       <div className="w-full">
         <div className="pb-4">
           <h2 className="text-xl font-semibold text-azul-kurve">
-            Información del Nuevo Miembro
+            Información del nuevo miembro
           </h2>
           <p className="text-sm text-gris-kurve-dark mt-1">
             Completa los datos para invitar a un nuevo colaborador al equipo.
@@ -97,7 +98,7 @@ const AddMemberModal = ({
             <input
               type="text"
               id="name"
-              placeholder="Ej: nombre del usuario"
+              placeholder="Ej: Juan Perez"
               value={formik.values.name}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
@@ -119,7 +120,7 @@ const AddMemberModal = ({
             <input
               type="email"
               id="email"
-              placeholder="empresa.nombre@empresa.com"
+              placeholder="mail@empresa.com"
               value={formik.values.email}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}

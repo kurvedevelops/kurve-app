@@ -35,7 +35,7 @@ const SidebarAdmin = () => {
     <SidebarBase
       navSections={navSections}
       userAvatar={getInitials(user?.full_name)}
-      userName={user?.full_name?.toString() || "U"}
+      userName={user?.full_name?.toString() || "Cargando.."}
       userRole="Administrador"
       showLogout={true}
     />

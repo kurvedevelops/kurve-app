@@ -61,13 +61,15 @@ const initialForm: NuevoClienteFormData = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function validateField(
+async function validateField(
   field: keyof NuevoClienteFormData,
   value?: string,
-): string | undefined {
+): Promise<string | undefined> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    nuevoClienteSchema.pick({ [field]: true } as any).parse({ [field]: value });
+    await nuevoClienteSchema
+      .pick({ [field]: true } as any)
+      .parseAsync({ [field]: value });
     return undefined;
   } catch (err) {
     if (err instanceof z.ZodError) return err.issues[0]?.message;
@@ -97,24 +99,26 @@ export function NuevoClienteModal({
     }
   }, [open]);
 
-  function handleChange(field: keyof NuevoClienteFormData, value: string) {
+  async function handleChange(
+    field: keyof NuevoClienteFormData,
+    value: string,
+  ) {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (touched[field]) {
-      setErrors((prev) => ({ ...prev, [field]: validateField(field, value) }));
+      const error = await validateField(field, value);
+      setErrors((prev) => ({ ...prev, [field]: error }));
     }
   }
 
-  function handleBlur(field: keyof NuevoClienteFormData) {
+  async function handleBlur(field: keyof NuevoClienteFormData) {
     setTouched((prev) => ({ ...prev, [field]: true }));
-    setErrors((prev) => ({
-      ...prev,
-      [field]: validateField(field, form[field]),
-    }));
+    const error = await validateField(field, form[field]);
+    setErrors((prev) => ({ ...prev, [field]: error }));
   }
 
   async function handleSubmit() {
     try {
-      const validatedData = nuevoClienteSchema.parse(form);
+      const validatedData = await nuevoClienteSchema.parseAsync(form);
       setErrors({});
       setLoading(true);
       await onSubmit(validatedData);
@@ -137,10 +141,9 @@ export function NuevoClienteModal({
         });
         toast.error("Por favor, corrige los errores en el formulario");
       } else {
+        console.error("Error al crear cliente:", err); // para ver el error real mientras debugueás
         toast.error("Error al crear cliente");
       }
-    } finally {
-      setLoading(false);
     }
   }
 
