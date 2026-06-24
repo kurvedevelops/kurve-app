@@ -428,6 +428,7 @@ export type Database = {
       }
       packages: {
         Row: {
+          block_on_limit: boolean
           client_id: string
           created_at: string
           end_date: string | null
@@ -440,6 +441,7 @@ export type Database = {
           total_pieces: number | null
         }
         Insert: {
+          block_on_limit?: boolean
           client_id: string
           created_at?: string
           end_date?: string | null
@@ -452,6 +454,7 @@ export type Database = {
           total_pieces?: number | null
         }
         Update: {
+          block_on_limit?: boolean
           client_id?: string
           created_at?: string
           end_date?: string | null
@@ -566,6 +569,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          phone: string | null
           role: Database["public"]["Enums"]["user_role"]
         }
         Insert: {
@@ -574,6 +578,7 @@ export type Database = {
           email: string
           full_name?: string
           id: string
+          phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
         }
         Update: {
@@ -582,6 +587,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
         }
         Relationships: []
