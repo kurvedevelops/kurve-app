@@ -1,65 +1,19 @@
+"use client";
 import PageHeader from "@/components/layout/PageHeader";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import TaskTypesTable from "@/components/admin/TaskTypeTable";
 import PieceCategoriesTable from "@/components/admin/PieceCategoriesTable";
-
-const category = [
-    {
-    id: 1,
-    nombre: "Community Management",
-    cuentaComoPieza: true,
-    rolesPermitidos: ["Diseño", "Social Media"],
-    activo: true,
-  },
-      {
-    id: 2,
-    nombre: "Community Management",
-    cuentaComoPieza: true,
-    rolesPermitidos: ["Diseño", "Social Media"],
-    activo: true,
-  },
-]
-
-const taskTypes = [
-  {
-    id: 1,
-    nombre: "Community Management",
-    cuentaComoPieza: true,
-    rolesPermitidos: ["Diseño", "Social Media"],
-    activo: true,
-  },
-  {
-    id: 2,
-    nombre: "Copywriting",
-    cuentaComoPieza: true,
-    rolesPermitidos: ["Redacción"],
-    activo: true,
-  },
-  {
-    id: 3,
-    nombre: "Reunión de coordinación",
-    cuentaComoPieza: false,
-    rolesPermitidos: ["Todos"],
-    activo: false,
-  },
-  {
-    id: 4,
-    nombre: "Copywriting",
-    cuentaComoPieza: true,
-    rolesPermitidos: ["Redacción"],
-    activo: true,
-  },
-  {
-    id: 5,
-    nombre: "Copywriting",
-    cuentaComoPieza: true,
-    rolesPermitidos: ["Redacción"],
-    activo: true,
-  },
-];
+import {
+  useTaskTypesConfig,
+  usePieceCategoriesConfig,
+} from "../../../hooks/middleware";
 
 const ConfigurationPage = () => {
+  const { tasks, loadingTasks, updateTask, addTask } = useTaskTypesConfig();
+  const { categories, loadingCategories, updateCategory, addCategory } =
+    usePieceCategoriesConfig();
+
   return (
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
       <SidebarAdmin />
@@ -87,7 +41,7 @@ const ConfigurationPage = () => {
           <Tabs defaultValue="tarea" className="mt-10">
             <TabsList
               variant="line"
-              className="gap-5 border-b border-gray-300/40"
+              className=" md:gap-5 border-b border-gray-300/40"
             >
               <TabsTrigger
                 value="tarea"
@@ -105,11 +59,27 @@ const ConfigurationPage = () => {
             </TabsList>
 
             <TabsContent value="tarea">
-              <TaskTypesTable taskTypes={taskTypes}/>
+              {loadingTasks ? (
+                <p className="text-sm text-gray-400 mt-10 ml-4">Cargando...</p>
+              ) : (
+                <TaskTypesTable
+                  taskTypes={tasks}
+                  onSave={updateTask}
+                  onAdd={addTask}
+                />
+              )}
             </TabsContent>
 
             <TabsContent value="piezas">
-              <PieceCategoriesTable categories={category}/>
+              {loadingCategories ? (
+                <p className="text-sm text-gray-400 mt-10 ml-4">Cargando...</p>
+              ) : (
+                <PieceCategoriesTable
+                  categories={categories}
+                  onSave={updateCategory}
+                  onAdd={addCategory}
+                />
+              )}
             </TabsContent>
           </Tabs>
         </div>

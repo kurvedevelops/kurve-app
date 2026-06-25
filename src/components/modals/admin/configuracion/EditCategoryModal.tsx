@@ -1,18 +1,14 @@
 import Modal from "@/components/modals/Modal";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import type { PieceCategory } from "@/hooks/middleware";
 
-interface Category {
-  id: number;
-  nombre: string;
-  activo: boolean;
-}
 
 interface EditCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  category: Category | null;
-  onSave: (updated: Category) => Promise<void>;
+  category: PieceCategory | null;
+  onSave: (updated: PieceCategory) => Promise<void>;
 }
 
 const EditCategoryModal = ({
@@ -22,20 +18,20 @@ const EditCategoryModal = ({
   onSave,
 }: EditCategoryModalProps) => {
   const esNuevo = category === null;
-  const [nombre, setNombre] = useState("");
-  const [activo, setActivo] = useState(true);
+  const [name, setName] = useState(category?.name ?? "");
+  const [active, setActive] = useState(category?.active ?? true);
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
-    if (!nombre.trim()) return;
+    if (!name.trim()) return;
     setLoading(true);
     await onSave({
-      id: category?.id ?? Date.now(),
-      nombre: nombre.trim(),
-      activo,
+      id: category?.id ?? crypto.randomUUID(),
+      name: name.trim(),
+      active,
     });
     setLoading(false);
-    setNombre("")
+    setName("")
     onClose();
   };
 
@@ -51,8 +47,8 @@ const EditCategoryModal = ({
             Nombre de categoría
           </label>
           <input
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             className="mt-2 h-11 px-3 rounded-lg border border-slate-300 text-sm outline-none focus:ring-1 focus:ring-verde-kurve"
             placeholder="Ej: Post feed"
           />
@@ -67,14 +63,14 @@ const EditCategoryModal = ({
           </div>
           <button
             type="button"
-            onClick={() => setActivo(!activo)}
+            onClick={() => setActive(!active)}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-              activo ? "bg-verde-kurve" : "bg-gray-200"
+              active ? "bg-verde-kurve" : "bg-gray-200"
             }`}
           >
             <span
               className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                activo ? "translate-x-6" : "translate-x-1"
+                active ? "translate-x-6" : "translate-x-1"
               }`}
             />
           </button>
@@ -88,7 +84,7 @@ const EditCategoryModal = ({
         <Button
           className="bg-verde-kurve text-white hover:bg-verde-kurve-dark"
           onClick={handleSave}
-          disabled={loading || !nombre.trim()}
+          disabled={loading || !name.trim()}
         >
           {loading ? "Guardando..." : esNuevo ? "Agregar categoría" : "Guardar cambios"}
         </Button>

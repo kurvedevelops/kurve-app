@@ -771,3 +771,186 @@ export async function RejectEditRequest(reqId: string, adminId: string) {
   if (error) throw error;
   console.log(error);
 }
+
+type ClientConsumption = {
+  client_id: string;
+  package_id: string;
+  package_name: string;
+  total_hours: number;
+  consumed_hours: number;
+  traffic_light: string;
+};
+
+export function useClientConsumption() {
+  const [data, setData] = useState<ClientConsumption[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("v_client_consumption")
+          .select("client_id, package_id, package_name, total_hours, consumed_hours, traffic_light, hours_percent");
+
+        if (error) throw error;
+        setData(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetch();
+  }, []);
+
+  return { data, loading, error };
+}
+
+export type TaskType = {
+  id: string;
+  name: string;
+  active: boolean;
+  counts_as_piece: boolean;
+  allowed_roles: string[];
+};
+
+export function useTaskTypesConfig() {
+  const [tasks, setTasks] = useState<TaskType[]>([]);
+  const [loadingTasks, setLoadingTasks] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("task_types")
+          .select("id, name, active, counts_as_piece, allowed_roles")
+          .order("name");
+
+        if (error) throw error;
+        setTasks(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingTasks(false);
+      }
+    };
+    fetchTasks();
+  }, []);
+
+  const updateTask = async (updated: TaskType) => {
+  try {
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("task_types")
+      .update({
+        name: updated.name,
+        active: updated.active,
+        counts_as_piece: updated.counts_as_piece,
+        allowed_roles: updated.allowed_roles,
+      })
+      .eq("id", updated.id);
+
+    if (error) throw error;
+
+    // Actualiza el estado local
+    setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+  } catch (err) {
+    setError(err instanceof Error ? err.message : "Error desconocido");
+  }
+};
+
+const addTask = async (nueva: TaskType) => {
+  try {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("task_types")
+      .insert({
+        name: nueva.name,
+        active: nueva.active,
+        counts_as_piece: nueva.counts_as_piece,
+        allowed_roles: nueva.allowed_roles,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    setTasks((prev) => [...prev, data]);
+  } catch (err) {
+    setError(err instanceof Error ? err.message : "Error desconocido");
+  }
+};
+
+return { tasks, loadingTasks, error, updateTask, addTask };
+}
+
+export type PieceCategory = {
+  id: string;
+  name: string;
+  active: boolean;
+};
+
+export function usePieceCategoriesConfig() {
+  const [categories, setCategories] = useState<PieceCategory[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("piece_categories")
+          .select("id, name, active")
+          .order("name");
+
+        if (error) throw error;
+        setCategories(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  const updateCategory = async (updated: PieceCategory) => {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("piece_categories")
+        .update({ name: updated.name, active: updated.active })
+        .eq("id", updated.id);
+
+      if (error) throw error;
+      setCategories((prev) =>
+        prev.map((c) => (c.id === updated.id ? updated : c)),
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+    }
+  };
+
+  const addCategory = async (nueva: Omit<PieceCategory, "id">) => {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("piece_categories")
+        .insert({ name: nueva.name, active: nueva.active })
+        .select()
+        .single();
+
+      if (error) throw error;
+      setCategories((prev) => [...prev, data]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+    }
+  };
+
+  return { categories, loadingCategories, error, updateCategory, addCategory };
+}
