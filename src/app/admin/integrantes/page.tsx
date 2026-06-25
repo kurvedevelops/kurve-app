@@ -140,6 +140,7 @@ const MembersPage = () => {
             Gestiona los miembros de tu equipo
           </p>
         </div>
+
         <div className="bg-background rounded-xl border border-border mt-4">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 md:p-6 border-b border-border">
             <div className="flex items-center gap-2">
@@ -240,7 +241,7 @@ const MembersPage = () => {
                     <TableCell className="px-4 py-6 text-sm">
                       {member.phone ? member.phone : "No especificado"}
                     </TableCell>
-                    <TableCell>–</TableCell>
+                    <TableCell className="px-4 py-6 text-sm">/</TableCell>
                     <TableCell className="px-4 py-6 text-sm">
                       {member.active === true ? (
                         <span className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">

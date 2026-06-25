@@ -305,7 +305,7 @@ export function useMembers() {
 }
 
 export function getInitials(fullName?: string) {
-  if (!fullName) return "U";
+  if (!fullName) return "";
   const parts = fullName.trim().split(" ");
   if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
@@ -695,6 +695,34 @@ export function useEditRequestsById(userId: string) {
     fetchEditRequests();
   }, [userId]);
   return { editRequests, loadingEditRequests, error };
+}
+
+export function useEditRequestsByLog(activityLogId: string | null) {
+  const [editRequests, setEditRequests] = useState<any[]>([]);
+  const [loadingEditRequests, setLoadingEditRequests] = useState(true);
+
+  useEffect(() => {
+    if (!activityLogId) {
+      return;
+    }
+
+    const fetchEditRequests = async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("edit_requests")
+        .select("*")
+        .eq("activity_log_id", activityLogId)
+        .order("created_at", { ascending: false })
+        .limit(2);
+
+      if (!error && data) setEditRequests(data);
+      setLoadingEditRequests(false);
+    };
+
+    fetchEditRequests();
+  }, [activityLogId]);
+
+  return { editRequests, loadingEditRequests };
 }
 
 export async function createCorrectionRequest(
