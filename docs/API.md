@@ -529,7 +529,9 @@ Asigna o desasigna clientes a un integrante.
 
 ### `POST /api/members/create`
 
-Endpoint legacy de alta rápida de integrantes. Misma funcionalidad que `POST /api/activity-logs/members` pero sin validación Zod ni chequeo de duplicados previo. Usa service client.
+> ⚠️ **Posible duplicado — confirmar cuál está activo en producción.** Misma funcionalidad que `POST /api/activity-logs/members` pero sin validación Zod ni chequeo de duplicados. Endpoint legacy, candidato a deprecar.
+
+Endpoint legacy de alta rápida de integrantes. Usa service client directamente.
 
 **Body:**
 ```json

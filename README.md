@@ -130,9 +130,9 @@ kurve-app/
 │   │   │   │   ├── route.ts        # GET (planilla admin) / POST (publicar actividad)
 │   │   │   │   ├── draft/          # GET / POST borradores
 │   │   │   │   ├── me/             # GET actividades del usuario autenticado
-│   │   │   │   ├── clients/        # CRUD de clientes
-│   │   │   │   ├── members/        # CRUD de integrantes + asignaciones
-│   │   │   │   └── packages/       # CRUD de paquetes
+│   │   │   │   ├── clients/        # CRUD de clientes  ⚠️ ver nota abajo
+│   │   │   │   ├── members/        # CRUD de integrantes + asignaciones  ⚠️ ver nota abajo
+│   │   │   │   └── packages/       # CRUD de paquetes  ⚠️ ver nota abajo
 │   │   │   ├── clients/
 │   │   │   │   └── [id]/package-status/  # Estado del paquete activo
 │   │   │   ├── edit-requests/      # Solicitudes de corrección
@@ -161,6 +161,8 @@ kurve-app/
 ├── .env.example                    # Plantilla de variables de entorno
 └── package.json
 ```
+
+> **⚠️ Nota sobre la estructura de rutas API**: los handlers de clientes, integrantes y paquetes están físicamente dentro de `src/app/api/activity-logs/`, por lo que sus URLs reales son `/api/activity-logs/clients`, `/api/activity-logs/members` y `/api/activity-logs/packages`. Esta anidación es **histórica** (se construyeron junto con el módulo de actividades) y conviene refactorizarla a futuro para separar los dominios en rutas de primer nivel (`/api/clients`, `/api/members`, `/api/packages`).
 
 ---
 
@@ -225,18 +227,8 @@ El endpoint `/api/reminders/send` valida el header `Authorization: Bearer <CRON_
 
 ---
 
-## Dudas / a confirmar
+## Pendiente / deuda técnica
 
-1. **Variables de Twilio ausentes del `.env.example`**: el código de `src/lib/whatsapp.ts` usa `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` y `TWILIO_WHATSAPP_FROM`, pero estas variables no figuran en `.env.example`. Falta agregarlas.
+1. **`/api/members/create` es un duplicado legacy**: existe `POST /api/activity-logs/members` (con validación Zod y chequeo de duplicados) y también `POST /api/members/create` (legacy, sin esas validaciones). Confirmar cuál usa el frontend en producción y deprecar el otro.
 
-2. **`ADMIN_EMAIL` no está en `.env.example`**: `src/app/api/edit-requests/route.ts` usa `process.env.ADMIN_EMAIL` con fallback a `kurvedevelops@gmail.com`. Debería documentarse en el `.env.example`.
-
-3. **`CRON_SECRET` no está en `.env.example`**: el endpoint `/api/reminders/send` lo requiere para autenticar el cron de Vercel, pero no figura en el `.env.example`.
-
-4. **Rutas de clientes en path incorrecto**: los route handlers de clientes (`/api/clients`) están dentro de `src/app/api/activity-logs/clients/`, lo que hace que la URL real sea `/api/activity-logs/clients`. Confirmar si esto es intencional o es un error de estructura.
-
-5. **Idem para members y packages**: los handlers de `/api/members` y `/api/packages` también están bajo `src/app/api/activity-logs/`. La URL efectiva del browser sería `/api/activity-logs/members` y `/api/activity-logs/packages`. Confirmar si la estructura de carpetas refleja las URLs reales de producción.
-
-6. **`src/app/api/members/create/route.ts` es un duplicado**: existe `/api/activity-logs/members/route.ts` (POST) y también `/api/members/create/route.ts` con la misma funcionalidad de crear un miembro. No queda claro cuál se usa en producción.
-
-7. **Tabla `consumption_summary` tiene columna `task_type_id`** en el tipo TypeScript pero la migration 003 solo crea la tabla con `category_id`. La columna `task_type_id` aparece en el tipo generado y en la vista `v_consumption_by_task_type`, pero no se ve en el SQL original de creación de la tabla. Puede haberse agregado manualmente en el dashboard sin migration correspondiente.
+2. **`consumption_summary.task_type_id` sin migration explícita**: la columna existe en el schema (confirmado por `20260618000009_fix_v_client_consumption_view.sql` que la referencia) pero no hay una migration que haga `ALTER TABLE ... ADD COLUMN task_type_id`. Fue agregada vía dashboard de Supabase. Conviene crear una migration retroactiva para mantener el historial consistente.
