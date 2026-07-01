@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { requireAdmin } from "@/lib/supabase/guard";
 
 // Schema de validación para crear/publicar una actividad
 const createActivityLogSchema = z.object({
@@ -34,6 +35,9 @@ const createActivityLogSchema = z.object({
 // GET /api/activity-logs
 // Planilla de tiempos para admin con filtros, cursor pagination y exportación CSV
 export async function GET(request: Request) {
+  const guard = await requireAdmin();
+  if (guard.error) return guard.error;
+
   // Crear cliente Supabase
   const supabase = await createClient();
 
@@ -56,6 +60,8 @@ export async function GET(request: Request) {
 
   // Cursor pagination
   const limit = 50;
+  // Techo de filas para exportación CSV — sin límite se haría full table scan
+  const CSV_MAX_ROWS = 5000;
 
   // Query base con joins
   let query = supabase
@@ -106,9 +112,7 @@ export async function GET(request: Request) {
   }
 
   // Limitar registros
-  if (exportFormat !== "csv") {
-    query = query.limit(limit);
-  }
+  query = query.limit(exportFormat === "csv" ? CSV_MAX_ROWS : limit);
 
   // Ejecutar query
   const { data: activityLogs, error } = await query;

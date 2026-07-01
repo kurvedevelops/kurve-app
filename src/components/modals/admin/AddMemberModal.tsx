@@ -40,9 +40,11 @@ const validate = (values: AddMemberFormValues) => {
 const AddMemberModal = ({
   isOpen,
   onClose,
+  onSuccess,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }) => {
   const formik = useFormik<AddMemberFormValues>({
     initialValues: {
@@ -55,8 +57,8 @@ const AddMemberModal = ({
 
     validateOnMount: true,
 
-    onSubmit: async (values) => {
-      const response = await fetch("/api/members/create", {
+    onSubmit: async (values, { resetForm }) => {
+      const response = await fetch("/api/activity-logs/members", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -65,12 +67,19 @@ const AddMemberModal = ({
           password: values.password,
         }),
       });
-      const result = await response.json();
-      if (!result.success) {
-        toast.error("No se ha podido crear el integrante");
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({ error: "Error desconocido" }));
+        toast.error("No se pudo crear el integrante", {
+          description: body.error ?? "Error desconocido",
+        });
         return;
       }
-      toast.success("Integrante creado con exito");
+
+      toast.success("Integrante creado correctamente");
+      resetForm();
+      onSuccess?.();
+      onClose();
     },
   });
 

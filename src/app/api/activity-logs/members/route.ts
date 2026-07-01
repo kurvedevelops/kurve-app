@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/service";
+import { requireAdmin } from "@/lib/supabase/guard";
 
 // Schema para crear integrantes
 const createMemberSchema = z.object({
@@ -14,6 +15,9 @@ const createMemberSchema = z.object({
 // GET /api/members
 // Listar integrantes
 export async function GET() {
+  const guard = await requireAdmin();
+  if (guard.error) return guard.error;
+
   // Crear cliente Supabase
   const supabase = createServiceClient();
 
@@ -46,6 +50,9 @@ export async function GET() {
 // POST /api/members
 // Crear integrante
 export async function POST(request: Request) {
+  const guard = await requireAdmin();
+  if (guard.error) return guard.error;
+
   // Crear cliente Supabase
   const supabase = createServiceClient();
 
