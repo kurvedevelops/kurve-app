@@ -183,6 +183,7 @@ const MembersPage = () => {
           <AddMemberModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
+            onSuccess={() => router.refresh()}
           />
           <Table>
             <TableHeader>

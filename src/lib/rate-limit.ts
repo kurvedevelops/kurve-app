@@ -17,12 +17,7 @@ export function checkRateLimit(userId: string): { limited: boolean } {
   }
 
   recent.push(now);
-  // Limpiar entrada vacía para evitar crecimiento ilimitado del Map
-  if (recent.length === 0) {
-    requestLog.delete(userId);
-  } else {
-    requestLog.set(userId, recent);
-  }
+  requestLog.set(userId, recent);
 
   return { limited: false };
 }
