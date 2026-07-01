@@ -9,8 +9,15 @@ import {
   AprovedCorrectionData,
   CorrectionFormData,
 } from "@/components/modals/member/CorrectionModal";
+import { Member } from "@/app/admin/integrantes/page";
 
 type User = Tables<"users">;
+
+export const formatDate = (date: string | null) => {
+  if (!date) return "Indefinido";
+  const [y, m, d] = date.split("-");
+  return `${d}/${m}/${y}`;
+};
 
 export async function editClient(
   clientId: string,
@@ -46,6 +53,20 @@ export async function deleteClient(clientId: string) {
   if (error) throw error;
 }
 
+export async function deleteMember(memberId?: string) {
+  if (!memberId) return;
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("users")
+    .update({
+      active: false,
+    })
+    .eq("id", memberId);
+
+  if (error) throw error;
+}
+
 export async function createNewClient(data: NuevoClienteFormData) {
   const supabase = createClient();
 
@@ -68,6 +89,23 @@ export async function checkClientExists(name: string) {
     .from("clients")
     .select("id")
     .eq("name", name)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error al verificar cliente:", error);
+    return false;
+  }
+
+  return !!data;
+}
+
+export async function checkMemberExists(name: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("users")
+    .select("id")
+    .eq("full_name", name)
     .single();
 
   if (error && error.code !== "PGRST116") {
@@ -94,6 +132,18 @@ export async function assignPackage(
     total_pieces: data.publicaciones.total || null,
     created_at: new Date().toISOString().split("T")[0],
     status: "active",
+  });
+
+  if (error) throw error;
+}
+
+export async function assignClientToUser(clientId: string, memberId?: string) {
+  if (!memberId) return;
+  const supabase = createClient();
+
+  const { error } = await supabase.from("client_users").insert({
+    user_id: memberId,
+    client_id: clientId,
   });
 
   if (error) throw error;
@@ -135,14 +185,22 @@ export function useCurrentUser() {
   return { user, loadingUser, error };
 }
 
-type ClientUser = Tables<"client_users">;
+type Client = Tables<"clients">;
 
-export function useClientsByUser(userId: string) {
-  const [clientsId, setClientsId] = useState<any[]>([]);
+interface UserClient {
+  id: string;
+  client_id: string;
+  user_id: string;
+  created_at: string;
+}
+
+export function useClientsByUser(userId?: string) {
+  const [clientsId, setClientsId] = useState<UserClient[]>([]);
   const [loadingClientsId, setLoadingClientsId] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!userId) return;
     const fetchClients = async () => {
       try {
         const supabase = createClient();
@@ -166,7 +224,7 @@ export function useClientsByUser(userId: string) {
 }
 
 export function useUsers() {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -192,7 +250,7 @@ export function useUsers() {
 }
 
 export function useClients() {
-  const [clients, setClients] = useState<any[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [loadingClients, setLoadingClients] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -218,8 +276,36 @@ export function useClients() {
   return { clients, loadingClients, error };
 }
 
+export function useMembers() {
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("users")
+          .select("*")
+          .eq("role", "member");
+
+        if (error) throw error;
+        setMembers(data || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingMembers(false);
+      }
+    };
+    fetchMembers();
+  }, []);
+
+  return { members, loadingMembers, error };
+}
+
 export function getInitials(fullName?: string) {
-  if (!fullName) return "U";
+  if (!fullName) return "";
   const parts = fullName.trim().split(" ");
   if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
@@ -263,7 +349,10 @@ export function usePackages() {
     const fetchPackages = async () => {
       try {
         const supabase = createClient();
-        const { data, error } = await supabase.from("packages").select("*");
+        const { data, error } = await supabase
+          .from("packages")
+          .select("*")
+          .eq("status", "active");
 
         if (error) throw error;
 
@@ -275,8 +364,55 @@ export function usePackages() {
       }
     };
     fetchPackages();
-  }, [packages]);
+  }, []);
   return { packages, loadingPackages };
+}
+
+export interface Package {
+  id: string;
+  client_id: string;
+  name: string;
+  total_hours: number;
+  price: number;
+  status: "active" | "paused" | "ended";
+  start_date: string | null;
+  end_date: string | null;
+  created_at: string;
+  total_pieces: number | null;
+}
+
+export async function deletePackage(id: string) {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("packages")
+    .update({
+      status: "ended",
+    })
+    .eq("id", id);
+
+  if (error) throw error;
+}
+
+export async function editPackage(data: Package, id: string) {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("packages")
+    .update({
+      client_id: data.client_id,
+      name: data.name,
+      total_hours: data.total_hours,
+      price: data.price,
+      status: data.status,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      created_at: data.created_at,
+      total_pieces: data.total_pieces,
+    })
+    .eq("id", id);
+
+  if (error) throw error;
 }
 
 export function usePackageByClient(clientId: string) {
@@ -304,7 +440,7 @@ export function usePackageByClient(clientId: string) {
       }
     };
     fetchPackages();
-  }, [clientPackage, clientId]);
+  }, [clientId]);
   return { clientPackage, loadingClientPackage };
 }
 
@@ -380,7 +516,7 @@ export type ActivityLogWithRelations = {
 };
 
 export function useActivityLogs(
-  userId: string,
+  userId?: string,
   filters?: {
     client_id?: string;
     status?: string;
@@ -397,6 +533,7 @@ export function useActivityLogs(
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!userId) return;
     const fetchActivityLogs = async () => {
       try {
         const supabase = createClient();
@@ -477,8 +614,17 @@ export function useActivityLogsForRequests() {
         const supabase = createClient();
         const { data, error } = await supabase
           .from("activity_logs")
-          .select("*")
-          .order("created_at", { ascending: false });
+          .select(
+            `
+            *,
+            users (id, full_name),
+            task_types ( id, name ),
+            clients ( id, name ),
+            piece_categories ( id, name )
+          `,
+            { count: "exact" },
+          )
+          .order("log_date", { ascending: false });
 
         if (error) throw error;
 
@@ -549,6 +695,34 @@ export function useEditRequestsById(userId: string) {
     fetchEditRequests();
   }, [userId]);
   return { editRequests, loadingEditRequests, error };
+}
+
+export function useEditRequestsByLog(activityLogId: string | null) {
+  const [editRequests, setEditRequests] = useState<any[]>([]);
+  const [loadingEditRequests, setLoadingEditRequests] = useState(true);
+
+  useEffect(() => {
+    if (!activityLogId) {
+      return;
+    }
+
+    const fetchEditRequests = async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("edit_requests")
+        .select("*")
+        .eq("activity_log_id", activityLogId)
+        .order("created_at", { ascending: false })
+        .limit(2);
+
+      if (!error && data) setEditRequests(data);
+      setLoadingEditRequests(false);
+    };
+
+    fetchEditRequests();
+  }, [activityLogId]);
+
+  return { editRequests, loadingEditRequests };
 }
 
 export async function createCorrectionRequest(

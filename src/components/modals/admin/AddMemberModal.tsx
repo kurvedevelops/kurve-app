@@ -1,5 +1,6 @@
 import Modal from "@/components/modals/Modal";
 import { useFormik } from "formik";
+import { toast } from "sonner";
 import { z } from "zod";
 
 type AddMemberFormValues = {
@@ -39,9 +40,11 @@ const validate = (values: AddMemberFormValues) => {
 const AddMemberModal = ({
   isOpen,
   onClose,
+  onSuccess,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }) => {
   const formik = useFormik<AddMemberFormValues>({
     initialValues: {
@@ -54,8 +57,8 @@ const AddMemberModal = ({
 
     validateOnMount: true,
 
-    onSubmit: async (values) => {
-      const response = await fetch("/api/members/create", {
+    onSubmit: async (values, { resetForm }) => {
+      const response = await fetch("/api/activity-logs/members", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -64,12 +67,19 @@ const AddMemberModal = ({
           password: values.password,
         }),
       });
-      const result = await response.json();
-      if (!result.success) {
-        console.error("Error al crear miembro:", result.error);
-        // acá podés setear un estado de error para mostrar en el modal
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({ error: "Error desconocido" }));
+        toast.error("No se pudo crear el integrante", {
+          description: body.error ?? "Error desconocido",
+        });
         return;
       }
+
+      toast.success("Integrante creado correctamente");
+      resetForm();
+      onSuccess?.();
+      onClose();
     },
   });
 
@@ -78,7 +88,7 @@ const AddMemberModal = ({
       <div className="w-full">
         <div className="pb-4">
           <h2 className="text-xl font-semibold text-azul-kurve">
-            Información del Nuevo Miembro
+            Información del nuevo miembro
           </h2>
           <p className="text-sm text-gris-kurve-dark mt-1">
             Completa los datos para invitar a un nuevo colaborador al equipo.
@@ -97,7 +107,7 @@ const AddMemberModal = ({
             <input
               type="text"
               id="name"
-              placeholder="Ej: nombre del usuario"
+              placeholder="Ej: Juan Perez"
               value={formik.values.name}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
@@ -119,7 +129,7 @@ const AddMemberModal = ({
             <input
               type="email"
               id="email"
-              placeholder="empresa.nombre@empresa.com"
+              placeholder="mail@empresa.com"
               value={formik.values.email}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}

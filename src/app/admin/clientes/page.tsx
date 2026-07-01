@@ -16,24 +16,14 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
 import { ChevronDown } from "lucide-react";
 import {
+  Client,
   EditarClienteFormData,
   EditarClienteModal,
 } from "@/components/modals/EditarClienteModal";
-import { ConfirmDeleteModal } from "@/components/modals/BorrarClienteModal";
+import { ConfirmDeleteModal } from "@/components/modals/BorrarEntidadModal";
 import { toast } from "sonner";
-
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  legal_name: string;
-  phone: string;
-  status: "active" | "paused";
-  created_at: string;
-}
 
 interface ActionDropdownProps {
   onEdit?: () => void;
@@ -154,8 +144,10 @@ const ClientesPage = () => {
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
+  type ActiveClient = Omit<Client, "status"> & { status: "active" | "paused" };
+
   const filteredClients = clients.filter(
-    (c) => c.status == "active" || c.status == "paused",
+    (c): c is ActiveClient => c.status === "active" || c.status === "paused",
   );
 
   const searchedClients = filteredClients.filter((c) => {
@@ -198,14 +190,12 @@ const ClientesPage = () => {
     }
   };
 
-  // Acá conectás con tu API/hook para crear el cliente
   const handleCrearCliente = async (data: NuevoClienteFormData) => {
     await createNewClient(data);
     router.refresh();
   };
 
   const handleOpenEditModal = (client: Client) => {
-    console.log("Abriendo modal para:", client);
     setSelectedClient(client);
     setShowEditarClienteModal(true);
   };
@@ -213,8 +203,6 @@ const ClientesPage = () => {
   const handleEditarCliente = async (data: EditarClienteFormData) => {
     try {
       if (!selectedClient) return;
-
-      console.log("Editando cliente:", selectedClient.id, data);
       await editClient(selectedClient.id, data);
 
       router.refresh();
@@ -369,7 +357,12 @@ const ClientesPage = () => {
                           : ""
                       }
                     >
-                      <td className="px-4 py-3.5 relative">
+                      <td
+                        className="px-4 py-3.5 relative cursor-pointer"
+                        onClick={() =>
+                          router.push(`/admin/clientes/${client.id}`)
+                        }
+                      >
                         <div className="flex items-center gap-2.5">
                           <div className="w-9 h-9 rounded-lg bg-verde-kurve/10 flex items-center justify-center text-xs font-semibold text-verde-kurve">
                             {getInitials(client.name)}
@@ -461,7 +454,7 @@ const ClientesPage = () => {
 
       <ConfirmDeleteModal
         open={deleteConfirm.open}
-        clientName={deleteConfirm.clientName}
+        entityName={deleteConfirm.clientName}
         loading={deletingId === deleteConfirm.clientId}
         onConfirm={() => handleDelete(deleteConfirm.clientId)}
         onCancel={() =>
