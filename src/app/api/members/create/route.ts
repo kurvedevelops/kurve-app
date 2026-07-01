@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { requireAdmin } from "@/lib/supabase/guard";
 
 export async function POST(request: Request) {
+  const guard = await requireAdmin();
+  if (guard.error) return guard.error;
+
   const supabaseAdmin = createServiceClient();
   const body = await request.json();
   const { full_name, email, password } = body;
