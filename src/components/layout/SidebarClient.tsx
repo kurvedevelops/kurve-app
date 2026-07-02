@@ -22,15 +22,7 @@ const SidebarClient = () => {
       title: "Tu cuenta",
       links: [
         { label: "Resumen de consumo", href: "/client/consumo" },
-        { label: "Piezas entregadas", href: "/client/piezas" },
         { label: "Equipo asignado", href: "/client/equipo" },
-      ],
-    },
-    {
-      title: "Recursos",
-      links: [
-        { label: "Links y documentos", href: "/client/links-docs" },
-        { label: "Estado de cuenta", href: "/client/estado" },
       ],
     },
   ];

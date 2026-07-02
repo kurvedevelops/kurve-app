@@ -16,14 +16,8 @@ const SidebarMember = () => {
     {
       title: "Asignaciones",
       links: [
-        { label: "Tareas", href: "/member/tasks" },
-        { label: "Clientes asignados", href: "/member/clients" },
-        { label: "Proyectos activos", href: "/member/projects" },
+        { label: "Clientes asignados", href: "/member/clientes-asignados" },
       ],
-    },
-    {
-      title: "Comunicación",
-      links: [{ label: "Mensajes", href: "/member/messages" }],
     },
   ];
 
