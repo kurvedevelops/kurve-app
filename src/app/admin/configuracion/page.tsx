@@ -8,7 +8,6 @@ import {
   useTaskTypesConfig,
   useTaskSubtypesConfig,
 } from "../../../hooks/middleware";
-import SubtypeOrderPanel from "@/components/admin/SubtypeOrderPanel";
 
 const ConfigurationPage = () => {
   const { tasks, loadingTasks, updateTask, addTask } = useTaskTypesConfig();
@@ -57,13 +56,6 @@ const ConfigurationPage = () => {
               >
                 Subtipo de tarea
               </TabsTrigger>
-
-              <TabsTrigger
-                value="orden"
-                className="text-xl font-bold text-gray-300 cursor-pointer pb-4"
-              >
-                Orden por rol
-              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="tarea">
@@ -88,14 +80,6 @@ const ConfigurationPage = () => {
                   onSave={updateSubtype}
                   onAdd={addSubtype}
                 />
-              )}
-            </TabsContent>
-
-            <TabsContent value="orden">
-              {loadingTasks ? (
-                <p className="text-sm text-gray-400 mt-10 ml-4">Cargando...</p>
-              ) : (
-                <SubtypeOrderPanel taskTypes={tasks} />
               )}
             </TabsContent>
           </Tabs>

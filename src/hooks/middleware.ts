@@ -862,7 +862,7 @@ export function useTaskTypesConfig() {
           .order("name");
 
         if (error) throw error;
-        setTasks(data);
+        setTasks(data as TaskType[]);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error desconocido");
       } finally {
@@ -891,7 +891,7 @@ export function useTaskTypesConfig() {
     }
   };
 
-  const addTask = async (nueva: TaskType) => {
+  const addTask = async (nueva: Omit<TaskType, "id">) => {
     try {
       const supabase = createClient();
       const { data, error } = await supabase
@@ -903,7 +903,7 @@ export function useTaskTypesConfig() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error || !data) throw error ?? new Error("No se pudo crear la tarea");
 
       setTasks((prev) => [...prev, data]);
     } catch (err) {
@@ -1002,70 +1002,4 @@ export function useTaskSubtypesConfig() {
   };
 
   return { subtypes, loadingSubtypes, error, updateSubtype, addSubtype };
-}
-
-export type SubtypeOrderItem = {
-  task_subtype_id: string;
-  name: string;
-  active: boolean;
-  order_index: number;
-};
-
-export function useTaskTypeSubtypeOrder(taskTypeId: string | null) {
-  const [items, setItems] = useState<SubtypeOrderItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!taskTypeId) return;
-    const fetchOrder = async () => {
-      setLoading(true);
-      try {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from("task_subtype_task_types")
-          .select("order_index, task_subtypes(id, name, active)")
-          .eq("task_type_id", taskTypeId)
-          .order("order_index");
-        if (error) throw error;
-
-        const mapped: SubtypeOrderItem[] = (data ?? []).map((row: any) => ({
-          task_subtype_id: row.task_subtypes.id,
-          name: row.task_subtypes.name,
-          active: row.task_subtypes.active,
-          order_index: row.order_index,
-        }));
-        setItems(mapped);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Error desconocido");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchOrder();
-  }, [taskTypeId]);
-
-  const saveOrder = async (orderedIds: string[]) => {
-    if (!taskTypeId) return;
-    try {
-      const supabase = createClient();
-      await Promise.all(
-        orderedIds.map((subtypeId, index) =>
-          supabase
-            .from("task_subtype_task_types")
-            .update({ order_index: index + 1 })
-            .eq("task_type_id", taskTypeId)
-            .eq("task_subtype_id", subtypeId),
-        ),
-      );
-
-      setItems((prev) =>
-        orderedIds.map((id) => prev.find((p) => p.task_subtype_id === id)!),
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
-    }
-  };
-
-  return { items, loading, error, saveOrder };
 }
