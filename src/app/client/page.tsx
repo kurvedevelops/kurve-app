@@ -4,41 +4,15 @@ import PageHeader from "@/components/layout/PageHeader";
 import SidebarClient from "@/components/layout/SidebarClient";
 import { Card, CardHeader } from "@/components/ui/card";
 import RedirectedAlert from "@/hooks/redirectedAlert";
+import PackageSummaryCard from "@/components/client/PackageSummaryCard";
 import { Suspense } from "react";
-import { FileText, Folder, BarChart3, BookOpen } from "lucide-react";
+import {
+  FileText,
+  Folder,
+  BarChart3,
+  BookOpen,
+} from "lucide-react";
 
-const planData = {
-  used: 44,
-  total: 100,
-  percent: 44,
-};
-
-const deliverablesData = {
-  completed: 22,
-  total: 100,
-  percent: 20,
-
-  items: [
-    {
-      label: "website",
-      current: 55,
-      total: 100,
-      progress: 55,
-    },
-    {
-      label: "marketing",
-      current: 22,
-      total: 100,
-      progress: 22,
-    },
-    {
-      label: "contenido",
-      current: 33,
-      total: 100,
-      progress: 33,
-    },
-  ],
-};
 
 const links = [
   {
@@ -95,90 +69,12 @@ const ClientPage = () => {
           showName={true}
           subtitle="Monitorea tu actividad y metricas clave"
         />
-        <div className="flex justify-between items-center mt-8 gap-8 md:flex-row flex-col">
-          <div className="">
-            <ConsumptionChart />
+        <div className="flex justify-between mt-8 gap-8 md:flex-row flex-col">
+          <div className="w-full md:w-1/2">
+            <ConsumptionChart/>
           </div>
-          <div className="flex flex-col gap-5 flex-1">
-            <div className="bg-white rounded-3xl border border-border px-6 py-5 shadow-sm">
-              <div className="flex items-start justify-between mb-4">
-                <h2 className="text-2xl font-semibold">Consumo de Plan</h2>
-
-                <span className="text-verde-kurve text-2xl font-bold">
-                  {planData.percent}%
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center mb-3">
-                <p className="font-medium">Horas Utilizadas: {planData.used}</p>
-
-                <p className="font-medium">Horas Incluidas: {planData.total}</p>
-              </div>
-
-              <div className="w-full h-4 bg-[#ECECEC] rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-verde-kurve"
-                  style={{
-                    width: `${planData.percent}%`,
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="bg-white rounded-3xl border border-border px-6 py-5 shadow-sm">
-              <div className="flex items-start justify-between mb-4">
-                <h2 className="text-2xl font-semibold">
-                  Resumen de Entregables
-                </h2>
-
-                <span className="text-verde-kurve text-2xl font-bold">
-                  {deliverablesData.percent}%
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center mb-3">
-                <p className="font-medium">
-                  Piezas Realizadas: {deliverablesData.completed}
-                </p>
-
-                <p className="font-medium">
-                  Incluidas: {deliverablesData.total}
-                </p>
-              </div>
-              <div className="w-full h-4 bg-[#ECECEC] rounded-full overflow-hidden mb-4">
-                <div
-                  className="h-full rounded-full bg-verde-kurve"
-                  style={{
-                    width: `${deliverablesData.percent}%`,
-                  }}
-                />
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-6">
-                {deliverablesData.items.map((item) => (
-                  <div key={item.label} className="flex flex-col gap-2">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">
-                        {item.label ?? "Pieza"}
-                      </span>
-
-                      <span className="font-medium">
-                        {item.current}/{item.total}
-                      </span>
-                    </div>
-
-                    <div className="w-full h-2 bg-[#ECECEC] rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-verde-kurve"
-                        style={{
-                          width: `${item.progress}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div className="w-full md:w-1/2">
+            <PackageSummaryCard />
           </div>
         </div>
         <div className="w-full mt-10">
@@ -190,7 +86,7 @@ const ClientPage = () => {
             {links.map((item) => (
               <Card
                 key={item.title}
-                className="rounded-2xl border border-[#ECECEC] shadow-none px-5 py-5 w-90 hover:shadow-sm transition-all"
+                className="rounded-2xl bg-white border border-[#ECECEC] shadow-none px-5 py-5 w-90 hover:shadow-sm transition-all"
               >
                 <CardHeader className="p-0 flex flex-col gap-5">
                   <div

@@ -10,6 +10,7 @@ import {
   CorrectionFormData,
 } from "@/components/modals/member/CorrectionModal";
 import { Member } from "@/app/admin/integrantes/page";
+import { X } from "lucide-react";
 
 type User = Tables<"users">;
 
@@ -511,6 +512,7 @@ export type ActivityLogWithRelations = {
   notes: string | null;
   is_draft: boolean;
   task_types: { id: string; name: string } | null;
+  task_subtypes: { id: string; name: string } | null;
   clients: { id: string; name: string } | null;
   piece_categories: { id: string; name: string } | null;
 };
@@ -544,7 +546,8 @@ export function useActivityLogs(
             *,
             task_types ( id, name ),
             clients ( id, name ),
-            piece_categories ( id, name )
+            piece_categories ( id, name ),
+            task_subtypes ( id, name )
           `,
             { count: "exact" },
           )
@@ -798,4 +801,205 @@ export async function RejectEditRequest(reqId: string, adminId: string) {
 
   if (error) throw error;
   console.log(error);
+}
+
+type ClientConsumption = {
+  client_id: string;
+  package_id: string;
+  package_name: string;
+  total_hours: number;
+  consumed_hours: number;
+  traffic_light: string;
+};
+
+export function useClientConsumption() {
+  const [data, setData] = useState<ClientConsumption[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("v_client_consumption")
+          .select(
+            "client_id, package_id, package_name, total_hours, consumed_hours, traffic_light, hours_percent",
+          );
+
+        if (error) throw error;
+        setData(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetch();
+  }, []);
+
+  return { data, loading, error };
+}
+
+export type TaskType = {
+  id: string;
+  name: string;
+  active: boolean;
+};
+
+export function useTaskTypesConfig() {
+  const [tasks, setTasks] = useState<TaskType[]>([]);
+  const [loadingTasks, setLoadingTasks] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("task_types")
+          .select("id, name, active")
+          .order("name");
+
+        if (error) throw error;
+        setTasks(data as TaskType[]);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingTasks(false);
+      }
+    };
+    fetchTasks();
+  }, []);
+
+  const updateTask = async (updated: TaskType) => {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("task_types")
+        .update({
+          name: updated.name,
+          active: updated.active,
+        })
+        .eq("id", updated.id);
+
+      if (error) throw error;
+
+      setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+    }
+  };
+
+  const addTask = async (nueva: Omit<TaskType, "id">) => {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("task_types")
+        .insert({
+          name: nueva.name,
+          active: nueva.active,
+        })
+        .select()
+        .single();
+
+      if (error || !data) throw error ?? new Error("No se pudo crear la tarea");
+
+      setTasks((prev) => [...prev, data]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+    }
+  };
+
+  return { tasks, loadingTasks, error, updateTask, addTask };
+}
+
+export type TaskSubtype = {
+  id: string;
+  name: string;
+  active: boolean;
+};
+
+export function useTaskSubtypesConfig() {
+  const [subtypes, setSubtypes] = useState<TaskSubtype[]>([]);
+  const [loadingSubtypes, setLoadingSubtypes] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSubtypes = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("task_subtypes")
+          .select("id, name, active")
+          .order("name");
+        if (error) throw error;
+        setSubtypes(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingSubtypes(false);
+      }
+    };
+    fetchSubtypes();
+  }, []);
+
+  const updateSubtype = async (updated: TaskSubtype) => {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("task_subtypes")
+        .update({ name: updated.name, active: updated.active })
+        .eq("id", updated.id);
+      if (error) throw error;
+
+      setSubtypes((prev) =>
+        prev.map((s) => (s.id === updated.id ? updated : s)),
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+    }
+  };
+
+  // Se vincula automáticamente con TODOS los task_types (roles) existentes,
+  // agregando cada uno al final del orden de ese rol.
+  const addSubtype = async (nueva: Omit<TaskSubtype, "id">) => {
+    try {
+      const supabase = createClient();
+
+      const { data: created, error } = await supabase
+        .from("task_subtypes")
+        .insert({ name: nueva.name, active: nueva.active })
+        .select()
+        .single();
+      if (error) throw error;
+
+      const { data: taskTypes, error: ttError } = await supabase
+        .from("task_types")
+        .select("id");
+      if (ttError) throw ttError;
+
+      for (const tt of taskTypes ?? []) {
+        const { count } = await supabase
+          .from("task_subtype_task_types")
+          .select("*", { count: "exact", head: true })
+          .eq("task_type_id", tt.id);
+
+        const { error: linkError } = await supabase
+          .from("task_subtype_task_types")
+          .insert({
+            task_subtype_id: created.id,
+            task_type_id: tt.id,
+            order_index: (count ?? 0) + 1,
+          });
+        if (linkError) throw linkError;
+      }
+
+      setSubtypes((prev) => [...prev, created]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+    }
+  };
+
+  return { subtypes, loadingSubtypes, error, updateSubtype, addSubtype };
 }
