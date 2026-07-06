@@ -17,6 +17,7 @@ import {
   useClients,
   useActivityLogDates,
   createCorrectionRequest,
+  useTaskSubtypesConfig,
 } from "@/hooks/middleware";
 import Link from "next/link";
 import { useState } from "react";
@@ -49,6 +50,7 @@ const MisActividadesPage = () => {
     user?.id || "",
     appliedFilters,
   );
+  const { subtypes, loadingSubtypes } = useTaskSubtypesConfig();
 
   const totalPages = Math.ceil(totalCount / 5);
 
@@ -157,6 +159,10 @@ const MisActividadesPage = () => {
                   </TableHead>
 
                   <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
+                    Rol
+                  </TableHead>
+
+                  <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
                     Tarea
                   </TableHead>
 
@@ -203,6 +209,10 @@ const MisActividadesPage = () => {
 
                       <TableCell className="font-semibold">
                         {activity.task_types?.name}
+                      </TableCell>
+
+                      <TableCell className="font-semibold">
+                        {activity.task_subtypes?.name}
                       </TableCell>
 
                       <TableCell className="font-semibold">

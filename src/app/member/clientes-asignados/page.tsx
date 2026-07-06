@@ -6,7 +6,6 @@ import {
   useClientsByUser,
   useCurrentUser,
 } from "@/hooks/middleware";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -15,7 +14,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Mail, Phone } from "lucide-react";
 
 const ClientesAsignadosPage = () => {
   const { user, loadingUser } = useCurrentUser();
@@ -45,10 +43,8 @@ const ClientesAsignadosPage = () => {
         </div>
 
         {isLoading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-14 w-full rounded-lg" />
-            ))}
+          <div className="flex justify-center items-center py-16">
+            <span>Cargando clientes...</span>
           </div>
         ) : clientesAsignados.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -114,45 +110,6 @@ const ClientesAsignadosPage = () => {
                   ))}
                 </TableBody>
               </Table>
-            </div>
-
-            {/* Cards - mobile */}
-            <div className="md:hidden space-y-3">
-              {clientesAsignados.map((client) => (
-                <div
-                  key={client.id}
-                  className="rounded-xl border bg-white p-4 space-y-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-gris-kurve-dark">
-                      {client.name}
-                    </h3>
-                    {client.status && (
-                      <span
-                        className={`text-xs font-medium px-2 py-1 rounded-full ${
-                          client.status === "active"
-                            ? "bg-verde-kurve text-white"
-                            : "bg-gris-kurve-dark/10 text-gris-kurve-dark"
-                        }`}
-                      >
-                        {client.status === "active" ? "Activo" : "Pausado"}
-                      </span>
-                    )}
-                  </div>
-                  {client.email && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Mail size={14} className="shrink-0" />
-                      <span>{client.email}</span>
-                    </div>
-                  )}
-                  {client.phone && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Phone size={14} className="shrink-0" />
-                      <span>{client.phone}</span>
-                    </div>
-                  )}
-                </div>
-              ))}
             </div>
           </>
         )}

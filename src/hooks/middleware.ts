@@ -10,6 +10,7 @@ import {
   CorrectionFormData,
 } from "@/components/modals/member/CorrectionModal";
 import { Member } from "@/app/admin/integrantes/page";
+import { X } from "lucide-react";
 
 type User = Tables<"users">;
 
@@ -511,6 +512,7 @@ export type ActivityLogWithRelations = {
   notes: string | null;
   is_draft: boolean;
   task_types: { id: string; name: string } | null;
+  task_subtypes: { id: string; name: string } | null;
   clients: { id: string; name: string } | null;
   piece_categories: { id: string; name: string } | null;
 };
@@ -544,7 +546,8 @@ export function useActivityLogs(
             *,
             task_types ( id, name ),
             clients ( id, name ),
-            piece_categories ( id, name )
+            piece_categories ( id, name ),
+            task_subtypes ( id, name )
           `,
             { count: "exact" },
           )
@@ -820,7 +823,9 @@ export function useClientConsumption() {
         const supabase = createClient();
         const { data, error } = await supabase
           .from("v_client_consumption")
-          .select("client_id, package_id, package_name, total_hours, consumed_hours, traffic_light, hours_percent");
+          .select(
+            "client_id, package_id, package_name, total_hours, consumed_hours, traffic_light, hours_percent",
+          );
 
         if (error) throw error;
         setData(data);
@@ -840,8 +845,6 @@ export type TaskType = {
   id: string;
   name: string;
   active: boolean;
-  counts_as_piece: boolean;
-  allowed_roles: string[];
 };
 
 export function useTaskTypesConfig() {
@@ -855,7 +858,7 @@ export function useTaskTypesConfig() {
         const supabase = createClient();
         const { data, error } = await supabase
           .from("task_types")
-          .select("id, name, active, counts_as_piece, allowed_roles")
+          .select("id, name, active")
           .order("name");
 
         if (error) throw error;
@@ -870,115 +873,199 @@ export function useTaskTypesConfig() {
   }, []);
 
   const updateTask = async (updated: TaskType) => {
-  try {
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("task_types")
-      .update({
-        name: updated.name,
-        active: updated.active,
-        counts_as_piece: updated.counts_as_piece,
-        allowed_roles: updated.allowed_roles,
-      })
-      .eq("id", updated.id);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("task_types")
+        .update({
+          name: updated.name,
+          active: updated.active,
+        })
+        .eq("id", updated.id);
 
-    if (error) throw error;
+      if (error) throw error;
 
-    // Actualiza el estado local
-    setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
-  } catch (err) {
-    setError(err instanceof Error ? err.message : "Error desconocido");
-  }
-};
+      setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+    }
+  };
 
-const addTask = async (nueva: TaskType) => {
-  try {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from("task_types")
-      .insert({
-        name: nueva.name,
-        active: nueva.active,
-        counts_as_piece: nueva.counts_as_piece,
-        allowed_roles: nueva.allowed_roles,
-      })
-      .select()
-      .single();
+  const addTask = async (nueva: TaskType) => {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("task_types")
+        .insert({
+          name: nueva.name,
+          active: nueva.active,
+        })
+        .select()
+        .single();
 
-    if (error) throw error;
+      if (error) throw error;
 
-    setTasks((prev) => [...prev, data]);
-  } catch (err) {
-    setError(err instanceof Error ? err.message : "Error desconocido");
-  }
-};
+      setTasks((prev) => [...prev, data]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+    }
+  };
 
-return { tasks, loadingTasks, error, updateTask, addTask };
+  return { tasks, loadingTasks, error, updateTask, addTask };
 }
 
-export type PieceCategory = {
+export type TaskSubtype = {
   id: string;
   name: string;
   active: boolean;
 };
 
-export function usePieceCategoriesConfig() {
-  const [categories, setCategories] = useState<PieceCategory[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
+export function useTaskSubtypesConfig() {
+  const [subtypes, setSubtypes] = useState<TaskSubtype[]>([]);
+  const [loadingSubtypes, setLoadingSubtypes] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchSubtypes = async () => {
       try {
         const supabase = createClient();
         const { data, error } = await supabase
-          .from("piece_categories")
+          .from("task_subtypes")
           .select("id, name, active")
           .order("name");
-
         if (error) throw error;
-        setCategories(data);
+        setSubtypes(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error desconocido");
       } finally {
-        setLoadingCategories(false);
+        setLoadingSubtypes(false);
       }
     };
-    fetchCategories();
+    fetchSubtypes();
   }, []);
 
-  const updateCategory = async (updated: PieceCategory) => {
+  const updateSubtype = async (updated: TaskSubtype) => {
     try {
       const supabase = createClient();
       const { error } = await supabase
-        .from("piece_categories")
+        .from("task_subtypes")
         .update({ name: updated.name, active: updated.active })
         .eq("id", updated.id);
-
       if (error) throw error;
-      setCategories((prev) =>
-        prev.map((c) => (c.id === updated.id ? updated : c)),
+
+      setSubtypes((prev) =>
+        prev.map((s) => (s.id === updated.id ? updated : s)),
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");
     }
   };
 
-  const addCategory = async (nueva: Omit<PieceCategory, "id">) => {
+  // Se vincula automáticamente con TODOS los task_types (roles) existentes,
+  // agregando cada uno al final del orden de ese rol.
+  const addSubtype = async (nueva: Omit<TaskSubtype, "id">) => {
     try {
       const supabase = createClient();
-      const { data, error } = await supabase
-        .from("piece_categories")
+
+      const { data: created, error } = await supabase
+        .from("task_subtypes")
         .insert({ name: nueva.name, active: nueva.active })
         .select()
         .single();
-
       if (error) throw error;
-      setCategories((prev) => [...prev, data]);
+
+      const { data: taskTypes, error: ttError } = await supabase
+        .from("task_types")
+        .select("id");
+      if (ttError) throw ttError;
+
+      for (const tt of taskTypes ?? []) {
+        const { count } = await supabase
+          .from("task_subtype_task_types")
+          .select("*", { count: "exact", head: true })
+          .eq("task_type_id", tt.id);
+
+        const { error: linkError } = await supabase
+          .from("task_subtype_task_types")
+          .insert({
+            task_subtype_id: created.id,
+            task_type_id: tt.id,
+            order_index: (count ?? 0) + 1,
+          });
+        if (linkError) throw linkError;
+      }
+
+      setSubtypes((prev) => [...prev, created]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");
     }
   };
 
-  return { categories, loadingCategories, error, updateCategory, addCategory };
+  return { subtypes, loadingSubtypes, error, updateSubtype, addSubtype };
+}
+
+export type SubtypeOrderItem = {
+  task_subtype_id: string;
+  name: string;
+  active: boolean;
+  order_index: number;
+};
+
+export function useTaskTypeSubtypeOrder(taskTypeId: string | null) {
+  const [items, setItems] = useState<SubtypeOrderItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!taskTypeId) return;
+    const fetchOrder = async () => {
+      setLoading(true);
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("task_subtype_task_types")
+          .select("order_index, task_subtypes(id, name, active)")
+          .eq("task_type_id", taskTypeId)
+          .order("order_index");
+        if (error) throw error;
+
+        const mapped: SubtypeOrderItem[] = (data ?? []).map((row: any) => ({
+          task_subtype_id: row.task_subtypes.id,
+          name: row.task_subtypes.name,
+          active: row.task_subtypes.active,
+          order_index: row.order_index,
+        }));
+        setItems(mapped);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrder();
+  }, [taskTypeId]);
+
+  const saveOrder = async (orderedIds: string[]) => {
+    if (!taskTypeId) return;
+    try {
+      const supabase = createClient();
+      await Promise.all(
+        orderedIds.map((subtypeId, index) =>
+          supabase
+            .from("task_subtype_task_types")
+            .update({ order_index: index + 1 })
+            .eq("task_type_id", taskTypeId)
+            .eq("task_subtype_id", subtypeId),
+        ),
+      );
+
+      setItems((prev) =>
+        orderedIds.map((id) => prev.find((p) => p.task_subtype_id === id)!),
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+    }
+  };
+
+  return { items, loading, error, saveOrder };
 }
