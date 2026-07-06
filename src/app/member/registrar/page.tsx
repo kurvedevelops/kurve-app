@@ -12,6 +12,7 @@ import {
   useCurrentUser,
   useTaskTypes,
   useActivityLogs,
+  useTaskSubtypesConfig,
 } from "@/hooks/middleware";
 import { createClient } from "@/lib/supabase/client";
 import Swal from "sweetalert2";
@@ -21,7 +22,6 @@ import { useRouter } from "next/navigation";
 const registroSchema = Yup.object().shape({
   client_id: Yup.string().required("Selecciona un cliente"),
   task_type_id: Yup.string().required("Selecciona una tarea"),
-  category_id: Yup.string().nullable(),
   log_date: Yup.string()
     .required("La fecha es requerida")
     .test(
@@ -41,13 +41,17 @@ const registroSchema = Yup.object().shape({
     .max(12, "Máximo 12 horas")
     .required("Las horas son requeridas"),
   is_publication: Yup.boolean(),
-  activity_status: Yup.string()
-    .oneOf(["in_progress", "delivered"], "Estado de actividad inválido")
-    .required("El estado de actividad es requerido"),
+  subtype_id: Yup.string().required("Selecciona el tipo de tarea"),
   pieces_count: Yup.number()
-    .min(0, "No puede ser negativo")
     .integer("Debe ser un número entero")
-    .required("Ingresa la cantidad de piezas"),
+    .when("is_publication", {
+      is: true,
+      then: (schema) =>
+        schema
+          .min(1, "Ingresa al menos 1 pieza")
+          .required("Ingresa la cantidad de piezas"),
+      otherwise: (schema) => schema.min(0).notRequired(),
+    }),
   notes: Yup.string().nullable(),
 });
 
@@ -56,9 +60,9 @@ const RegistrarHorasPage = () => {
   const { user, loadingUser } = useCurrentUser();
   const { clients, loadingClients } = useClients();
   const { clientsId, loadingClientsId } = useClientsByUser(user?.id || "");
-  const { categories, loadingCategories } = usePieceCategories();
   const { tasks, loadingTasks } = useTaskTypes();
   const { activityLogs, loadingActivityLogs } = useActivityLogs(user?.id || "");
+  const { subtypes, loadingSubtypes } = useTaskSubtypesConfig();
 
   const communityManagementId = tasks.find(
     (t) => t.name === "Community management",
@@ -70,14 +74,19 @@ const RegistrarHorasPage = () => {
 
   const horasTotales = activityLogs
     .filter((log) => {
-      const logDate = new Date(log.log_date);
+      // Parseo manual para evitar que "YYYY-MM-DD" se interprete como UTC
+      const [year, month, day] = log.log_date.split("-").map(Number);
+      const logDate = new Date(year, month - 1, day);
+
       const now = new Date();
       const startOfWeek = new Date(now);
       startOfWeek.setDate(now.getDate() - ((now.getDay() + 6) % 7));
       startOfWeek.setHours(0, 0, 0, 0);
+
       const endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(startOfWeek.getDate() + 6);
       endOfWeek.setHours(23, 59, 59, 999);
+
       return logDate >= startOfWeek && logDate <= endOfWeek;
     })
     .reduce((total, log) => total + log.hours, 0);
@@ -133,11 +142,10 @@ const RegistrarHorasPage = () => {
     initialValues: {
       client_id: "",
       task_type_id: "",
-      category_id: "",
       log_date: new Date().toISOString().split("T")[0],
       hours: 0,
       is_publication: false,
-      activity_status: "",
+      subtype_id: "",
       pieces_count: 0,
       notes: "",
     },
@@ -154,12 +162,11 @@ const RegistrarHorasPage = () => {
           user_id: user.id,
           client_id: values.client_id,
           task_type_id: values.task_type_id,
-          category_id: values.category_id || null,
+          subtype_id: values.subtype_id,
           log_date: values.log_date,
           hours: values.hours,
           pieces_count: values.pieces_count,
           notes: values.notes || null,
-          status: values.activity_status,
         });
 
         if (error) throw error;
@@ -329,7 +336,7 @@ const RegistrarHorasPage = () => {
                 {/* Tarea */}
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-semibold text-foreground">
-                    Tipo de tarea
+                    Rol
                   </label>
                   <select
                     name="task_type_id"
@@ -344,7 +351,7 @@ const RegistrarHorasPage = () => {
                     onBlur={formik.handleBlur}
                     className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
                   >
-                    <option value="">Selecciona una tarea</option>
+                    <option value="">Selecciona tu rol</option>
                     {tasks.map((tarea) => (
                       <option key={tarea.id} value={tarea.id}>
                         {tarea.name}
@@ -359,26 +366,27 @@ const RegistrarHorasPage = () => {
                     )}
                 </div>
 
-                {/* Horas */}
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-semibold text-foreground">
-                    Horas dedicadas
+                    Tipo de tarea
                   </label>
-                  <input
-                    type="number"
-                    name="hours"
-                    step="0.5"
-                    min="0.5"
-                    max="24"
-                    value={formik.values.hours}
+                  <select
+                    name="subtype_id"
+                    value={formik.values.subtype_id}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
-                    placeholder="0.00"
-                  />
-                  {formik.touched.hours && formik.errors.hours && (
+                  >
+                    <option value="">Selecciona una tarea</option>
+                    {subtypes.map((subtype) => (
+                      <option key={subtype.id} value={subtype.id}>
+                        {subtype.name}
+                      </option>
+                    ))}
+                  </select>
+                  {formik.touched.subtype_id && formik.errors.subtype_id && (
                     <p className="text-xs text-red-500">
-                      {formik.errors.hours}
+                      {formik.errors.subtype_id}
                     </p>
                   )}
                 </div>
@@ -426,49 +434,30 @@ const RegistrarHorasPage = () => {
                           </p>
                         )}
                     </div>
-
-                    {/* Categoría */}
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-semibold text-foreground">
-                        Categoría{" "}
-                        <span className="text-gris-kurve-dark font-normal">
-                          (opcional)
-                        </span>
-                      </label>
-                      <select
-                        name="category_id"
-                        value={formik.values.category_id}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
-                      >
-                        <option value="">Selecciona una categoria</option>
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
                   </div>
                 </div>
               )}
 
+              {/* Horas */}
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-semibold text-foreground">
-                  Estado de actividad
+                  Horas dedicadas
                 </label>
-                <select
-                  name="activity_status"
-                  value={formik.values.activity_status}
+                <input
+                  type="number"
+                  name="hours"
+                  step="0.5"
+                  min="0.5"
+                  max="12"
+                  value={formik.values.hours}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
-                >
-                  <option value="">Selecciona un estado</option>
-                  <option value="in_progress">En Progreso</option>
-                  <option value="delivered">Completado</option>
-                </select>
+                  placeholder="0.00"
+                />
+                {formik.touched.hours && formik.errors.hours && (
+                  <p className="text-xs text-red-500">{formik.errors.hours}</p>
+                )}
               </div>
 
               {/* Row 4: Notas */}
@@ -505,8 +494,23 @@ const RegistrarHorasPage = () => {
 
           {/* Recent Records Section */}
           <div className="lg:col-span-1">
-            <div className="bg-background rounded-xl border border-border p-6">
-              <div className="flex items-center justify-between mb-4">
+            {/* Total Weekly */}
+            <div className="bg-gradient-to-r from-verde-kurve-dark to-verde-kurve rounded-lg p-4 text-white mb-4">
+              <p className="text-sm font-semibold opacity-90 mb-2">
+                Total Semanal
+              </p>
+              <h4 className="text-3xl font-bold mb-3">{horasTotales} horas</h4>
+              <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-white rounded-full transition-all duration-500"
+                  style={{
+                    width: `${Math.min((horasTotales / 40) * 100, 100)}%`,
+                  }}
+                />
+              </div>
+            </div>
+            <div className="bg-background rounded-xl border border-border">
+              <div className="flex items-center justify-between m-4">
                 <h3 className="text-lg font-bold text-foreground">
                   Registros Recientes
                 </h3>
@@ -519,7 +523,7 @@ const RegistrarHorasPage = () => {
               </div>
 
               {/* Records List */}
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-4 m-4">
                 {[...activityLogs].slice(0, 4).map((log, index) => (
                   <div
                     key={log.id}
@@ -547,24 +551,6 @@ const RegistrarHorasPage = () => {
                     </div>
                   </div>
                 ))}
-              </div>
-
-              {/* Total Weekly */}
-              <div className="bg-gradient-to-r from-verde-kurve-dark to-verde-kurve rounded-lg p-4 text-white">
-                <p className="text-sm font-semibold opacity-90 mb-2">
-                  Total Semanal
-                </p>
-                <h4 className="text-3xl font-bold mb-3">
-                  {horasTotales} horas
-                </h4>
-                <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-white rounded-full transition-all duration-500"
-                    style={{
-                      width: `${Math.min((horasTotales / 40) * 100, 100)}%`,
-                    }}
-                  />
-                </div>
               </div>
             </div>
           </div>

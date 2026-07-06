@@ -1,10 +1,19 @@
 "use client";
 import PageHeader from "@/components/layout/PageHeader";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
-import { useClients } from "@/hooks/middleware";
+import {
+  useClients,
+  useMembers,
+  useClientConsumption,
+  useEditRequests,
+  useActivityLogsForRequests,
+  getInitials,
+} from "@/hooks/middleware";
 import RedirectedAlert from "@/hooks/redirectedAlert";
 import { Suspense } from "react";
-
+import { Clock, ClipboardList } from "lucide-react";
+import ConsumptionChartAdmin from "@/components/admin/ConsumptionChartAdmin";
+import { useMemo } from "react";
 export const dynamic = "force-dynamic";
 
 const AlertWrapper = () => {
@@ -12,10 +21,48 @@ const AlertWrapper = () => {
   return null;
 };
 
+interface RecentActivity {
+  id: string;
+  initials: string;
+  name: string;
+  client: string;
+  taskType: string;
+  hours: number;
+}
+
 const AdminPage = () => {
   const { clients, loadingClients } = useClients();
+  const { members } = useMembers();
+  const { data: consumption } = useClientConsumption();
+  const { editRequests } = useEditRequests();
+
+  const { activityLogs, loadingActivityLogs } = useActivityLogsForRequests();
+
+  const pendingCorrections = editRequests.filter(
+    (req) => req.status === "pending",
+  ).length;
+
+  const totalHoursRegistered = consumption.reduce(
+    (acc, item) => acc + (item.consumed_hours ?? 0),
+    0,
+  );
 
   const activeClients = clients.filter((client) => client.status === "active");
+
+  const recentActivities: RecentActivity[] = useMemo(
+    () =>
+      activityLogs.slice(0, 5).map((log) => ({
+        id: log.id,
+        initials: getInitials(log.users?.full_name),
+        name: log.users?.full_name ?? "Sin nombre",
+        client: log.clients?.name ?? "Sin cliente",
+        taskType: log.task_types?.name ?? "Sin tipo",
+        hours: log.hours ?? 0,
+      })),
+    [activityLogs],
+  );
+
+  const hasActivities = recentActivities.length > 0;
 
   return (
     <div className="min-h-screen w-full bg-muted flex">
@@ -83,7 +130,7 @@ const AdminPage = () => {
             </p>
             <div className="border-t border-border pt-3">
               <p className="text-sm text-verde-kurve font-medium">
-                Sin datos aún
+                {members.length === 0 ? "Sin integrantes aún" : members.length}
               </p>
             </div>
           </div>
@@ -107,7 +154,9 @@ const AdminPage = () => {
             </p>
             <div className="border-t border-border pt-3">
               <p className="text-sm text-verde-kurve font-medium">
-                Sin datos aún
+                {totalHoursRegistered === 0
+                  ? "Sin horas registradas"
+                  : totalHoursRegistered}
               </p>
             </div>
           </div>
@@ -131,14 +180,76 @@ const AdminPage = () => {
             </p>
             <div className="border-t border-border pt-3">
               <p className="text-sm text-verde-kurve font-medium">
-                Sin datos aún
+                {pendingCorrections === 0
+                  ? "Sin correcciones pendientes"
+                  : pendingCorrections}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-background p-12 rounded-lg border border-border flex flex-col items-center justify-center min-h-96">
-          
+        <div className="bg-background p-12 rounded-lg border border-border min-h-96">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <ConsumptionChartAdmin />
+            <div className="bg-white rounded-2xl border border-border shadow-sm p-6 w-full lg:w-[480px] h-112.5">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-xs font-bold text-gris-kurve-dark uppercase tracking-wide">
+                  Actividad reciente
+                </h2>
+                <span className="text-xs text-gray-400 flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" />
+                  Últimos registros
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {loadingActivityLogs ? (
+                  <div className="flex items-center justify-center h-[350px]">
+                    <p className="text-sm text-gray-400">
+                      Cargando actividad...
+                    </p>
+                  </div>
+                ) : hasActivities ? (
+                  <div className="space-y-3">
+                    {recentActivities.map((activity) => (
+                      <div
+                        key={activity.id}
+                        className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-verde-kurve/10 flex items-center justify-center shrink-0">
+                            <span className="text-xs font-bold text-verde-kurve">
+                              {activity.initials}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-800">
+                              {activity.name}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              {activity.client} · {activity.taskType}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-end h-55 mt-4">
+                    <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                      <ClipboardList className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <p className="text-sm font-semibold text-gray-700">
+                      Sin actividad reciente
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1 text-center max-w-48">
+                      Los registros del equipo aparecerán aquí cuando se carguen
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>
