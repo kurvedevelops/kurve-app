@@ -2,6 +2,7 @@ import Modal from "@/components/modals/Modal";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import type { TaskType } from "@/hooks/middleware";
+import { toast } from "sonner";
 
 interface EditTaskTypeModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ const EditTaskTypeModal = ({
       active,
     });
     onClose();
+    toast.success("Tarea guardada exitosamente");
   };
 
   return (

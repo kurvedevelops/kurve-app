@@ -1,5 +1,5 @@
 "use client";
-import { Pencil, LayoutList } from "lucide-react";
+import { Pencil, LayoutList, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { useState } from "react";
 import EditTaskSubtypeModal from "../modals/admin/configuracion/EditTaskSubtypeModal";
-import type { TaskSubtype, TaskType } from "@/hooks/middleware";
+import { type TaskSubtype, type TaskType } from "@/hooks/middleware";
 
 interface TaskSubtypesTableProps {
   subtypes: TaskSubtype[];
@@ -41,7 +41,7 @@ const TaskSubtypesTable = ({
     <div className="bg-white rounded-xl overflow-hidden shadow-sm overflow-x-auto mt-10 md:mx-20">
       <div className="flex items-center justify-between mb-5 gap-3 mt-4 ml-4 mr-4">
         <h2 className="text-base font-medium text-gray-900">
-          Registro de subtipos de tarea
+          Registro de tareas
         </h2>
 
         <Button
@@ -49,7 +49,7 @@ const TaskSubtypesTable = ({
           variant="outline"
           onClick={() => setAddModalOpen(true)}
         >
-          + Agregar un nuevo subtipo
+          + Nueva tarea
         </Button>
       </div>
 
@@ -60,7 +60,7 @@ const TaskSubtypesTable = ({
               NOMBRE
             </TableHead>
             <TableHead className="font-semibold text-gray-400">
-              ACTIVO
+              ESTADO
             </TableHead>
             <TableHead className="font-semibold text-gray-400">
               ACCIONES
@@ -124,6 +124,7 @@ const TaskSubtypesTable = ({
       </Table>
 
       <EditTaskSubtypeModal
+        key={selectedSubtype?.id ?? "edit-empty"}
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
         subtype={selectedSubtype}
