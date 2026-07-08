@@ -21,7 +21,7 @@ const SidebarClient = () => {
     {
       title: "Tu cuenta",
       links: [
-        { label: "Resumen de consumo", href: "/client/consumo" },
+        { label: "Resumen de consumo", href: "/client" },
         { label: "Equipo asignado", href: "/client/equipo" },
       ],
     },

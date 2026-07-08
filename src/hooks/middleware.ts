@@ -809,7 +809,7 @@ type ClientConsumption = {
   traffic_light: string;
 };
 
-export function useClientConsumption() {
+export function useClientConsumption(clientId?: string) {
   const [data, setData] = useState<ClientConsumption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -818,9 +818,13 @@ export function useClientConsumption() {
     const fetch = async () => {
       try {
         const supabase = createClient();
-        const { data, error } = await supabase
+        let query = supabase
           .from("v_client_consumption")
           .select("client_id, package_id, package_name, total_hours, consumed_hours, traffic_light, hours_percent");
+
+        if (clientId) query = query.eq("client_id", clientId);
+
+        const { data, error } = await query;
 
         if (error) throw error;
         setData(data);
@@ -831,7 +835,7 @@ export function useClientConsumption() {
       }
     };
     fetch();
-  }, []);
+  }, [clientId]);
 
   return { data, loading, error };
 }

@@ -12,6 +12,7 @@ import {
   BarChart3,
   BookOpen,
 } from "lucide-react";
+import { useCurrentUser, useClientsByUser } from "@/hooks/middleware";
 
 
 const links = [
@@ -55,6 +56,13 @@ const AlertWrapper = () => {
 };
 
 const ClientPage = () => {
+  const { user, loadingUser } = useCurrentUser();
+  const { clientsId, loadingClientsId, error } = useClientsByUser(user?.id);
+  console.log("clientsId", clientsId);
+  console.log("user", user);
+  console.log("error", error);
+  const clientId = clientsId?.[0]?.client_id;
+
   return (
     <div className="min-h-screen w-full bg-muted flex">
       <SidebarClient />
@@ -70,8 +78,8 @@ const ClientPage = () => {
           subtitle="Monitorea tu actividad y metricas clave"
         />
         <div className="flex justify-between mt-8 gap-8 md:flex-row flex-col">
-          <div className="w-full md:w-1/2">
-            <ConsumptionChart/>
+         <div className="w-full md:w-1/2">
+              <ConsumptionChart clientId={clientId} />
           </div>
           <div className="w-full md:w-1/2">
             <PackageSummaryCard />

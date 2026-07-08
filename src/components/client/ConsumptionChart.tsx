@@ -1,18 +1,7 @@
 "use client";
 import { CalendarDays, Package, Clock2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-
-const mockConsumption: Consumption = {
-  package_name: "Paquete Agencia",
-  total_hours: 300,
-  consumed_hours: 228,
-  remaining_hours: 72,
-  hours_percent: 76,
-  traffic_light: "yellow",
-  package_status: "active",
-  start_date: "2026-06-24",
-  end_date: null,
-};
+import { useClientConsumption, usePackageByClient } from "@/hooks/middleware";
 
 interface Consumption {
   package_name: string;
@@ -21,13 +10,13 @@ interface Consumption {
   remaining_hours: number;
   hours_percent: number;
   traffic_light: "green" | "yellow" | "red";
-  package_status: "active" | "ended";
+  package_status: "active" | "paused" | "ended";
   start_date: string;
   end_date: string | null;
 }
 
 interface ConsumptionChartProps {
-  consumption: Consumption;
+  clientId: string;
 }
 
 const trafficColors = {
@@ -57,10 +46,46 @@ const trafficMessages = {
   },
 };
 
-const ConsumptionChart = () => {
-
-  const consumption = mockConsumption;
+const ConsumptionChart = ({ clientId }: ConsumptionChartProps) => {
   const router = useRouter();
+  const { data, loading } = useClientConsumption(clientId);
+  const { clientPackage, loadingClientPackage } = usePackageByClient(clientId);
+
+  const consumptionRaw = data?.[0];
+  const packageRaw = clientPackage?.find(
+    (p) => p.id === consumptionRaw?.package_id,
+  );
+
+  if (loading || loadingClientPackage) {
+    return (
+      <div className="rounded-3xl border border-border bg-white p-6 shadow-sm h-full flex items-center justify-center">
+        <p className="text-sm text-muted-foreground">Cargando consumo...</p>
+      </div>
+    );
+  }
+
+  if (!consumptionRaw || !packageRaw) {
+    return (
+      <div className="rounded-3xl border border-border bg-white p-6 shadow-sm h-full flex items-center justify-center">
+        <p className="text-sm text-muted-foreground">
+          No hay paquetes asignados todavía.
+        </p>
+      </div>
+    );
+  }
+
+  const consumption: Consumption = {
+    package_name: consumptionRaw.package_name,
+    total_hours: consumptionRaw.total_hours,
+    consumed_hours: consumptionRaw.consumed_hours ?? 0,
+    remaining_hours:
+    consumptionRaw.total_hours - (consumptionRaw.consumed_hours ?? 0),
+    hours_percent: consumptionRaw.hours_percent,
+    traffic_light: consumptionRaw.traffic_light as "green" | "yellow" | "red",
+    package_status: packageRaw.status,
+    start_date: packageRaw.start_date ?? "",
+    end_date: packageRaw.end_date,
+  };
 
   const progress = Math.min(consumption.hours_percent, 100);
 
@@ -89,11 +114,7 @@ const ConsumptionChart = () => {
         onClick={() => router.push("/client/consumo/detalle")}
       >
         <div className="relative w-60 h-60">
-          <svg
-            width="240"
-            height="240"
-            viewBox="0 0 240 240"
-          >
+          <svg width="240" height="240" viewBox="0 0 240 240">
             <circle
               cx="120"
               cy="120"
@@ -159,6 +180,8 @@ const ConsumptionChart = () => {
               className={`h-2.5 w-2.5 rounded-full ${
                 consumption.package_status === "active"
                   ? "bg-green-500"
+                  : consumption.package_status === "paused"
+                  ? "bg-yellow-500"
                   : "bg-gray-400"
               }`}
             />
@@ -177,9 +200,9 @@ const ConsumptionChart = () => {
           <div className="mt-1 flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-verde-kurve" />
             <span className="font-semibold">
-              {new Date(
-                consumption.start_date,
-              ).toLocaleDateString("es-AR")}
+              {consumption.start_date
+                ? new Date(consumption.start_date).toLocaleDateString("es-AR")
+                : "Indefinido"}
             </span>
           </div>
         </div>
