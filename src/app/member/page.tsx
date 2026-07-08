@@ -26,21 +26,21 @@ const MemberPage = () => {
     {
       label: "Actividades",
       icon: <Clock size={24} />,
-      href: "/member/activities",
+      href: "/member/mis-actividades",
     },
     {
       label: "Registrar",
       icon: <Plus size={28} />,
-      href: "/member/register",
+      href: "/member/registrar",
       isFab: true,
     },
     {
-      label: "Mensajes",
-      icon: <MessageSquare size={24} />,
-      href: "/member/messages",
+      label: "Correciones",
+      icon: <CheckSquare size={24} />,
+      href: "/member/mis-solicitudes",
     },
     {
-      label: "Perfil",
+      label: "Clientes",
       icon: (
         <svg
           width="24"
@@ -54,7 +54,7 @@ const MemberPage = () => {
           <circle cx="12" cy="7" r="4" />
         </svg>
       ),
-      href: "/member/profile",
+      href: "/member/clientes-asignados",
     },
   ];
 

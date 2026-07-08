@@ -1,5 +1,5 @@
 "use client";
-import { Pencil, LayoutList } from "lucide-react";
+import { Pencil, LayoutList, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { useState } from "react";
 import EditTaskTypeModal from "../modals/admin/configuracion/EditTaskTypeModal";
-import type { TaskType } from "@/hooks/middleware";
+import { type TaskType } from "@/hooks/middleware";
 
 interface TaskTypesTableProps {
   taskTypes: TaskType[];
@@ -33,7 +33,7 @@ const TaskTypesTable = ({ taskTypes, onSave, onAdd }: TaskTypesTableProps) => {
     <div className="bg-white rounded-xl overflow-hidden shadow-sm overflow-x-auto mt-10 md:mx-20">
       <div className="flex items-center justify-between mb-5 gap-3 mt-4 ml-4 mr-4">
         <h2 className="text-base font-medium text-gray-900">
-          Registro de tareas
+          Registro de roles
         </h2>
 
         <Button
@@ -41,7 +41,7 @@ const TaskTypesTable = ({ taskTypes, onSave, onAdd }: TaskTypesTableProps) => {
           variant="outline"
           onClick={() => setAddModalOpen(true)}
         >
-          + Agregar una nueva tarea
+          + Nuevo rol
         </Button>
       </div>
 
@@ -53,7 +53,7 @@ const TaskTypesTable = ({ taskTypes, onSave, onAdd }: TaskTypesTableProps) => {
             </TableHead>
 
             <TableHead className="font-semibold text-gray-400">
-              ACTIVO
+              ESTADO
             </TableHead>
 
             <TableHead className="font-semibold text-gray-400">
@@ -117,6 +117,7 @@ const TaskTypesTable = ({ taskTypes, onSave, onAdd }: TaskTypesTableProps) => {
         </TableBody>
       </Table>
       <EditTaskTypeModal
+        key={selectedTask?.id ?? "edit-empty"}
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
         taskType={selectedTask}

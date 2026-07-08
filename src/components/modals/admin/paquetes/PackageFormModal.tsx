@@ -2,13 +2,13 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { BaseModal } from "../../ModalBase";
-import { Package } from "@/hooks/middleware";
+import { PackageData } from "@/hooks/middleware";
 
 interface PackageFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  pkg: Package | null;
-  onSave: (updated: Package) => void;
+  pkg: PackageData | null;
+  onSave: (updated: PackageData) => void;
 }
 
 const PackageFormModal = ({
@@ -39,6 +39,7 @@ const PackageFormModal = ({
       start_date: pkg?.start_date ?? "",
       end_date: pkg?.end_date ?? "",
       created_at: pkg?.created_at ?? "",
+      block_on_limit: pkg?.block_on_limit ?? false,
     });
     onClose();
   };

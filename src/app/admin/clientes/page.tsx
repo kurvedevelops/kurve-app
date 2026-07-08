@@ -215,11 +215,6 @@ const ClientesPage = () => {
 
   const actions = [
     {
-      label: "↓ Exportar",
-      variant: "secondary" as const,
-      onClick: () => console.log("Exportar"),
-    },
-    {
       label: "+ Nuevo cliente",
       variant: "primary" as const,
       onClick: () => setShowNuevoClienteModal(true),

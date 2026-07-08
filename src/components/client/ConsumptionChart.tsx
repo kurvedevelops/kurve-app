@@ -1,18 +1,12 @@
 "use client";
 import { CalendarDays, Package, Clock2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-
-const mockConsumption: Consumption = {
-  package_name: "Paquete Agencia",
-  total_hours: 300,
-  consumed_hours: 228,
-  remaining_hours: 72,
-  hours_percent: 76,
-  traffic_light: "yellow",
-  package_status: "active",
-  start_date: "2026-06-24",
-  end_date: null,
-};
+import {
+  ClientConsumption,
+  PackageData,
+  useClientConsumption,
+  usePackageByClient,
+} from "@/hooks/middleware";
 
 interface Consumption {
   package_name: string;
@@ -21,13 +15,13 @@ interface Consumption {
   remaining_hours: number;
   hours_percent: number;
   traffic_light: "green" | "yellow" | "red";
-  package_status: "active" | "ended";
+  package_status: "active" | "paused" | "ended";
   start_date: string;
   end_date: string | null;
 }
 
 interface ConsumptionChartProps {
-  consumption: Consumption;
+  clientId: string;
 }
 
 const trafficColors = {
@@ -57,10 +51,47 @@ const trafficMessages = {
   },
 };
 
-const ConsumptionChart = () => {
-
-  const consumption = mockConsumption;
+const ConsumptionChart = ({ clientId }: ConsumptionChartProps) => {
   const router = useRouter();
+  const { data, loading } = useClientConsumption(clientId);
+  const { clientPackage, loadingClientPackage } = usePackageByClient(clientId);
+
+  const consumptionRaw: ClientConsumption | undefined = data?.[0];
+  const packageRaw: PackageData | undefined =
+    clientPackage && clientPackage.id === consumptionRaw?.package_id
+      ? clientPackage
+      : undefined;
+
+  if (loading || loadingClientPackage) {
+    return (
+      <div className="rounded-3xl border border-border bg-white p-6 shadow-sm h-full flex items-center justify-center">
+        <p className="text-sm text-muted-foreground">Cargando consumo...</p>
+      </div>
+    );
+  }
+
+  if (!consumptionRaw || !packageRaw) {
+    return (
+      <div className="rounded-3xl border border-border bg-white p-6 shadow-sm h-full flex items-center justify-center">
+        <p className="text-sm text-muted-foreground">
+          No hay paquetes asignados todavía.
+        </p>
+      </div>
+    );
+  }
+
+  const consumption: Consumption = {
+    package_name: consumptionRaw.package_name,
+    total_hours: consumptionRaw.total_hours,
+    consumed_hours: consumptionRaw.consumed_hours ?? 0,
+    remaining_hours:
+      consumptionRaw.total_hours - (consumptionRaw.consumed_hours ?? 0),
+    hours_percent: consumptionRaw.hours_percent,
+    traffic_light: consumptionRaw.traffic_light,
+    package_status: packageRaw.status,
+    start_date: packageRaw.start_date ?? "",
+    end_date: packageRaw.end_date,
+  };
 
   const progress = Math.min(consumption.hours_percent, 100);
 
@@ -68,8 +99,7 @@ const ConsumptionChart = () => {
   const strokeWidth = 18;
   const circumference = 2 * Math.PI * radius;
 
-  const strokeDashoffset =
-    circumference - (progress / 100) * circumference;
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
 
   const traffic = trafficMessages[consumption.traffic_light];
 
@@ -85,15 +115,11 @@ const ConsumptionChart = () => {
         </p>
       </div>
       <div
-        className="flex flex-col items-center cursor-pointer transition-opacity hover:opacity-90"
+        className="flex flex-col items-center transition-opacity hover:opacity-90"
         onClick={() => router.push("/client/consumo/detalle")}
       >
         <div className="relative w-60 h-60">
-          <svg
-            width="240"
-            height="240"
-            viewBox="0 0 240 240"
-          >
+          <svg width="240" height="240" viewBox="0 0 240 240">
             <circle
               cx="120"
               cy="120"
@@ -125,75 +151,24 @@ const ConsumptionChart = () => {
               {consumption.hours_percent}%
             </span>
 
-            <span className="text-sm text-muted-foreground">
-              Consumido
-            </span>
+            <span className="text-sm text-muted-foreground">Consumido</span>
           </div>
         </div>
 
-        <p className=" text-2xl font-bold">
+        <p className=" text-2xl font-bold mb-2">
           {consumption.consumed_hours} hs / {consumption.total_hours} hs
         </p>
       </div>
-      <div className="mt-1 grid grid-cols-2 gap-5 border-t border-border pt-5 justify-items-center">
-        <div className="text-center">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Paquete
-          </p>
 
-          <div className="mt-1 flex items-center gap-2">
-            <Package className="h-4 w-4 text-verde-kurve" />
-            <span className="font-semibold">
-              {consumption.package_name}
-            </span>
-          </div>
-        </div>
-
-        <div className="text-center">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Estado
-          </p>
-
-          <div className="mt-1 flex items-center gap-2">
-            <span
-              className={`h-2.5 w-2.5 rounded-full ${
-                consumption.package_status === "active"
-                  ? "bg-green-500"
-                  : "bg-gray-400"
-              }`}
-            />
-
-            <span className="font-semibold capitalize">
-              {consumption.package_status}
-            </span>
-          </div>
-        </div>
-
-        <div className="text-center">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Inicio
-          </p>
-
-          <div className="mt-1 flex items-center gap-2">
-            <CalendarDays className="h-4 w-4 text-verde-kurve" />
-            <span className="font-semibold">
-              {new Date(
-                consumption.start_date,
-              ).toLocaleDateString("es-AR")}
-            </span>
-          </div>
-        </div>
-
-        <div className="text-center">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Horas restantes
-          </p>
-          <div className="mt-1 flex items-center gap-2 ml-4">
-            <Clock2 className="h-4 w-4 text-verde-kurve" />
-          <span className=" font-semibold">
+      <div className="flex flex-col justify-center items-center text-center">
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+          Horas restantes
+        </p>
+        <div className="mt-1 flex justify-center items-center gap-2">
+          <Clock2 className="h-4 w-4 text-verde-kurve" />
+          <span className="font-semibold">
             {consumption.remaining_hours} hs
           </span>
-          </div>
         </div>
       </div>
     </div>
