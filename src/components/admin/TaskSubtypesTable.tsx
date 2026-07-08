@@ -10,22 +10,30 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useState } from "react";
-import EditTaskTypeModal from "../modals/admin/configuracion/EditTaskTypeModal";
-import { type TaskType } from "@/hooks/middleware";
+import EditTaskSubtypeModal from "../modals/admin/configuracion/EditTaskSubtypeModal";
+import { type TaskSubtype, type TaskType } from "@/hooks/middleware";
 
-interface TaskTypesTableProps {
+interface TaskSubtypesTableProps {
+  subtypes: TaskSubtype[];
   taskTypes: TaskType[];
-  onSave: (updated: TaskType) => Promise<void>;
-  onAdd: (nueva: Omit<TaskType, "id">) => Promise<void>;
+  onSave: (updated: TaskSubtype) => Promise<void>;
+  onAdd: (nueva: Omit<TaskSubtype, "id">) => Promise<void>;
 }
 
-const TaskTypesTable = ({ taskTypes, onSave, onAdd }: TaskTypesTableProps) => {
+const TaskSubtypesTable = ({
+  subtypes,
+  taskTypes,
+  onSave,
+  onAdd,
+}: TaskSubtypesTableProps) => {
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
+  const [selectedSubtype, setSelectedSubtype] = useState<TaskSubtype | null>(
+    null,
+  );
   const [addModalOpen, setAddModalOpen] = useState(false);
 
-  const handleEditClick = (task: TaskType) => {
-    setSelectedTask(task);
+  const handleEditClick = (subtype: TaskSubtype) => {
+    setSelectedSubtype(subtype);
     setEditModalOpen(true);
   };
 
@@ -33,7 +41,7 @@ const TaskTypesTable = ({ taskTypes, onSave, onAdd }: TaskTypesTableProps) => {
     <div className="bg-white rounded-xl overflow-hidden shadow-sm overflow-x-auto mt-10 md:mx-20">
       <div className="flex items-center justify-between mb-5 gap-3 mt-4 ml-4 mr-4">
         <h2 className="text-base font-medium text-gray-900">
-          Registro de roles
+          Registro de tareas
         </h2>
 
         <Button
@@ -41,7 +49,7 @@ const TaskTypesTable = ({ taskTypes, onSave, onAdd }: TaskTypesTableProps) => {
           variant="outline"
           onClick={() => setAddModalOpen(true)}
         >
-          + Nuevo rol
+          + Nueva tarea
         </Button>
       </div>
 
@@ -51,11 +59,9 @@ const TaskTypesTable = ({ taskTypes, onSave, onAdd }: TaskTypesTableProps) => {
             <TableHead className="h-12 px-3 font-semibold text-gray-400">
               NOMBRE
             </TableHead>
-
             <TableHead className="font-semibold text-gray-400">
               ESTADO
             </TableHead>
-
             <TableHead className="font-semibold text-gray-400">
               ACCIONES
             </TableHead>
@@ -63,7 +69,7 @@ const TaskTypesTable = ({ taskTypes, onSave, onAdd }: TaskTypesTableProps) => {
         </TableHeader>
 
         <TableBody>
-          {taskTypes.length === 0 ? (
+          {subtypes.length === 0 ? (
             <TableRow>
               <TableCell colSpan={3} className="text-center py-20">
                 <div className="flex flex-col items-center justify-center gap-2">
@@ -71,33 +77,33 @@ const TaskTypesTable = ({ taskTypes, onSave, onAdd }: TaskTypesTableProps) => {
                     <LayoutList className="w-5 h-5 text-gray-400" />
                   </div>
                   <p className="text-sm font-semibold text-gray-700">
-                    Sin tipos de tarea
+                    Sin subtipos de tarea
                   </p>
                   <p className="text-xs text-gray-400">
-                    Agregá un nuevo tipo de tarea para comenzar
+                    Agregá un nuevo subtipo para comenzar
                   </p>
                 </div>
               </TableCell>
             </TableRow>
           ) : (
-            taskTypes.map((task) => (
+            subtypes.map((subtype) => (
               <TableRow
-                key={task.id}
+                key={subtype.id}
                 className="border-b border-gray-100 hover:bg-muted/50 transition-colors"
               >
                 <TableCell className="text-sm px-4 py-6 w-75">
-                  {task.name}
+                  {subtype.name}
                 </TableCell>
 
                 <TableCell className="w-75">
                   <span
                     className={`px-2 py-1 text-xs rounded-full font-medium ${
-                      task.active
+                      subtype.active
                         ? "bg-verde-kurve-light text-verde-kurve"
                         : "bg-gray-100 text-gray-600"
                     }`}
                   >
-                    {task.active ? "Activo" : "Inactivo"}
+                    {subtype.active ? "Activo" : "Inactivo"}
                   </span>
                 </TableCell>
 
@@ -106,7 +112,7 @@ const TaskTypesTable = ({ taskTypes, onSave, onAdd }: TaskTypesTableProps) => {
                     variant="ghost"
                     size="icon"
                     className="cursor-pointer"
-                    onClick={() => handleEditClick(task)}
+                    onClick={() => handleEditClick(subtype)}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
@@ -116,22 +122,23 @@ const TaskTypesTable = ({ taskTypes, onSave, onAdd }: TaskTypesTableProps) => {
           )}
         </TableBody>
       </Table>
-      <EditTaskTypeModal
-        key={selectedTask?.id ?? "edit-empty"}
+
+      <EditTaskSubtypeModal
+        key={selectedSubtype?.id ?? "edit-empty"}
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
-        taskType={selectedTask}
+        subtype={selectedSubtype}
         onSave={onSave}
       />
-      <EditTaskTypeModal
-        key="new-task"
+      <EditTaskSubtypeModal
+        key="new-subtype"
         isOpen={addModalOpen}
         onClose={() => setAddModalOpen(false)}
-        taskType={null}
+        subtype={null}
         onSave={onAdd}
       />
     </div>
   );
 };
 
-export default TaskTypesTable;
+export default TaskSubtypesTable;

@@ -3,16 +3,16 @@ import PageHeader from "@/components/layout/PageHeader";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import TaskTypesTable from "@/components/admin/TaskTypeTable";
-import PieceCategoriesTable from "@/components/admin/PieceCategoriesTable";
+import TaskSubtypesTable from "@/components/admin/TaskSubtypesTable";
 import {
   useTaskTypesConfig,
-  usePieceCategoriesConfig,
+  useTaskSubtypesConfig,
 } from "../../../hooks/middleware";
 
 const ConfigurationPage = () => {
   const { tasks, loadingTasks, updateTask, addTask } = useTaskTypesConfig();
-  const { categories, loadingCategories, updateCategory, addCategory } =
-    usePieceCategoriesConfig();
+  const { subtypes, loadingSubtypes, updateSubtype, addSubtype } =
+    useTaskSubtypesConfig();
 
   return (
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
@@ -47,14 +47,14 @@ const ConfigurationPage = () => {
                 value="tarea"
                 className="text-xl font-bold text-gray-300 cursor-pointer pb-4"
               >
-                Tipo de tarea
+                Roles
               </TabsTrigger>
 
               <TabsTrigger
-                value="piezas"
+                value="subtarea"
                 className="text-xl font-bold text-gray-300 cursor-pointer pb-4"
               >
-                Categoria de piezas
+                Tareas
               </TabsTrigger>
             </TabsList>
 
@@ -70,14 +70,15 @@ const ConfigurationPage = () => {
               )}
             </TabsContent>
 
-            <TabsContent value="piezas">
-              {loadingCategories ? (
+            <TabsContent value="subtarea">
+              {loadingSubtypes || loadingTasks ? (
                 <p className="text-sm text-gray-400 mt-10 ml-4">Cargando...</p>
               ) : (
-                <PieceCategoriesTable
-                  categories={categories}
-                  onSave={updateCategory}
-                  onAdd={addCategory}
+                <TaskSubtypesTable
+                  subtypes={subtypes}
+                  taskTypes={tasks}
+                  onSave={updateSubtype}
+                  onAdd={addSubtype}
                 />
               )}
             </TabsContent>
