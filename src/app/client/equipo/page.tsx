@@ -1,9 +1,36 @@
+"use client";
 import { Suspense } from "react";
 import SidebarClient from "@/components/layout/SidebarClient";
 import PageHeader from "@/components/layout/PageHeader";
-import {Table, TableHeader, TableRow, TableHead, TableBody, TableCell} from "@/components/ui/table";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+import {
+  useCurrentUser,
+  useMembers,
+  useMembersByClient,
+} from "@/hooks/middleware";
 
 const TeamPage = () => {
+  const { user, loadingUser } = useCurrentUser();
+  const clientId = user?.client_id;
+
+  const { membersIdByClient, loadingMembersByClient } =
+    useMembersByClient(clientId);
+  const { members, loadingMembers } = useMembers();
+
+  const assignedMembers = members.filter((member) =>
+    membersIdByClient.includes(member.id),
+  );
+
+  console.log(membersIdByClient);
+  console.log("assignedMembers:", assignedMembers);
+
   return (
     <div className="min-h-screen w-full bg-muted flex">
       <SidebarClient />
@@ -21,12 +48,12 @@ const TeamPage = () => {
                 Todos los miembros
               </span>
               <span className="text-sm text-gris-kurve-dark">
-                5 miembros
+                {assignedMembers.length} miembro/s
               </span>
             </div>
           </div>
 
-                    <Table>
+          <Table>
             <TableHeader>
               <TableRow className="px-3.5 py-2.5 text-left text-[11px] font-medium uppercase tracking-wide border-b border-gray-200">
                 <TableHead className="h-12 px-3 font-semibold text-gray-400">
@@ -40,9 +67,6 @@ const TeamPage = () => {
                 <TableHead className="font-semibold text-gray-400">
                   Telefono
                 </TableHead>
-                <TableHead className="font-semibold text-gray-400">
-                  Rol
-                </TableHead>
 
                 <TableHead className="font-semibold text-gray-400">
                   Estado
@@ -50,25 +74,27 @@ const TeamPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-                <TableRow className="px-3.5 py-2.5 text-left text-[11px] font-medium uppercase tracking-wide border-b border-gray-200">
+              {assignedMembers.map((member) => (
+                <TableRow
+                  key={member.id}
+                  className="px-3.5 py-2.5 text-left text-[11px] cursor-default font-medium uppercase tracking-wide border-b border-gray-200"
+                >
                   <TableCell className="h-12 px-3">
-                    Marcos Perez
+                    {member.full_name}
                   </TableCell>
                   <TableCell className="h-12 px-3">
-                    marcos.perez@example.com
+                    {member.email ? member.email : "No especificado"}
                   </TableCell>
                   <TableCell className="h-12 px-3">
-                    123-456-7890
+                    {member.phone ? member.phone : "No especificado"}
                   </TableCell>
                   <TableCell className="h-12 px-3">
-                    Desarrollador
-                  </TableCell>
-                  <TableCell className="h-12 px-3">
-                    Activo
+                    {member.active ? "Activo" : "Inactivo"}
                   </TableCell>
                 </TableRow>
+              ))}
             </TableBody>
-            </Table>
+          </Table>
         </div>
       </main>
     </div>
