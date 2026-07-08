@@ -17,38 +17,36 @@ const getColor = (trafficLight: string) => {
   return "#22c55e";
 };
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const d = payload[0].payload;
-      return (
-        <div className="bg-white border border-gray-200 rounded-lg px-3 py-2 shadow text-sm">
-          <p className="font-semibold text-gray-800 mb-1">{d.package_name}</p>
-          <p className="text-gray-400">
-            Total:{" "}
-            <span className="text-gray-700 font-medium">
-              {d.total_hours} hs
-            </span>
-          </p>
-          <p className="text-gray-400">
-            Consumido:{" "}
-            <span className="text-gray-700 font-medium">
-              {d.consumed_hours} hs
-            </span>
-          </p>
-          <p className="text-gray-400">
-            Uso:{" "}
-            <span
-              className="font-medium"
-              style={{ color: getColor(d.traffic_light) }}
-            >
-              {d.hours_percent}%
-            </span>
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const d = payload[0].payload;
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg px-3 py-2 shadow text-sm">
+        <p className="font-semibold text-gray-800 mb-1">{d.package_name}</p>
+        <p className="text-gray-400">
+          Total:{" "}
+          <span className="text-gray-700 font-medium">{d.total_hours} hs</span>
+        </p>
+        <p className="text-gray-400">
+          Consumido:{" "}
+          <span className="text-gray-700 font-medium">
+            {d.consumed_hours} hs
+          </span>
+        </p>
+        <p className="text-gray-400">
+          Uso:{" "}
+          <span
+            className="font-medium"
+            style={{ color: getColor(d.traffic_light) }}
+          >
+            {d.hours_percent}%
+          </span>
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
 const ConsumptionChartAdmin = () => {
   const { data, loading, error } = useClientConsumption();
@@ -104,7 +102,7 @@ const ConsumptionChartAdmin = () => {
           <Tooltip content={<CustomTooltip />} />
           <Bar
             dataKey="total_hours"
-            fill="#1F8F4D"
+            fill="#06b6d4"
             radius={[6, 6, 0, 0]}
             minPointSize={4}
           />
@@ -118,7 +116,7 @@ const ConsumptionChartAdmin = () => {
 
       <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-verde-kurve-dark inline-block" />
+          <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 inline-block" />
           Total
         </span>
         <span className="flex items-center gap-1.5">
