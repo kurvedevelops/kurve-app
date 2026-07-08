@@ -10,9 +10,19 @@ import {
   CorrectionFormData,
 } from "@/components/modals/member/CorrectionModal";
 import { Member } from "@/app/admin/integrantes/page";
-import { X } from "lucide-react";
 
-type User = Tables<"users">;
+export type UserRole = "admin" | "member" | "client"; // ajustá según los valores reales de tu enum user_role
+
+export interface User {
+  id: string; // uuid
+  email: string;
+  full_name: string;
+  role: UserRole;
+  active: boolean;
+  created_at: string; // timestamptz -> ISO string
+  phone: string | null;
+  client_id: string | null; // uuid, solo presente cuando role === 'client'
+}
 
 export const formatDate = (date: string | null) => {
   if (!date) return "Indefinido";
@@ -224,6 +234,38 @@ export function useClientsByUser(userId?: string) {
   return { clientsId, loadingClientsId, error };
 }
 
+export function useMembersByClient(clientId?: string | null) {
+  const [membersIdByClient, setMembersIdByClient] = useState<string[]>([]);
+  const [loadingMembersByClient, setLoadingMembersByClient] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("client_users")
+          .select("user_id")
+          .eq("client_id", clientId);
+
+        console.log("clientId usado:", clientId);
+        console.log("data completa:", data);
+        console.log("cantidad de filas:", data?.length);
+
+        if (error) throw error;
+        setMembersIdByClient(data.map((row) => row.user_id));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingMembersByClient(false);
+      }
+    };
+    if (clientId) fetchMembers();
+  }, [clientId]);
+
+  return { membersIdByClient, loadingMembersByClient, error };
+}
+
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
@@ -292,7 +334,7 @@ export function useMembers() {
           .eq("role", "member");
 
         if (error) throw error;
-        setMembers(data || []);
+        setMembers(data ?? []);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error desconocido");
       } finally {
@@ -369,7 +411,7 @@ export function usePackages() {
   return { packages, loadingPackages };
 }
 
-export interface Package {
+export interface PackageData {
   id: string;
   client_id: string;
   name: string;
@@ -380,6 +422,7 @@ export interface Package {
   end_date: string | null;
   created_at: string;
   total_pieces: number | null;
+  block_on_limit: boolean;
 }
 
 export async function deletePackage(id: string) {
@@ -395,7 +438,7 @@ export async function deletePackage(id: string) {
   if (error) throw error;
 }
 
-export async function editPackage(data: Package, id: string) {
+export async function editPackage(data: PackageData, id: string) {
   const supabase = createClient();
 
   const { error } = await supabase
@@ -416,20 +459,24 @@ export async function editPackage(data: Package, id: string) {
   if (error) throw error;
 }
 
-export function usePackageByClient(clientId: string) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [clientPackage, setClientPackage] = useState<any[]>([]);
+export function usePackageByClient(clientId: string | null | undefined) {
+  const [clientPackage, setClientPackage] = useState<PackageData | null>(null);
   const [loadingClientPackage, setLoadingClientPackage] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!clientId) {
+      return;
+    }
+
     const fetchPackages = async () => {
       try {
         const supabase = createClient();
         const { data, error } = await supabase
           .from("packages")
           .select("*")
-          .eq("client_id", clientId);
+          .eq("client_id", clientId)
+          .maybeSingle();
 
         if (error) throw error;
 
@@ -803,16 +850,17 @@ export async function RejectEditRequest(reqId: string, adminId: string) {
   console.log(error);
 }
 
-type ClientConsumption = {
+export interface ClientConsumption {
   client_id: string;
   package_id: string;
   package_name: string;
   total_hours: number;
+  hours_percent: number;
   consumed_hours: number;
-  traffic_light: string;
-};
+  traffic_light: "green" | "yellow" | "red";
+}
 
-export function useClientConsumption() {
+export function useClientConsumption(clientId?: string) {
   const [data, setData] = useState<ClientConsumption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -821,11 +869,15 @@ export function useClientConsumption() {
     const fetch = async () => {
       try {
         const supabase = createClient();
-        const { data, error } = await supabase
+        let query = supabase
           .from("v_client_consumption")
           .select(
             "client_id, package_id, package_name, total_hours, consumed_hours, traffic_light, hours_percent",
           );
+
+        if (clientId) query = query.eq("client_id", clientId);
+
+        const { data, error } = await query;
 
         if (error) throw error;
         setData(data);
@@ -836,7 +888,7 @@ export function useClientConsumption() {
       }
     };
     fetch();
-  }, []);
+  }, [clientId]);
 
   return { data, loading, error };
 }

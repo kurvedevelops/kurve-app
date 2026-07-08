@@ -47,14 +47,14 @@ const ConfigurationPage = () => {
                 value="tarea"
                 className="text-xl font-bold text-gray-300 cursor-pointer pb-4"
               >
-                Tipo de tarea
+                Roles
               </TabsTrigger>
 
               <TabsTrigger
                 value="subtarea"
                 className="text-xl font-bold text-gray-300 cursor-pointer pb-4"
               >
-                Subtipo de tarea
+                Tareas
               </TabsTrigger>
             </TabsList>
 
