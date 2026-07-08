@@ -89,7 +89,7 @@ const ClientPage = () => {
             Enlaces Importantes
           </h2>
 
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-2 md:ml-8 ml-0">
+          <div className="grid grid-cols-2 gap-6 md:grid-cols-2 lg:grid-cols-4 md:ml-8 ml-0">
             {links.map((item) => (
               <Card
                 key={item.title}
