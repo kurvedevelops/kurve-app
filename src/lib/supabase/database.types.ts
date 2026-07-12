@@ -664,6 +664,10 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      recalculate_package_consumption: {
+        Args: { p_package_id: string }
+        Returns: undefined
+      }
       get_active_package_id: { Args: { p_client_id: string }; Returns: string }
       get_my_client_ids: { Args: never; Returns: string[] }
       recalculate_client_consumption: {
