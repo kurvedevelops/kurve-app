@@ -25,6 +25,7 @@ export async function GET() {
     .from("users")
     .select("*")
     .eq("role", "member")
+    .eq("active", true)
     .order("created_at", { ascending: false });
 
   // Manejar error
@@ -72,24 +73,66 @@ export async function POST(request: Request) {
     );
   }
 
-  // Verificar email duplicado
+  // Verificar si el email ya existe (activo o inactivo)
   const { data: existingUser } = await supabase
     .from("users")
-    .select("id")
+    .select("id, active")
     .eq("email", parsed.data.email)
     .maybeSingle();
 
-  // Si existe usuario devolver error
   if (existingUser) {
+    if (existingUser.active) {
+      return NextResponse.json(
+        { error: "Ya existe un integrante activo con ese email" },
+        { status: 409 }
+      );
+    }
+
+    // Usuario inactivo (eliminado antes) → reactivarlo sin tocar Auth
+    const { data: reactivated, error: reactivateError } = await supabase
+      .from("users")
+      .update({ full_name: parsed.data.full_name, role: "member", active: true })
+      .eq("id", existingUser.id)
+      .select()
+      .single();
+
+    if (reactivateError) {
+      console.error("Error al reactivar integrante:", reactivateError.message, reactivateError);
+      return NextResponse.json(
+        { error: "Error al reactivar integrante", detail: reactivateError.message },
+        { status: 500 }
+      );
+    }
+
+    // Limpiar asignaciones viejas y reasignar las nuevas
+    await supabase.from("client_users").delete().eq("user_id", existingUser.id);
+
+    if (parsed.data.client_ids.length > 0) {
+      const rows = parsed.data.client_ids.map((clientId) => ({
+        client_id: clientId,
+        user_id: existingUser.id,
+      }));
+      const { error: assignError } = await supabase.from("client_users").insert(rows);
+      if (assignError) {
+        console.error("Error al reasignar clientes:", assignError.message, assignError);
+        return NextResponse.json(
+          {
+            error: "El integrante se reactivó pero no se pudieron asignar los clientes. Asignalos desde el detalle.",
+            detail: assignError.message,
+            data: reactivated,
+          },
+          { status: 207 }
+        );
+      }
+    }
+
     return NextResponse.json(
-      {
-        error: "Ya existe un usuario con ese email",
-      },
-      { status: 409 }
+      { message: "Integrante reactivado correctamente", data: reactivated },
+      { status: 200 }
     );
   }
 
-  // Crear usuario en Supabase Auth
+  // Si no existe → flujo normal de creación en Auth
   const { data: authUser, error: authError } =
     await supabase.auth.admin.createUser({
       email: parsed.data.email,

@@ -334,7 +334,8 @@ export function useMembers() {
         const { data, error } = await supabase
           .from("users")
           .select("*")
-          .eq("role", "member");
+          .eq("role", "member")
+          .eq("active", true);
 
         if (error) throw error;
         setMembers(data ?? []);
