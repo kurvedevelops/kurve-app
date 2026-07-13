@@ -100,6 +100,7 @@ export async function POST(request: Request) {
 
   // Manejar error auth
   if (authError || !authUser.user) {
+    console.error("Error al crear usuario en Auth:", authError?.message, authError);
     return NextResponse.json(
       {
         error: "Error al crear usuario en Auth",
@@ -108,24 +109,27 @@ export async function POST(request: Request) {
     );
   }
 
-  // Crear usuario en tabla public.users
+  // El trigger handle_new_user ya insertó la fila en public.users al crear el
+  // usuario en Auth (con full_name vacío). Actualizamos con los datos reales
+  // en lugar de insertar de nuevo (un insert chocaría con la PK existente).
   const { data: member, error: insertError } = await supabase
     .from("users")
-    .insert({
-      id: authUser.user.id,
+    .update({
       full_name: parsed.data.full_name,
-      email: parsed.data.email,
       role: "member",
       active: true,
     })
+    .eq("id", authUser.user.id)
     .select()
     .single();
 
   // Manejar error DB
   if (insertError) {
+    console.error("Error al actualizar integrante en users:", insertError.message, insertError);
     return NextResponse.json(
       {
         error: "Error al crear integrante",
+        detail: insertError.message,
       },
       { status: 500 }
     );
