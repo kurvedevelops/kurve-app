@@ -504,7 +504,7 @@ export type Database = {
           display_order: number
           id: string
           name: string
-          task_type_id: string
+          task_type_id: string | null
           updated_at: string
         }
         Insert: {
@@ -513,7 +513,7 @@ export type Database = {
           display_order?: number
           id?: string
           name: string
-          task_type_id: string
+          task_type_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -522,7 +522,7 @@ export type Database = {
           display_order?: number
           id?: string
           name?: string
-          task_type_id?: string
+          task_type_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -565,6 +565,7 @@ export type Database = {
       users: {
         Row: {
           active: boolean
+          client_id: string | null
           created_at: string
           email: string
           full_name: string
@@ -574,6 +575,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          client_id?: string | null
           created_at?: string
           email: string
           full_name?: string
@@ -583,6 +585,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          client_id?: string | null
           created_at?: string
           email?: string
           full_name?: string
@@ -590,7 +593,15 @@ export type Database = {
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "users_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -645,11 +656,20 @@ export type Database = {
       }
     }
     Functions: {
+      approve_edit_request: {
+        Args: { p_request_id: string; p_reviewer_id: string }
+        Returns: Json
+      }
       current_user_role: {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      recalculate_package_consumption: {
+        Args: { p_package_id: string }
+        Returns: undefined
+      }
       get_active_package_id: { Args: { p_client_id: string }; Returns: string }
+      get_my_client_ids: { Args: never; Returns: string[] }
       recalculate_client_consumption: {
         Args: { p_client_id: string }
         Returns: undefined

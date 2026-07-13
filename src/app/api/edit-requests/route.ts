@@ -7,24 +7,64 @@ import { resend, FROM_EMAIL } from "@/lib/resend";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "kurvedevelops@gmail.com";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const VALID_STATUSES = ["in_progress", "delivered", "published"] as const;
+
 // Schema para crear solicitud de corrección
-const createEditRequestSchema = z.object({
-  activity_log_id: z.string().uuid(),
+const createEditRequestSchema = z
+  .object({
+    activity_log_id: z.string().uuid(),
 
-  field_name: z.enum([
-    "hours",
-    "pieces_count",
-    "task_type_id",
-    "category_id",
-    "log_date",
-    "status",
-    "notes",
-  ]),
+    field_name: z.enum([
+      "hours",
+      "pieces_count",
+      "task_type_id",
+      "category_id",
+      "log_date",
+      "status",
+      "notes",
+    ]),
 
-  new_value: z.string(),
+    new_value: z.string(),
 
-  reason: z.string().max(500).nullable().optional(),
-});
+    reason: z.string().max(500).nullable().optional(),
+  })
+  .superRefine(({ field_name, new_value }, ctx) => {
+    const fail = (message: string) =>
+      ctx.addIssue({ code: "custom", path: ["new_value"], message });
+
+    switch (field_name) {
+      case "hours": {
+        const n = Number(new_value);
+        if (isNaN(n) || n <= 0)
+          fail("Debe ser un número positivo (ej. 1.5)");
+        break;
+      }
+      case "pieces_count": {
+        const n = Number(new_value);
+        if (!Number.isInteger(n) || n < 0)
+          fail("Debe ser un entero no negativo (ej. 3)");
+        break;
+      }
+      case "log_date": {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(new_value) || isNaN(Date.parse(new_value)))
+          fail("Debe ser una fecha válida en formato YYYY-MM-DD");
+        break;
+      }
+      case "status": {
+        if (!(VALID_STATUSES as readonly string[]).includes(new_value))
+          fail(`Estado inválido. Valores permitidos: ${VALID_STATUSES.join(", ")}`);
+        break;
+      }
+      case "task_type_id":
+      case "category_id": {
+        if (!UUID_RE.test(new_value))
+          fail("Debe ser un UUID válido");
+        break;
+      }
+      // "notes": cualquier string es válido
+    }
+  });
 
 // POST /api/edit-requests
 // Member crea solicitud de corrección
