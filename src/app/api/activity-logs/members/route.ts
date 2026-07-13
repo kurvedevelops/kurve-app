@@ -6,10 +6,9 @@ import { requireAdmin } from "@/lib/supabase/guard";
 // Schema para crear integrantes
 const createMemberSchema = z.object({
   full_name: z.string().min(2).max(100),
-
   email: z.email(),
-
   password: z.string().min(6),
+  client_ids: z.array(z.string().uuid()).optional().default([]),
 });
 
 // GET /api/members
@@ -133,6 +132,32 @@ export async function POST(request: Request) {
       },
       { status: 500 }
     );
+  }
+
+  // Asignar clientes al integrante (si el modal mandó client_ids)
+  if (parsed.data.client_ids.length > 0) {
+    const rows = parsed.data.client_ids.map((clientId) => ({
+      client_id: clientId,
+      user_id: authUser.user.id,
+    }));
+
+    const { error: assignError } = await supabase
+      .from("client_users")
+      .insert(rows);
+
+    if (assignError) {
+      console.error("Error al asignar clientes al integrante:", assignError.message, assignError);
+      // El integrante ya se creó correctamente. Informamos el éxito parcial
+      // para que el admin pueda asignar los clientes desde el detalle.
+      return NextResponse.json(
+        {
+          error: "El integrante se creó pero no se pudieron asignar los clientes. Asignalos desde el detalle del integrante.",
+          detail: assignError.message,
+          data: member,
+        },
+        { status: 207 }
+      );
+    }
   }
 
   // Respuesta exitosa
