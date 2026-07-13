@@ -19,10 +19,10 @@ import { toast } from "sonner";
 import { ConfirmDeleteModal } from "@/components/modals/BorrarEntidadModal";
 
 const MemberDetail = () => {
-  const { members, loadingMembers } = useMembers();
+  const { members, loadingMembers, refetchMembers } = useMembers();
   const { id } = useParams();
   const memberDetail = members.find((m) => m.id === id);
-  const { clientsId, loadingClientsId } = useClientsByUser(memberDetail?.id);
+  const { clientsId, loadingClientsId, refetchClientsId } = useClientsByUser(memberDetail?.id);
   const { clients, loadingClients } = useClients();
   const clientIds = clientsId.map((c) => c.client_id);
   const clientesAsociados = clients.filter((client) =>
@@ -51,7 +51,7 @@ const MemberDetail = () => {
       await deleteMember(id);
       setDeleteConfirm({ open: false, memberId: "", memberName: "" });
       toast.success("Integrante eliminado exitosamente");
-      router.refresh();
+      refetchMembers();
     } catch {
       toast.error("Error al eliminar integrante");
     } finally {
@@ -63,7 +63,7 @@ const MemberDetail = () => {
     try {
       await assignClientToUser(clientId, memberDetail?.id);
       toast.success("Cliente asignado exitosamente");
-      router.refresh();
+      refetchClientsId();
     } catch {
       toast.error("Error al asignar cliente al integrante");
     }

@@ -1,5 +1,5 @@
 "use client";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import PageHeader from "@/components/layout/PageHeader";
 import { Package, Calendar, Mail, Phone, Plus } from "lucide-react";
@@ -26,13 +26,12 @@ const ClientDetailPage = () => {
   const clientId = params.id as string;
   const [showEditarClienteModal, setShowEditarClienteModal] = useState(false);
   const [showAsignarPaqueteModal, setShowAsignarPaqueteModal] = useState(false);
-  const { clients, loadingClients } = useClients();
-  const { packageConsumption, loadingPackageConsumption } =
+  const { clients, loadingClients, refetchClients } = useClients();
+  const { packageConsumption, loadingPackageConsumption, refetchPackageConsumption } =
     usePackageConsumption(clientId);
 
   const client = clients.find((c) => c.id === clientId);
   const initials = getInitials(client?.name);
-  const router = useRouter();
 
   const handleActions = {
     edit: () => setShowEditarClienteModal(true),
@@ -41,12 +40,14 @@ const ClientDetailPage = () => {
 
   const handleAsignarPaquete = async (data: AsignarPaqueteFormData) => {
     await assignPackage(clientId, data);
-    router.refresh();
+    setShowAsignarPaqueteModal(false);
+    refetchPackageConsumption();
   };
 
   const handleEditarCliente = async (data: EditarClienteFormData) => {
     await editClient(clientId, data);
-    router.refresh();
+    setShowEditarClienteModal(false);
+    refetchClients();
   };
 
   if (!client)

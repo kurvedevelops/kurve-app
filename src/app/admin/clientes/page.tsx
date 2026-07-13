@@ -129,7 +129,7 @@ export function ActionDropdown({
 }
 
 const ClientesPage = () => {
-  const { clients, loadingClients } = useClients();
+  const { clients, loadingClients, refetchClients } = useClients();
   const { packages, loadingPackages } = usePackages();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "paused">(
@@ -182,7 +182,7 @@ const ClientesPage = () => {
       await deleteClient(id);
       setDeleteConfirm({ open: false, clientId: "", clientName: "" });
       toast.success("Cliente eliminado exitosamente");
-      router.refresh();
+      refetchClients();
     } catch {
       toast.error("Error al eliminar cliente");
     } finally {
@@ -192,7 +192,8 @@ const ClientesPage = () => {
 
   const handleCrearCliente = async (data: NuevoClienteFormData) => {
     await createNewClient(data);
-    router.refresh();
+    setShowNuevoClienteModal(false);
+    refetchClients();
   };
 
   const handleOpenEditModal = (client: Client) => {
@@ -205,7 +206,7 @@ const ClientesPage = () => {
       if (!selectedClient) return;
       await editClient(selectedClient.id, data);
 
-      router.refresh();
+      refetchClients();
       setShowEditarClienteModal(false);
       setSelectedClient(null);
     } catch (error) {

@@ -209,6 +209,7 @@ export function useClientsByUser(userId?: string) {
   const [clientsId, setClientsId] = useState<UserClient[]>([]);
   const [loadingClientsId, setLoadingClientsId] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [_cuk, _setCuk] = useState(0);
 
   useEffect(() => {
     if (!userId) return;
@@ -229,9 +230,9 @@ export function useClientsByUser(userId?: string) {
       }
     };
     if (userId) fetchClients();
-  }, [userId]);
+  }, [userId, _cuk]);
 
-  return { clientsId, loadingClientsId, error };
+  return { clientsId, loadingClientsId, error, refetchClientsId: () => _setCuk((k) => k + 1) };
 }
 
 export function useMembersByClient(clientId?: string | null) {
@@ -296,6 +297,7 @@ export function useClients() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loadingClients, setLoadingClients] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [_ck, _setCk] = useState(0);
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -314,15 +316,16 @@ export function useClients() {
     };
 
     fetchClients();
-  }, []);
+  }, [_ck]);
 
-  return { clients, loadingClients, error };
+  return { clients, loadingClients, error, refetchClients: () => _setCk((k) => k + 1) };
 }
 
 export function useMembers() {
   const [members, setMembers] = useState<Member[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [_mk, _setMk] = useState(0);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -342,9 +345,9 @@ export function useMembers() {
       }
     };
     fetchMembers();
-  }, []);
+  }, [_mk]);
 
-  return { members, loadingMembers, error };
+  return { members, loadingMembers, error, refetchMembers: () => _setMk((k) => k + 1) };
 }
 
 export function getInitials(fullName?: string) {
@@ -387,6 +390,7 @@ export function usePackages() {
   const [packages, setPackages] = useState<any[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [_pk, _setPk] = useState(0);
 
   useEffect(() => {
     const fetchPackages = async () => {
@@ -407,8 +411,8 @@ export function usePackages() {
       }
     };
     fetchPackages();
-  }, []);
-  return { packages, loadingPackages };
+  }, [_pk]);
+  return { packages, loadingPackages, refetchPackages: () => _setPk((k) => k + 1) };
 }
 
 export interface PackageData {
@@ -497,6 +501,7 @@ export function usePackageConsumption(clientId: string) {
   const [loadingPackageConsumption, setLoadingPackageConsumption] =
     useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [_pck, _setPck] = useState(0);
 
   useEffect(() => {
     const fetchPackageConsumption = async () => {
@@ -517,8 +522,8 @@ export function usePackageConsumption(clientId: string) {
       }
     };
     fetchPackageConsumption();
-  }, [clientId]);
-  return { packageConsumption, loadingPackageConsumption };
+  }, [clientId, _pck]);
+  return { packageConsumption, loadingPackageConsumption, refetchPackageConsumption: () => _setPck((k) => k + 1) };
 }
 
 export function useTaskTypes() {
@@ -580,6 +585,7 @@ export function useActivityLogs(
   const [totalCount, setTotalCount] = useState(0);
   const [loadingActivityLogs, setLoadingActivityLogs] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [_alk, _setAlk] = useState(0);
 
   useEffect(() => {
     if (!userId) return;
@@ -626,9 +632,10 @@ export function useActivityLogs(
     filters?.from,
     filters?.to,
     filters?.page,
+    _alk,
   ]);
 
-  return { activityLogs, loadingActivityLogs, error, totalCount };
+  return { activityLogs, loadingActivityLogs, error, totalCount, refetchActivityLogs: () => _setAlk((k) => k + 1) };
 }
 
 export function useActivityLogDates(userId: string) {
@@ -694,6 +701,7 @@ export function useEditRequests() {
   const [editRequests, setEditRequests] = useState<any[]>([]);
   const [loadingEditRequests, setLoadingEditRequests] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [_erk, _setErk] = useState(0);
 
   useEffect(() => {
     const fetchEditRequests = async () => {
@@ -714,8 +722,8 @@ export function useEditRequests() {
       }
     };
     fetchEditRequests();
-  }, []);
-  return { editRequests, loadingEditRequests, error };
+  }, [_erk]);
+  return { editRequests, loadingEditRequests, error, refetchEditRequests: () => _setErk((k) => k + 1) };
 }
 
 export function useEditRequestsById(userId: string) {

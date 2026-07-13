@@ -61,7 +61,7 @@ const RegistrarHorasPage = () => {
   const { clients, loadingClients } = useClients();
   const { clientsId, loadingClientsId } = useClientsByUser(user?.id || "");
   const { tasks, loadingTasks } = useTaskTypes();
-  const { activityLogs, loadingActivityLogs } = useActivityLogs(user?.id || "");
+  const { activityLogs, loadingActivityLogs, refetchActivityLogs } = useActivityLogs(user?.id || "");
   const { subtypes, loadingSubtypes } = useTaskSubtypesConfig();
 
   const communityManagementId = tasks.find(
@@ -181,6 +181,7 @@ const RegistrarHorasPage = () => {
         });
         resetForm();
         localStorage.removeItem("activity_draft");
+        refetchActivityLogs();
       } catch (err: any) {
         setStatus({ error: err.message || "Error al registrar las horas" });
         Swal.fire({

@@ -26,7 +26,7 @@ const PackagesPage = () => {
     null,
   );
 
-  const { packages, loadingPackages } = usePackages();
+  const { packages, loadingPackages, refetchPackages } = usePackages();
 
   // Abre el modal de edición con el paquete seleccionado
   const handleOpenEdit = (pkg: PackageData) => {
@@ -44,9 +44,11 @@ const PackagesPage = () => {
   const handleSave = async (updated: PackageData) => {
     try {
       if (selectedPackage) {
-        // Edición
         await editPackage(updated, updated.id);
         toast.success("Paquete editado exitosamente");
+        setFormModalOpen(false);
+        setSelectedPackage(null);
+        refetchPackages();
       }
     } catch (err) {
       toast.error(`Error al editar paquete: ${err}`);
@@ -59,6 +61,7 @@ const PackagesPage = () => {
     try {
       await deletePackage(selectedPackage.id);
       toast.success("Paquete eliminado");
+      refetchPackages();
     } catch (err) {
       toast.error(`Error al eliminar paquete: ${err}`);
     } finally {

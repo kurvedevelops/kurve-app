@@ -58,7 +58,7 @@ const MembersPage = () => {
   const [showEditarMiembroModal, setShowEditarMiembroModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
-  const { members, loadingMembers } = useMembers();
+  const { members, loadingMembers, refetchMembers } = useMembers();
 
   const searchedMembers = members.filter((c) => {
     const matchesSearch = c.full_name
@@ -80,7 +80,7 @@ const MembersPage = () => {
       await deleteMember(id);
       setDeleteConfirm({ open: false, memberId: "", memberName: "" });
       toast.success("Integrante eliminado exitosamente");
-      router.refresh();
+      refetchMembers();
     } catch {
       toast.error("Error al eliminar integrante");
     } finally {
@@ -106,7 +106,7 @@ const MembersPage = () => {
       if (!selectedMember) return;
       await editMember(selectedMember.id, data);
 
-      router.refresh();
+      refetchMembers();
       setShowEditarMiembroModal(false);
       setSelectedMember(null);
     } catch (error) {
@@ -183,7 +183,7 @@ const MembersPage = () => {
           <AddMemberModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
-            onSuccess={() => router.refresh()}
+            onSuccess={refetchMembers}
           />
           <Table>
             <TableHeader>
