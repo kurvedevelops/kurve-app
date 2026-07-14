@@ -9,6 +9,8 @@ const createMemberSchema = z.object({
   email: z.email(),
   password: z.string().min(6),
   client_ids: z.array(z.string().uuid()).optional().default([]),
+  phone: z.string().max(50).optional().nullable(),
+  position: z.string().max(100).optional().nullable(),
 });
 
 // GET /api/members
@@ -91,7 +93,13 @@ export async function POST(request: Request) {
     // Usuario inactivo (eliminado antes) → reactivarlo sin tocar Auth
     const { data: reactivated, error: reactivateError } = await supabase
       .from("users")
-      .update({ full_name: parsed.data.full_name, role: "member", active: true })
+      .update({
+        full_name: parsed.data.full_name,
+        role: "member",
+        active: true,
+        phone: parsed.data.phone ?? null,
+        position: parsed.data.position ?? null,
+      })
       .eq("id", existingUser.id)
       .select()
       .single();
@@ -160,6 +168,8 @@ export async function POST(request: Request) {
       full_name: parsed.data.full_name,
       role: "member",
       active: true,
+      phone: parsed.data.phone ?? null,
+      position: parsed.data.position ?? null,
     })
     .eq("id", authUser.user.id)
     .select()

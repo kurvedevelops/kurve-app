@@ -10,6 +10,12 @@ const updateMemberSchema = z.object({
   email: z.email().optional(),
 
   active: z.boolean().optional(),
+
+  phone: z.string().max(50).optional().nullable(),
+
+  position: z.string().max(100).optional().nullable(),
+
+  client_ids: z.array(z.string().uuid()).optional(),
 });
 
 // GET /api/members/:id
@@ -105,10 +111,13 @@ export async function PATCH(
     }
   }
 
+  // Separar client_ids (no es columna de users) de los campos del usuario
+  const { client_ids, ...userFields } = parsed.data;
+
   // Actualizar integrante en public.users
   const { data: updatedMember, error } = await supabase
     .from("users")
-    .update(parsed.data)
+    .update(userFields)
     .eq("id", id)
     .eq("role", "member")
     .select()
@@ -116,12 +125,57 @@ export async function PATCH(
 
   // Manejar error
   if (error || !updatedMember) {
+    console.error("Error al actualizar integrante:", error?.message, error);
     return NextResponse.json(
       {
         error: "Error al actualizar integrante",
+        detail: error?.message,
       },
       { status: 500 }
     );
+  }
+
+  // Si mandaron client_ids, reasignar: limpiar asignaciones viejas e insertar las nuevas
+  if (client_ids) {
+    const { error: deleteError } = await supabase
+      .from("client_users")
+      .delete()
+      .eq("user_id", id);
+
+    if (deleteError) {
+      console.error("Error al limpiar clientes del integrante:", deleteError.message, deleteError);
+      return NextResponse.json(
+        {
+          error: "El integrante se actualizó pero no se pudieron reasignar los clientes.",
+          detail: deleteError.message,
+          data: updatedMember,
+        },
+        { status: 207 }
+      );
+    }
+
+    if (client_ids.length > 0) {
+      const rows = client_ids.map((clientId) => ({
+        client_id: clientId,
+        user_id: id,
+      }));
+
+      const { error: assignError } = await supabase
+        .from("client_users")
+        .insert(rows);
+
+      if (assignError) {
+        console.error("Error al reasignar clientes al integrante:", assignError.message, assignError);
+        return NextResponse.json(
+          {
+            error: "El integrante se actualizó pero no se pudieron reasignar los clientes.",
+            detail: assignError.message,
+            data: updatedMember,
+          },
+          { status: 207 }
+        );
+      }
+    }
   }
 
   // Respuesta exitosa

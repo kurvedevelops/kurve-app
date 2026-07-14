@@ -7,6 +7,8 @@ type AddMemberFormValues = {
   name: string;
   email: string;
   password: string;
+  phone: string;
+  position: string;
 };
 
 export const addMemberSchema = z.object({
@@ -51,6 +53,8 @@ const AddMemberModal = ({
       name: "",
       email: "",
       password: "",
+      phone: "",
+      position: "",
     },
 
     validate,
@@ -65,6 +69,8 @@ const AddMemberModal = ({
           full_name: values.name,
           email: values.email,
           password: values.password,
+          phone: values.phone || null,
+          position: values.position || null,
         }),
       });
 
@@ -161,6 +167,44 @@ const AddMemberModal = ({
                 {formik.errors.password}
               </p>
             )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-azul-kurve mb-2"
+              >
+                Teléfono
+              </label>
+              <input
+                type="tel"
+                id="phone"
+                placeholder="+54 11 0000-0000"
+                value={formik.values.phone}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                className="w-full h-11 px-3 rounded-lg border border-slate-300 bg-white text-sm outline-none focus:ring-1 focus:ring-verde-kurve"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="position"
+                className="block text-sm font-medium text-azul-kurve mb-2"
+              >
+                Cargo / especialidad
+              </label>
+              <input
+                type="text"
+                id="position"
+                placeholder="Ej: Community Manager"
+                value={formik.values.position}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                className="w-full h-11 px-3 rounded-lg border border-slate-300 bg-white text-sm outline-none focus:ring-1 focus:ring-verde-kurve"
+              />
+            </div>
           </div>
 
           <div className="flex items-center gap-2">

@@ -27,6 +27,7 @@ export interface Member {
   email: string;
   role: string;
   phone: string;
+  position: string | null;
   active: boolean;
   created_at: string;
 }
@@ -43,6 +44,7 @@ export async function editMember(
       full_name: data.full_name,
       email: data.email,
       phone: data.phone,
+      position: data.position || null,
       created_at: data.fechaAlta,
     })
     .eq("id", memberId);

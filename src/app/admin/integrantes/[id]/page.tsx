@@ -1,9 +1,9 @@
 "use client";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, UserMinus } from "lucide-react";
+import { ChevronRight, UserMinus, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link2, User, Plus, Link2Off } from "lucide-react";
+import { Link2, User, Plus } from "lucide-react";
 import {
   assignClientToUser,
   deleteMember,
@@ -17,6 +17,10 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDeleteModal } from "@/components/modals/BorrarEntidadModal";
+import {
+  EditarmiembroModal,
+  EditarMiembroSubmitData,
+} from "@/components/modals/EditarMiembroModal";
 
 const MemberDetail = () => {
   const { members, loadingMembers, refetchMembers } = useMembers();
@@ -69,6 +73,43 @@ const MemberDetail = () => {
     }
   };
 
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  // Opciones del multi-select: clientes activos + los ya asignados (aunque
+  // estén pausados/finalizados) para no perder asignaciones al editar.
+  const clientOptions = clients
+    .filter((c) => c.status === "active" || clientIds.includes(c.id))
+    .map((c) => ({ id: c.id, name: c.name }));
+
+  const handleEditarIntegrante = async (data: EditarMiembroSubmitData) => {
+    if (!memberDetail) return;
+
+    const res = await fetch(`/api/activity-logs/members/${memberDetail.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        full_name: data.full_name,
+        phone: data.phone || null,
+        position: data.position || null,
+        client_ids: data.client_ids ?? [],
+      }),
+    });
+
+    if (!res.ok) {
+      const body = await res
+        .json()
+        .catch(() => ({ error: "Error desconocido" }));
+      toast.error("No se pudo actualizar el integrante", {
+        description: body.error ?? "Error desconocido",
+      });
+      return;
+    }
+
+    toast.success("Integrante actualizado correctamente");
+    refetchMembers();
+    refetchClientsId();
+  };
+
   return (
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
       <SidebarAdmin />
@@ -100,35 +141,43 @@ const MemberDetail = () => {
               </h2>
               <div className="flex gap-4">
                 <p className="text-gray-600 text-xs">
-                  <span className="text-xs font-semibold">Rol: </span>
-                  Desarrolladora Full Stack
+                  <span className="text-xs font-semibold">Cargo: </span>
+                  {memberDetail?.position || "Sin especificar"}
                 </p>
                 <p className="text-gray-600 text-xs">
                   <span className="text-xs font-semibold">Email: </span>
                   {memberDetail?.email}
                 </p>
-                {memberDetail?.phone ? (
-                  <p className="text-gray-600 text-xs">
-                    <span className="text-xs font-semibold">Telefono: </span>
-                    {memberDetail?.email}
-                  </p>
-                ) : null}
+                <p className="text-gray-600 text-xs">
+                  <span className="text-xs font-semibold">Telefono: </span>
+                  {memberDetail?.phone || "Sin especificar"}
+                </p>
               </div>
             </div>
-            <Button
-              variant="outline"
-              className="ml-auto px-8 py-6 flex items-center gap-2 border-red-500 text-red-500 cursor-pointer hover:bg-red-300 hover:text-red-600"
-              onClick={() => {
-                setDeleteConfirm({
-                  open: true,
-                  memberId: memberDetail?.id ?? "",
-                  memberName: memberDetail?.full_name ?? "",
-                });
-              }}
-            >
-              <UserMinus />
-              Eliminar
-            </Button>
+            <div className="ml-auto flex items-center gap-2">
+              <Button
+                variant="outline"
+                className="px-6 py-6 flex items-center gap-2 border-verde-kurve text-verde-kurve-dark cursor-pointer hover:bg-verde-kurve-light"
+                onClick={() => setShowEditModal(true)}
+              >
+                <Pencil size={16} />
+                Editar
+              </Button>
+              <Button
+                variant="outline"
+                className="px-6 py-6 flex items-center gap-2 border-red-500 text-red-500 cursor-pointer hover:bg-red-300 hover:text-red-600"
+                onClick={() => {
+                  setDeleteConfirm({
+                    open: true,
+                    memberId: memberDetail?.id ?? "",
+                    memberName: memberDetail?.full_name ?? "",
+                  });
+                }}
+              >
+                <UserMinus />
+                Eliminar
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -237,6 +286,17 @@ const MemberDetail = () => {
           </div>
         </div>
       </main>
+      {memberDetail && (
+        <EditarmiembroModal
+          open={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          member={memberDetail}
+          clients={clientOptions}
+          assignedClientIds={clientIds}
+          onSubmit={handleEditarIntegrante}
+        />
+      )}
+
       <ConfirmDeleteModal
         open={deleteConfirm.open}
         entityName={deleteConfirm.memberName}
