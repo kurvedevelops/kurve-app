@@ -13,8 +13,8 @@ import { useState } from "react";
 import {
   usePackages,
   editPackage,
-  Package,
   deletePackage,
+  PackageData,
 } from "@/hooks/middleware";
 import { toast } from "sonner";
 import { ConfirmDeleteModal } from "@/components/modals/BorrarEntidadModal";
@@ -22,24 +22,26 @@ import { ConfirmDeleteModal } from "@/components/modals/BorrarEntidadModal";
 const PackagesPage = () => {
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<PackageData | null>(
+    null,
+  );
 
   const { packages, loadingPackages } = usePackages();
 
   // Abre el modal de edición con el paquete seleccionado
-  const handleOpenEdit = (pkg: Package) => {
+  const handleOpenEdit = (pkg: PackageData) => {
     setSelectedPackage(pkg);
     setFormModalOpen(true);
   };
 
   // Abre el modal de confirmación de borrado
-  const handleOpenDelete = (pkg: Package) => {
+  const handleOpenDelete = (pkg: PackageData) => {
     setSelectedPackage(pkg);
     setDeleteModalOpen(true);
   };
 
   // Guarda un paquete nuevo o editado llamando a Supabase
-  const handleSave = async (updated: Package) => {
+  const handleSave = async (updated: PackageData) => {
     try {
       if (selectedPackage) {
         // Edición
