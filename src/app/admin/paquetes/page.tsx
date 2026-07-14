@@ -40,18 +40,47 @@ const PackagesPage = () => {
     setDeleteModalOpen(true);
   };
 
-  // Guarda un paquete nuevo o editado llamando a Supabase
+  // Guarda un paquete: edición directa en Supabase o creación vía endpoint
   const handleSave = async (updated: PackageData) => {
     try {
       if (selectedPackage) {
+        // Edición
         await editPackage(updated, updated.id);
         toast.success("Paquete editado exitosamente");
-        setFormModalOpen(false);
-        setSelectedPackage(null);
-        refetchPackages();
+      } else {
+        // Creación → POST al endpoint
+        const res = await fetch("/api/activity-logs/packages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            client_id: updated.client_id,
+            name: updated.name,
+            total_hours: updated.total_hours,
+            total_pieces: updated.total_pieces,
+            price: updated.price,
+            start_date: updated.start_date,
+            end_date: updated.end_date || null,
+          }),
+        });
+
+        if (!res.ok) {
+          const body = await res
+            .json()
+            .catch(() => ({ error: "Error desconocido" }));
+          toast.error("No se pudo crear el paquete", {
+            description: body.error ?? "Error desconocido",
+          });
+          return;
+        }
+
+        toast.success("Paquete creado correctamente");
       }
+
+      setFormModalOpen(false);
+      setSelectedPackage(null);
+      refetchPackages();
     } catch (err) {
-      toast.error(`Error al editar paquete: ${err}`);
+      toast.error(`Error al guardar paquete: ${err}`);
     }
   };
 

@@ -25,6 +25,8 @@ const createPackageSchema = z.object({
 
   total_pieces: z.number().int().min(0).nullable().optional(),
 
+  price: z.number().min(0).optional(),
+
   package_pieces: z.array(packagePieceSchema).optional(),
 });
 
@@ -128,6 +130,7 @@ export async function POST(request: Request) {
       end_date: parsed.data.end_date ?? null,
       total_hours: parsed.data.total_hours,
       total_pieces: parsed.data.total_pieces ?? null,
+      price: parsed.data.price ?? 0,
     })
     .select()
     .single();
