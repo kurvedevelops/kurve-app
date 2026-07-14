@@ -71,16 +71,22 @@ export async function deleteMember(memberId?: string) {
 export async function createNewClient(data: NuevoClienteFormData) {
   const supabase = createClient();
 
-  const { error } = await supabase.from("clients").insert({
-    name: data.name,
-    legal_name: data.razonSocial,
-    email: data.email,
-    phone: data.telefono,
-    created_at: data.fechaAlta,
-    status: "active",
-  });
+  const { data: newClient, error } = await supabase
+    .from("clients")
+    .insert({
+      name: data.name,
+      legal_name: data.razonSocial,
+      email: data.email,
+      phone: data.telefono,
+      created_at: data.fechaAlta,
+      status: "active",
+    })
+    .select()
+    .single();
 
   if (error) throw error;
+
+  return newClient;
 }
 
 export async function checkClientExists(name: string) {

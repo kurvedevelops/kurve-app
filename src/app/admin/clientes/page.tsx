@@ -2,7 +2,6 @@
 import PageHeader from "@/components/layout/PageHeader";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import {
-  createNewClient,
   deleteClient,
   editClient,
   getInitials,
@@ -11,7 +10,6 @@ import {
 } from "@/hooks/middleware";
 import {
   NuevoClienteModal,
-  NuevoClienteFormData,
 } from "@/components/modals/NuevoClienteModal";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -188,11 +186,6 @@ const ClientesPage = () => {
     } finally {
       setDeletingId(null);
     }
-  };
-
-  const handleCrearCliente = async (data: NuevoClienteFormData) => {
-    await createNewClient(data);
-    router.refresh();
   };
 
   const handleOpenEditModal = (client: Client) => {
@@ -431,7 +424,7 @@ const ClientesPage = () => {
       <NuevoClienteModal
         open={showNuevoClienteModal}
         onClose={() => setShowNuevoClienteModal(false)}
-        onSubmit={handleCrearCliente}
+        onSuccess={() => router.refresh()}
       />
 
       {/* Modal editar cliente */}
