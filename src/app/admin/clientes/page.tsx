@@ -8,9 +8,7 @@ import {
   useClients,
   usePackages,
 } from "@/hooks/middleware";
-import {
-  NuevoClienteModal,
-} from "@/components/modals/NuevoClienteModal";
+import { NuevoClienteModal } from "@/components/modals/NuevoClienteModal";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";

@@ -46,6 +46,7 @@ const ClientDetailPage = () => {
   const { clients, loadingClients } = useClients();
   const { packageConsumption, loadingPackageConsumption } =
     usePackageConsumption(clientId);
+  console.log("Package Consumption:", packageConsumption);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [selectedLink, setSelectedLink] = useState<ClientLink | null>(null);
   const [deleteLinkConfirm, setDeleteLinkConfirm] = useState<{
@@ -245,7 +246,7 @@ const ClientDetailPage = () => {
           ) : (
             <>
               {packageConsumption.map((pkg) => (
-                <div key={pkg.package_id} className="mb-5">
+                <div key={pkg.package_id} className="mb-2">
                   {/* Package Header */}
                   <div className="flex items-start justify-between mb-2">
                     <div>
@@ -267,9 +268,8 @@ const ClientDetailPage = () => {
                       {pkg.package_status === "active" ? "Activo" : "Inactivo"}
                     </span>
                   </div>
-
                   {/* Stats Grid */}
-                  <div className="grid grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     {/* Horas */}
                     <div className="bg-muted rounded-lg p-4">
                       <p className="text-xs font-semibold text-gris-kurve-dark uppercase tracking-wide mb-2">
@@ -290,25 +290,6 @@ const ClientDetailPage = () => {
                         <span className="text-sm ml-1 font-normal">hs</span>
                       </p>
                     </div>
-
-                    {/* Posts */}
-                    <div className="bg-muted rounded-lg p-4">
-                      <p className="text-xs font-semibold text-gris-kurve-dark uppercase tracking-wide mb-2">
-                        Publicaciones totales
-                      </p>
-                      <p className="text-2xl font-bold text-foreground">
-                        {pkg.total_pieces || 0}
-                      </p>
-                    </div>
-
-                    <div className="bg-muted rounded-lg p-4">
-                      <p className="text-xs font-semibold text-gris-kurve-dark uppercase tracking-wide mb-2">
-                        Publicaciones consumidas
-                      </p>
-                      <p className="text-2xl font-bold text-foreground">
-                        {pkg.total_pieces || 0}
-                      </p>
-                    </div>
                   </div>
                 </div>
               ))}
@@ -316,10 +297,21 @@ const ClientDetailPage = () => {
           )}
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-foreground mb-4 ml-5 mt-8">
-            Links del cliente
-          </h1>
-          <div className="bg-background rounded-xl border border-border p-8">
+          <div className="flex items-center justify-between text-center mb-4 ml-5 mt-4">
+            <h1 className="text-2xl font-bold text-foreground flex items-center text-center">
+              Links del cliente
+            </h1>
+            <div className="flex items-center text-center">
+              <button
+                onClick={handleOpenNewLinkModal}
+                className="px-4 py-2 bg-verde-kurve text-white rounded-lg hover:bg-verde-kurve-dark transition-colors font-semibold text-sm"
+              >
+                + Agregar link
+              </button>
+            </div>
+          </div>
+
+          <div>
             {loadingLinks ? (
               <p className="text-sm text-gray-400">Cargando...</p>
             ) : links.length === 0 ? (
@@ -337,25 +329,9 @@ const ClientDetailPage = () => {
                   Agregá el contrato, el Drive, las analíticas u otros accesos
                   relevantes para este cliente.
                 </p>
-
-                <button
-                  onClick={handleOpenNewLinkModal}
-                  className="px-6 py-2 bg-verde-kurve text-white rounded-lg hover:bg-verde-kurve-dark transition-colors font-semibold"
-                >
-                  + Agregar link
-                </button>
               </div>
             ) : (
               <>
-                <div className="flex items-center justify-end mb-6">
-                  <button
-                    onClick={handleOpenNewLinkModal}
-                    className="px-4 py-2 bg-verde-kurve text-white rounded-lg hover:bg-verde-kurve-dark transition-colors font-semibold text-sm"
-                  >
-                    + Agregar link
-                  </button>
-                </div>
-
                 <div className="grid grid-cols-2 gap-6 md:grid-cols-2 lg:grid-cols-4">
                   {links.map((link) => {
                     const config = linkTypeConfig[link.type];

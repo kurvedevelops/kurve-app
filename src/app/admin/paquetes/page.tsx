@@ -110,8 +110,8 @@ const PackagesPage = () => {
                   <span
                     className={`px-2 py-1 rounded text-sm font-medium ${
                       pkg.status === "active"
-                        ? "bg-verde-kurve-dark/20 text-verde-kurve"
-                        : "bg-gris-kurve-light text-gris-kurve-dark"
+                        ? "bg-verde-kurve/10 text-verde-kurve"
+                        : "bg-gray-100 text-gray-500"
                     }`}
                   >
                     {pkg.status === "active" ? "Activo" : "Inactivo"}
@@ -161,7 +161,7 @@ const PackagesPage = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="px-6 py-4 cursor-pointer text-red-500 hover:text-red-600 hover:border-red-300"
+                      className="px-6 py-4 cursor-pointer text-red-500 hover:text-red-600 hover:bg-red-200 hover:border-red-300"
                       onClick={() => handleOpenDelete(pkg)}
                     >
                       Eliminar
