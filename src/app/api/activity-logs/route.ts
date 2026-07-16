@@ -8,6 +8,9 @@ import { requireAdmin } from "@/lib/supabase/guard";
 const createActivityLogSchema = z.object({
   client_id: z.string().uuid(),
 
+  // Paquete al que se imputan las horas (requerido: cliente → paquete → tarea)
+  package_id: z.string().uuid(),
+
   task_type_id: z.string().uuid(),
 
   // La categoría puede venir null o no enviarse
@@ -253,6 +256,30 @@ export async function POST(request: Request) {
     );
   }
 
+  // Validar que el paquete pertenezca al cliente que se está registrando
+  // (no se puede imputar una actividad a un paquete de otro cliente)
+  const { data: pkgOwner, error: pkgOwnerError } = await supabase
+    .from("packages")
+    .select("id")
+    .eq("id", parsed.data.package_id)
+    .eq("client_id", parsed.data.client_id)
+    .maybeSingle();
+
+  if (pkgOwnerError) {
+    console.error("Error al validar el paquete:", pkgOwnerError.message, pkgOwnerError);
+    return NextResponse.json(
+      { error: "Error al validar el paquete" },
+      { status: 500 }
+    );
+  }
+
+  if (!pkgOwner) {
+    return NextResponse.json(
+      { error: "El paquete no pertenece al cliente indicado" },
+      { status: 400 }
+    );
+  }
+
   // Validar coherencia entre piezas y categoría
   if (parsed.data.pieces_count > 0 && !parsed.data.category_id) {
     return NextResponse.json(
@@ -282,12 +309,12 @@ export async function POST(request: Request) {
   // Tipo transitorio hasta que database.types.ts se regenere con block_on_limit
   type PackageWithLimit = { block_on_limit: boolean };
 
-  // Consultar consumo del paquete activo para este cliente
+  // Consultar consumo del paquete específico elegido (soporta múltiples
+  // paquetes activos por cliente: filtramos por package_id, no por cliente)
   const { data: consumo } = await supabase
     .from("v_client_consumption")
     .select("package_id, hours_percent")
-    .eq("client_id", parsed.data.client_id)
-    .eq("package_status", "active")
+    .eq("package_id", parsed.data.package_id)
     .maybeSingle();
 
   const hoursPercent = consumo?.hours_percent ?? 0;
@@ -326,6 +353,7 @@ export async function POST(request: Request) {
   const activityPayload = {
     user_id: user.id,
     client_id: parsed.data.client_id,
+    package_id: parsed.data.package_id,
     task_type_id: parsed.data.task_type_id,
     category_id: parsed.data.category_id ?? null,
     log_date: parsed.data.log_date,

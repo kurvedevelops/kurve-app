@@ -24,6 +24,7 @@ export type Database = {
           is_draft: boolean
           log_date: string
           notes: string | null
+          package_id: string | null
           pieces_count: number
           status: Database["public"]["Enums"]["activity_status"]
           subtype_id: string | null
@@ -40,6 +41,7 @@ export type Database = {
           is_draft?: boolean
           log_date?: string
           notes?: string | null
+          package_id?: string | null
           pieces_count?: number
           status?: Database["public"]["Enums"]["activity_status"]
           subtype_id?: string | null
@@ -56,6 +58,7 @@ export type Database = {
           is_draft?: boolean
           log_date?: string
           notes?: string | null
+          package_id?: string | null
           pieces_count?: number
           status?: Database["public"]["Enums"]["activity_status"]
           subtype_id?: string | null
@@ -76,6 +79,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_logs_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
             referencedColumns: ["id"]
           },
           {
