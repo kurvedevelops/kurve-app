@@ -25,6 +25,8 @@ const createPackageSchema = z.object({
 
   total_pieces: z.number().int().min(0).nullable().optional(),
 
+  price: z.number().min(0).optional(),
+
   package_pieces: z.array(packagePieceSchema).optional(),
 });
 
@@ -91,31 +93,8 @@ export async function POST(request: Request) {
     );
   }
 
-  // Validar que el cliente no tenga ya un paquete activo
-  const { data: activePackage, error: activePackageError } = await supabase
-    .from("packages")
-    .select("id")
-    .eq("client_id", parsed.data.client_id)
-    .eq("status", "active")
-    .maybeSingle();
-
-  if (activePackageError) {
-    return NextResponse.json(
-      {
-        error: "Error al validar paquete activo del cliente",
-      },
-      { status: 500 }
-    );
-  }
-
-  if (activePackage) {
-    return NextResponse.json(
-      {
-        error: "El cliente ya tiene un paquete activo",
-      },
-      { status: 409 }
-    );
-  }
+  // Nota: un cliente puede tener múltiples paquetes activos a la vez
+  // (regla de negocio nueva). Ya no se rechaza si existe otro activo.
 
   // Crear paquete principal
   const { data: createdPackage, error: packageError } = await supabase
@@ -128,6 +107,7 @@ export async function POST(request: Request) {
       end_date: parsed.data.end_date ?? null,
       total_hours: parsed.data.total_hours,
       total_pieces: parsed.data.total_pieces ?? null,
+      price: parsed.data.price ?? 0,
     })
     .select()
     .single();

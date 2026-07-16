@@ -1,5 +1,5 @@
 "use client";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import PageHeader from "@/components/layout/PageHeader";
 import {
@@ -43,8 +43,8 @@ const ClientDetailPage = () => {
   const [showAsignarPaqueteModal, setShowAsignarPaqueteModal] = useState(false);
   const { links, loadingLinks, addLink, updateLink, deleteLink } =
     useClientLinks(clientId);
-  const { clients, loadingClients } = useClients();
-  const { packageConsumption, loadingPackageConsumption } =
+  const { clients, loadingClients, refetchClients } = useClients();
+  const { packageConsumption, loadingPackageConsumption, refetchPackageConsumption } =
     usePackageConsumption(clientId);
   console.log("Package Consumption:", packageConsumption);
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -57,7 +57,6 @@ const ClientDetailPage = () => {
   const [deletingLinkId, setDeletingLinkId] = useState<string | null>(null);
   const client = clients.find((c) => c.id === clientId);
   const initials = getInitials(client?.name);
-  const router = useRouter();
 
   const handleActions = {
     edit: () => setShowEditarClienteModal(true),
@@ -66,12 +65,14 @@ const ClientDetailPage = () => {
 
   const handleAsignarPaquete = async (data: AsignarPaqueteFormData) => {
     await assignPackage(clientId, data);
-    router.refresh();
+    setShowAsignarPaqueteModal(false);
+    refetchPackageConsumption();
   };
 
   const handleEditarCliente = async (data: EditarClienteFormData) => {
     await editClient(clientId, data);
-    router.refresh();
+    setShowEditarClienteModal(false);
+    refetchClients();
   };
 
   const handleOpenNewLinkModal = () => {

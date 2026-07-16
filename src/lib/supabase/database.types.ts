@@ -24,6 +24,7 @@ export type Database = {
           is_draft: boolean
           log_date: string
           notes: string | null
+          package_id: string | null
           pieces_count: number
           status: Database["public"]["Enums"]["activity_status"]
           subtype_id: string | null
@@ -40,6 +41,7 @@ export type Database = {
           is_draft?: boolean
           log_date?: string
           notes?: string | null
+          package_id?: string | null
           pieces_count?: number
           status?: Database["public"]["Enums"]["activity_status"]
           subtype_id?: string | null
@@ -56,6 +58,7 @@ export type Database = {
           is_draft?: boolean
           log_date?: string
           notes?: string | null
+          package_id?: string | null
           pieces_count?: number
           status?: Database["public"]["Enums"]["activity_status"]
           subtype_id?: string | null
@@ -76,6 +79,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_logs_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
             referencedColumns: ["id"]
           },
           {
@@ -504,7 +514,7 @@ export type Database = {
           display_order: number
           id: string
           name: string
-          task_type_id: string
+          task_type_id: string | null
           updated_at: string
         }
         Insert: {
@@ -513,7 +523,7 @@ export type Database = {
           display_order?: number
           id?: string
           name: string
-          task_type_id: string
+          task_type_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -522,7 +532,7 @@ export type Database = {
           display_order?: number
           id?: string
           name?: string
-          task_type_id?: string
+          task_type_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -565,32 +575,46 @@ export type Database = {
       users: {
         Row: {
           active: boolean
+          client_id: string | null
           created_at: string
           email: string
           full_name: string
           id: string
           phone: string | null
+          position: string | null
           role: Database["public"]["Enums"]["user_role"]
         }
         Insert: {
           active?: boolean
+          client_id?: string | null
           created_at?: string
           email: string
           full_name?: string
           id: string
           phone?: string | null
+          position?: string | null
           role?: Database["public"]["Enums"]["user_role"]
         }
         Update: {
           active?: boolean
+          client_id?: string | null
           created_at?: string
           email?: string
           full_name?: string
           id?: string
           phone?: string | null
+          position?: string | null
           role?: Database["public"]["Enums"]["user_role"]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "users_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -645,11 +669,20 @@ export type Database = {
       }
     }
     Functions: {
+      approve_edit_request: {
+        Args: { p_request_id: string; p_reviewer_id: string }
+        Returns: Json
+      }
       current_user_role: {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      recalculate_package_consumption: {
+        Args: { p_package_id: string }
+        Returns: undefined
+      }
       get_active_package_id: { Args: { p_client_id: string }; Returns: string }
+      get_my_client_ids: { Args: never; Returns: string[] }
       recalculate_client_consumption: {
         Args: { p_client_id: string }
         Returns: undefined

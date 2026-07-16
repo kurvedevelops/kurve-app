@@ -74,6 +74,7 @@ const CorrecionesPage = () => {
       toast.success(
         "Pedido de correccion aprobado, la actividad ha sido modificada",
       );
+      refetchEditRequests();
     } catch {
       toast.error("Error al aprobar correccion");
     } finally {
@@ -87,12 +88,13 @@ const CorrecionesPage = () => {
       toast.success(
         "Pedido de correccion rechazado, la actividad se mantiene igual",
       );
+      refetchEditRequests();
     } catch {
       toast.error("Error al rechazar correccion");
     }
   };
 
-  const { editRequests, loadingEditRequests } = useEditRequests();
+  const { editRequests, loadingEditRequests, refetchEditRequests } = useEditRequests();
 
   const filteredRequests =
     statusFilter === "all"

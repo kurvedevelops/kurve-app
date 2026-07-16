@@ -2,13 +2,17 @@
 import PageHeader from "@/components/layout/PageHeader";
 import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import {
+  createNewClient,
   deleteClient,
   editClient,
   getInitials,
   useClients,
   usePackages,
 } from "@/hooks/middleware";
-import { NuevoClienteModal } from "@/components/modals/NuevoClienteModal";
+import {
+  NuevoClienteModal,
+  NuevoClienteFormData,
+} from "@/components/modals/NuevoClienteModal";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
@@ -125,7 +129,7 @@ export function ActionDropdown({
 }
 
 const ClientesPage = () => {
-  const { clients, loadingClients } = useClients();
+  const { clients, loadingClients, refetchClients } = useClients();
   const { packages, loadingPackages } = usePackages();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "paused">(
@@ -178,13 +182,14 @@ const ClientesPage = () => {
       await deleteClient(id);
       setDeleteConfirm({ open: false, clientId: "", clientName: "" });
       toast.success("Cliente eliminado exitosamente");
-      router.refresh();
+      refetchClients();
     } catch {
       toast.error("Error al eliminar cliente");
     } finally {
       setDeletingId(null);
     }
   };
+
 
   const handleOpenEditModal = (client: Client) => {
     setSelectedClient(client);
@@ -196,7 +201,7 @@ const ClientesPage = () => {
       if (!selectedClient) return;
       await editClient(selectedClient.id, data);
 
-      router.refresh();
+      refetchClients();
       setShowEditarClienteModal(false);
       setSelectedClient(null);
     } catch (error) {
@@ -422,7 +427,7 @@ const ClientesPage = () => {
       <NuevoClienteModal
         open={showNuevoClienteModal}
         onClose={() => setShowNuevoClienteModal(false)}
-        onSuccess={() => router.refresh()}
+        onSuccess={() => { setShowNuevoClienteModal(false); refetchClients(); }}
       />
 
       {/* Modal editar cliente */}

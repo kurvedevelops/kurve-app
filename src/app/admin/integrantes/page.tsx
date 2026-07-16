@@ -27,6 +27,7 @@ export interface Member {
   email: string;
   role: string;
   phone: string;
+  position: string | null;
   active: boolean;
   created_at: string;
 }
@@ -43,6 +44,7 @@ export async function editMember(
       full_name: data.full_name,
       email: data.email,
       phone: data.phone,
+      position: data.position || null,
       created_at: data.fechaAlta,
     })
     .eq("id", memberId);
@@ -60,7 +62,7 @@ const MembersPage = () => {
   const [showEditarMiembroModal, setShowEditarMiembroModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
-  const { members, loadingMembers } = useMembers();
+  const { members, loadingMembers, refetchMembers } = useMembers();
 
   const searchedMembers = members.filter((c) => {
     const matchesSearch = c.full_name
@@ -82,7 +84,7 @@ const MembersPage = () => {
       await deleteMember(id);
       setDeleteConfirm({ open: false, memberId: "", memberName: "" });
       toast.success("Integrante eliminado exitosamente");
-      router.refresh();
+      refetchMembers();
     } catch {
       toast.error("Error al eliminar integrante");
     } finally {
@@ -108,7 +110,7 @@ const MembersPage = () => {
       if (!selectedMember) return;
       await editMember(selectedMember.id, data);
 
-      router.refresh();
+      refetchMembers();
       setShowEditarMiembroModal(false);
       setSelectedMember(null);
     } catch (error) {
@@ -183,7 +185,7 @@ const MembersPage = () => {
           <AddMemberModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
-            onSuccess={() => router.refresh()}
+            onSuccess={refetchMembers}
           />
 
           {searchedMembers.length === 0 ? (

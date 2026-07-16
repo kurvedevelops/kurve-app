@@ -3,11 +3,14 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/guard";
 import { resend, FROM_EMAIL } from "@/lib/resend";
+import type { Tables } from "@/lib/supabase/database.types";
 
 // POST /api/edit-requests/:id/approve
-// Admin aprueba una solicitud de corrección
+// Admin aprueba una solicitud de corrección.
+// El UPDATE a activity_logs y el UPDATE a edit_requests se ejecutan
+// en una sola transacción Postgres vía approve_edit_request().
 export async function POST(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const guard = await requireAdmin();
@@ -16,74 +19,33 @@ export async function POST(
   const supabase = await createClient();
   const { id } = await params;
 
-  // Buscar solicitud pendiente
-  const { data: editRequest, error: requestError } = await supabase
-    .from("edit_requests")
-    .select("*")
-    .eq("id", id)
-    .eq("status", "pending")
-    .single();
+  // Transacción atómica: aplica corrección en activity_logs + marca como aprobada.
+  // SELECT FOR UPDATE dentro de la función previene aprobaciones dobles concurrentes.
+  const { data: approvedRequest, error: txError } = await supabase
+    .rpc("approve_edit_request", {
+      p_request_id: id,
+      p_reviewer_id: guard.user.id,
+    });
 
-  if (requestError || !editRequest) {
+  if (txError || !approvedRequest) {
+    const isNotFound = txError?.message === "edit_request_not_found";
     return NextResponse.json(
-      {
-        error: "Solicitud no encontrada o no está pendiente",
-      },
-      { status: 404 }
+      { error: isNotFound ? "Solicitud no encontrada o ya fue procesada" : "Error al aprobar solicitud" },
+      { status: isNotFound ? 404 : 500 }
     );
   }
 
-  // Preparar actualización del activity_log
-  const updatePayload = {
-    [editRequest.field_name]: editRequest.new_value,
-  };
+  // La función devuelve el row completo del edit_request aprobado como JSON
+  const approved = approvedRequest as unknown as Tables<"edit_requests">;
 
-  // Aplicar corrección en la actividad
-  const { error: updateActivityError } = await supabase
-    .from("activity_logs")
-    .update(updatePayload as never)
-    .eq("id", editRequest.activity_log_id);
-
-  if (updateActivityError) {
-    return NextResponse.json(
-      {
-        error: "Error al aplicar corrección en actividad",
-      },
-      { status: 500 }
-    );
-  }
-
-  // Marcar solicitud como aprobada
-  const { data: approvedRequest, error: approveError } = await supabase
-    .from("edit_requests")
-    .update({
-      status: "approved",
-      reviewed_by: guard.user.id,
-      reviewed_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (approveError || !approvedRequest) {
-    return NextResponse.json(
-      {
-        error: "Error al aprobar solicitud",
-      },
-      { status: 500 }
-    );
-  }
-
-  // Buscar usuario que pidió la corrección para notificarle
-  const { data: requestedByUser } = await supabase
-    .from("users")
-    .select("id, email, full_name")
-    .eq("id", editRequest.requested_by)
-    .single();
-
-  // Intentar enviar email al member
-  // Si falla NO rompe la aprobación
+  // Notificación al member — best-effort: no rompe la aprobación si falla
   try {
+    const { data: requestedByUser } = await supabase
+      .from("users")
+      .select("id, email, full_name")
+      .eq("id", approved.requested_by)
+      .single();
+
     if (requestedByUser?.email) {
       await resend.emails.send({
         from: `Kurve <${FROM_EMAIL}>`,
@@ -93,9 +55,9 @@ export async function POST(
           <h2>Solicitud aprobada</h2>
           <p>Hola ${requestedByUser.full_name ?? ""},</p>
           <p>Tu solicitud de corrección fue aprobada correctamente.</p>
-          <p><strong>Campo:</strong> ${editRequest.field_name}</p>
-          <p><strong>Valor anterior:</strong> ${editRequest.old_value}</p>
-          <p><strong>Nuevo valor:</strong> ${editRequest.new_value}</p>
+          <p><strong>Campo:</strong> ${approved.field_name}</p>
+          <p><strong>Valor anterior:</strong> ${approved.old_value}</p>
+          <p><strong>Nuevo valor:</strong> ${approved.new_value}</p>
         `,
       });
 
@@ -105,8 +67,8 @@ export async function POST(
         channel: "email" as const,
         type: "edit_request_approved",
         payload: {
-          edit_request_id: editRequest.id,
-          activity_log_id: editRequest.activity_log_id,
+          edit_request_id: approved.id,
+          activity_log_id: approved.activity_log_id,
         },
         sent_at: new Date().toISOString(),
       });
@@ -116,10 +78,7 @@ export async function POST(
   }
 
   return NextResponse.json(
-    {
-      message: "Solicitud aprobada correctamente",
-      data: approvedRequest,
-    },
+    { message: "Solicitud aprobada correctamente", data: approved },
     { status: 200 }
   );
 }

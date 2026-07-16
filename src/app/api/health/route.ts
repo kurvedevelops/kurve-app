@@ -1,30 +1,39 @@
 import { NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase/service";
 
 // GET /api/health
 // Endpoint público para monitores externos (UptimeRobot, Vercel, etc.).
-// Devuelve 200 + latencia si la DB responde; 503 si no.
+// Pinga el root de PostgREST (/rest/v1/) con la anon key: responde 200
+// sin tocar ninguna tabla ni requerir RLS. Si PostgREST no responde,
+// Postgres tampoco está disponible.
 export async function GET() {
   const start = Date.now();
 
-  const supabase = createServiceClient();
-  const { error } = await supabase
-    .from("task_types")
-    .select("id")
-    .limit(1)
-    .maybeSingle();
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/`,
+      {
+        headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
+        signal: AbortSignal.timeout(5000),
+      }
+    );
 
-  const latency_ms = Date.now() - start;
+    const latency_ms = Date.now() - start;
 
-  if (error) {
+    if (!res.ok) {
+      return NextResponse.json(
+        { status: "error", db: "unreachable", latency_ms, detail: `HTTP ${res.status}` },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
-      { status: "error", db: "unreachable", latency_ms, detail: error.message },
+      { status: "ok", db: "reachable", latency_ms },
+      { status: 200 }
+    );
+  } catch (err) {
+    return NextResponse.json(
+      { status: "error", db: "unreachable", latency_ms: Date.now() - start, detail: String(err) },
       { status: 503 }
     );
   }
-
-  return NextResponse.json(
-    { status: "ok", db: "reachable", latency_ms },
-    { status: 200 }
-  );
 }
