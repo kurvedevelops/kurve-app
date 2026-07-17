@@ -6,48 +6,13 @@ import { Card, CardHeader } from "@/components/ui/card";
 import RedirectedAlert from "@/hooks/redirectedAlert";
 import PackageSummaryCard from "@/components/client/PackageSummaryCard";
 import { Suspense } from "react";
-import { FileText, Folder, BarChart3, BookOpen } from "lucide-react";
+import { linkTypeConfig } from "@/lib/linkTypeConfig";
 import {
   useCurrentUser,
-  useClientsByUser,
-  useClients,
+  useClientLinks,
   usePackageByClient,
 } from "@/hooks/middleware";
-
-const links = [
-  {
-    title: "Contrato",
-    description:
-      "Documento de contrato con los detalles del acuerdo y términos.",
-    icon: FileText,
-    color: "#5B8E3D",
-    bg: "#EEF8E7",
-  },
-  {
-    title: "Google Drive",
-    description:
-      "Google Drive con los entregables y archivos compartidos del proyecto.",
-    icon: Folder,
-    color: "#D2A500",
-    bg: "#FFF7DD",
-  },
-  {
-    title: "Analytics",
-    description:
-      "Datos clave y métricas de rendimiento del proyecto para monitorear el éxito y tomar decisiones informadas.",
-    icon: BarChart3,
-    color: "#D4871F",
-    bg: "#FFF1E3",
-  },
-  {
-    title: "Documentación",
-    description:
-      "Documentación detallada del proyecto, incluyendo procesos, guías y recursos para referencia futura.",
-    icon: BookOpen,
-    color: "#7A52B3",
-    bg: "#F4ECFF",
-  },
-];
+import {LinkIcon} from "lucide-react"
 
 const AlertWrapper = () => {
   RedirectedAlert();
@@ -57,8 +22,11 @@ const AlertWrapper = () => {
 const ClientPage = () => {
   const { user, loadingUser } = useCurrentUser();
   const clientId = user?.client_id;
-
+  const { links, loadingLinks } = useClientLinks(clientId);
   const { clientPackage, loadingClientPackage } = usePackageByClient(clientId);
+
+
+  
 
   return (
     <div className="min-h-screen w-full bg-muted flex">
@@ -89,37 +57,59 @@ const ClientPage = () => {
             Enlaces Importantes
           </h2>
 
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-2 lg:grid-cols-4 md:ml-8 ml-0">
-            {links.map((item) => (
-              <Card
-                key={item.title}
-                className="rounded-2xl bg-white border border-[#ECECEC] cursor-pointer shadow-none px-5 py-5 w-80 hover:shadow-sm transition-all"
-              >
-                <CardHeader className="p-0 flex flex-col gap-5">
-                  <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center"
-                    style={{
-                      backgroundColor: item.bg,
-                    }}
-                  >
-                    <item.icon
-                      className="w-8 h-8"
-                      style={{
-                        color: item.color,
-                      }}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <h3 className="text-2xl leading-none font-semibold text-[#1F1F1F]">
-                      {item.title}
-                    </h3>
+            {loadingLinks ? (
+              <p className="text-sm text-gray-400">Cargando...</p>
+            ) : links.length === 0 ? (
+              // Empty State
+              <div className="flex flex-col items-center justify-center py-20 bg-white rounded-4xl">
+                <div className="w-16 h-16 rounded-full bg-verde-kurve/10 flex items-center justify-center mb-4">
+                  <LinkIcon size={32} className="text-verde-kurve" />
+                </div>
 
-                    <p className=" text-[#707070]">{item.description}</p>
-                  </div>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
+                <h4 className="text-lg font-bold text-foreground mb-2">
+                  Este cliente todavía no tiene links
+                </h4>
+
+                <p className="text-sm text-gris-kurve-dark text-center max-w-sm mb-6">
+                  El administrador va a cargar los links importantes para el cliente
+                </p>
+              </div>
+            ): (
+            <div className="grid grid-cols-2 gap-6 md:grid-cols-2 lg:grid-cols-4 md:ml-8 ml-0">
+              {links.map((link) => {
+                const config = linkTypeConfig[link.type];
+                const Icon = config.icon;
+                return (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Card className="rounded-2xl bg-white border border-[#ECECEC] cursor-pointer shadow-none px-5 py-5 w-80 hover:shadow-sm transition-all">
+                      <CardHeader className="p-0 flex flex-col gap-5">
+                        <div
+                          className="w-16 h-16 rounded-full flex items-center justify-center"
+                          style={{ backgroundColor: config.bg }}
+                        >
+                          <Icon
+                            className="w-8 h-8"
+                            style={{ color: config.color }}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <h3 className="text-2xl leading-none font-semibold text-[#1F1F1F]">
+                            {link.label}
+                          </h3>
+                          <p className="text-[#707070]">{config.description}</p>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  </a>
+                );
+              })}
+            </div>
+          )}
         </div>
       </main>
     </div>

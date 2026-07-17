@@ -1,5 +1,5 @@
 "use client";
-import { CalendarDays, Package, Clock2 } from "lucide-react";
+import { CalendarDays, ChartPie, Clock2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   ClientConsumption,
@@ -70,15 +70,25 @@ const ConsumptionChart = ({ clientId }: ConsumptionChartProps) => {
     );
   }
 
-  if (!consumptionRaw || !packageRaw) {
-    return (
-      <div className="rounded-3xl border border-border bg-white p-6 shadow-sm h-full flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">
-          No hay paquetes asignados todavía.
-        </p>
-      </div>
-    );
-  }
+if (!consumptionRaw || !packageRaw) {
+  return (
+    <div className="rounded-3xl border border-border gap-3 bg-white p-6 shadow-sm flex flex-col items-center justify-center h-96 text-center">
+        <div className="w-16 h-16 rounded-full bg-verde-kurve/10 flex items-center justify-center mb-4">
+          <ChartPie className="h-8 w-8 text-verde-kurve" />
+        </div>
+
+      <p className="text-lg font-bold text-foreground">
+        No hay información de consumo disponible
+      </p>
+
+      <p className="text-sm text-gris-kurve-dark max-w-sm">
+        Cuando el administrador asigne un paquete y se registren horas
+        consumidas, podrás visualizar aquí el progreso y el porcentaje de uso
+        de tu plan.
+      </p>
+    </div>
+  );
+}
 
   const consumption: Consumption = {
     package_name: consumptionRaw.package_name,

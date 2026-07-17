@@ -1096,6 +1096,8 @@ export function useClientLinks(clientId: string | null | undefined) {
     const fetchLinks = async () => {
       try {
         const supabase = createClient();
+            const { data: session } = await supabase.auth.getSession();
+            console.log("session:", session);
         const { data, error } = await supabase
           .from("client_links")
           .select("*")

@@ -36,7 +36,22 @@ const PackageSummaryCard = ({
   clientPackage: PackageData | null;
 }) => {
   if (!clientPackage) {
-    return null;
+    return (
+      <div className="rounded-3xl border border-border bg-white p-6 shadow-sm flex flex-col items-center justify-center h-96 text-center">
+        <div className="w-16 h-16 rounded-full bg-verde-kurve/10 flex items-center justify-center mb-4">
+          <Package className="h-8 w-8 text-verde-kurve" />
+        </div>
+
+        <h3 className="text-lg font-bold text-foreground mb-2">
+          No hay un paquete asignado
+        </h3>
+
+        <p className="text-sm text-gris-kurve-dark max-w-sm">
+          Cuando el administrador asigne un paquete, vas a poder ver la
+          información de tu plan, horas disponibles y fechas de vigencia.
+        </p>
+      </div>
+    );
   }
   const status = statusStyles[clientPackage.status];
   return (
