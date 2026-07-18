@@ -5,8 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
-import { Mail, Lock } from "lucide-react";
-import { Suspense, useEffect } from "react";
+import { Mail, Lock, EyeOff, Eye } from "lucide-react";
+import { Suspense, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import Image from "next/image";
 
@@ -35,6 +35,7 @@ const AlertWrapper = () => {
 };
 
 export default function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const {
     register,
@@ -50,9 +51,17 @@ export default function LoginPage() {
       password: data.password,
     });
 
-    if (error) {
+    if (error?.message === "Invalid login credentials") {
+      Swal.fire({
+        title: "Error",
+        text: "Email o contraseña incorrectos",
+        icon: "error",
+        confirmButtonText: "Reintentar",
+        confirmButtonColor: "#76B041",
+      });
       return;
     }
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -76,9 +85,8 @@ export default function LoginPage() {
       <Suspense fallback={<div>Cargando...</div>}>
         <AlertWrapper />
       </Suspense>
-      <div className="hidden md:flex md:w-[50%] lg:w-[65%] flex-col bg-cover bg-center bg-no-repeat relative bg-[url('/login-background.jpeg')]">
-        <div className="flex flex-col justify-between py-12 md:pl-8 lg:pl-14 pl-14 h-full">
-          <h1 className="text-azul-kurve text-4xl font-bold">kurve</h1>
+      <div className="hidden md:flex md:w-[50%] lg:w-[58%] flex-col bg-cover bg-center bg-no-repeat relative bg-[url('/background_aura.jpg')] bg-blend-overlay bg-white/30">
+        <div className="flex flex-col justify-center py-12 md:pl-8 lg:pl-14 pl-14 h-full">
           <div className="flex flex-col gap-6">
             <h2 className="text-5xl leading-14 font-bold text-azul-kurve">
               Conectando
@@ -89,14 +97,10 @@ export default function LoginPage() {
             </h2>
 
             <p className="max-w-sm text-zinc-600">
-              Plataforma de gestión y control de actividades para agencias de
-              marketing. Registra, supervisa y muestra resultados en tiempo
-              real.
+              Plataforma de gestión y control de actividades para Kurve.
+              Registra, supervisa y muestra resultados en tiempo real.
             </p>
           </div>
-          <span className="text-sm text-gray-400">
-            Código que crea experiencias
-          </span>
         </div>
       </div>
 
@@ -171,11 +175,19 @@ export default function LoginPage() {
                   </div>
                   <Input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     {...register("password")}
                     className="border-0 shadow-none bg-muted focus-visible:ring-0 focus-visible:ring-off set-0 p-0 pl-4 text-lg text-azul-kurve placeholder:text-[#9CA39C]"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="text-[#9CA39C] hover:text-azul-kurve transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
                 {errors.password && (
                   <span className="text-xs text-red-500">

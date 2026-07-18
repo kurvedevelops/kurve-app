@@ -81,16 +81,22 @@ export async function deleteMember(memberId?: string) {
 export async function createNewClient(data: NuevoClienteFormData) {
   const supabase = createClient();
 
-  const { error } = await supabase.from("clients").insert({
-    name: data.name,
-    legal_name: data.razonSocial,
-    email: data.email,
-    phone: data.telefono,
-    created_at: data.fechaAlta,
-    status: "active",
-  });
+  const { data: newClient, error } = await supabase
+    .from("clients")
+    .insert({
+      name: data.name,
+      legal_name: data.razonSocial,
+      email: data.email,
+      phone: data.telefono,
+      created_at: data.fechaAlta,
+      status: "active",
+    })
+    .select()
+    .single();
 
   if (error) throw error;
+
+  return newClient;
 }
 
 export async function checkClientExists(name: string) {
@@ -232,7 +238,12 @@ export function useClientsByUser(userId?: string) {
     if (userId) fetchClients();
   }, [userId, _cuk]);
 
-  return { clientsId, loadingClientsId, error, refetchClientsId: () => _setCuk((k) => k + 1) };
+  return {
+    clientsId,
+    loadingClientsId,
+    error,
+    refetchClientsId: () => _setCuk((k) => k + 1),
+  };
 }
 
 export function useMembersByClient(clientId?: string | null) {
@@ -318,7 +329,12 @@ export function useClients() {
     fetchClients();
   }, [_ck]);
 
-  return { clients, loadingClients, error, refetchClients: () => _setCk((k) => k + 1) };
+  return {
+    clients,
+    loadingClients,
+    error,
+    refetchClients: () => _setCk((k) => k + 1),
+  };
 }
 
 export function useMembers() {
@@ -348,7 +364,12 @@ export function useMembers() {
     fetchMembers();
   }, [_mk]);
 
-  return { members, loadingMembers, error, refetchMembers: () => _setMk((k) => k + 1) };
+  return {
+    members,
+    loadingMembers,
+    error,
+    refetchMembers: () => _setMk((k) => k + 1),
+  };
 }
 
 export function getInitials(fullName?: string) {
@@ -413,7 +434,11 @@ export function usePackages() {
     };
     fetchPackages();
   }, [_pk]);
-  return { packages, loadingPackages, refetchPackages: () => _setPk((k) => k + 1) };
+  return {
+    packages,
+    loadingPackages,
+    refetchPackages: () => _setPk((k) => k + 1),
+  };
 }
 
 export interface PackageData {
@@ -524,7 +549,11 @@ export function usePackageConsumption(clientId: string) {
     };
     fetchPackageConsumption();
   }, [clientId, _pck]);
-  return { packageConsumption, loadingPackageConsumption, refetchPackageConsumption: () => _setPck((k) => k + 1) };
+  return {
+    packageConsumption,
+    loadingPackageConsumption,
+    refetchPackageConsumption: () => _setPck((k) => k + 1),
+  };
 }
 
 export function useTaskTypes() {
@@ -636,7 +665,13 @@ export function useActivityLogs(
     _alk,
   ]);
 
-  return { activityLogs, loadingActivityLogs, error, totalCount, refetchActivityLogs: () => _setAlk((k) => k + 1) };
+  return {
+    activityLogs,
+    loadingActivityLogs,
+    error,
+    totalCount,
+    refetchActivityLogs: () => _setAlk((k) => k + 1),
+  };
 }
 
 export function useActivityLogDates(userId: string) {
@@ -724,7 +759,12 @@ export function useEditRequests() {
     };
     fetchEditRequests();
   }, [_erk]);
-  return { editRequests, loadingEditRequests, error, refetchEditRequests: () => _setErk((k) => k + 1) };
+  return {
+    editRequests,
+    loadingEditRequests,
+    error,
+    refetchEditRequests: () => _setErk((k) => k + 1),
+  };
 }
 
 export function useEditRequestsById(userId: string) {
@@ -1063,4 +1103,112 @@ export function useTaskSubtypesConfig() {
   };
 
   return { subtypes, loadingSubtypes, error, updateSubtype, addSubtype };
+}
+
+export type LinkType = "contract" | "drive" | "analytics" | "custom";
+
+export type ClientLink = {
+  id: string;
+  client_id: string;
+  type: LinkType;
+  label: string;
+  url: string;
+  created_at: string;
+};
+
+export function useClientLinks(clientId: string | null | undefined) {
+  const [links, setLinks] = useState<ClientLink[]>([]);
+  const [loadingLinks, setLoadingLinks] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!clientId) {
+      setLoadingLinks(false);
+      return;
+    }
+
+    const fetchLinks = async () => {
+      try {
+        const supabase = createClient();
+        const { data: session } = await supabase.auth.getSession();
+        console.log("session:", session);
+        const { data, error } = await supabase
+          .from("client_links")
+          .select("*")
+          .eq("client_id", clientId)
+          .order("created_at", { ascending: true });
+
+        if (error) throw error;
+        setLinks(data as ClientLink[]);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingLinks(false);
+      }
+    };
+    fetchLinks();
+  }, [clientId]);
+
+  const addLink = async (
+    clientId: string,
+    nuevo: { type: LinkType; label: string; url: string },
+  ) => {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("client_links")
+        .insert({
+          client_id: clientId,
+          type: nuevo.type,
+          label: nuevo.label,
+          url: nuevo.url,
+        })
+        .select()
+        .single();
+
+      if (error || !data) throw error ?? new Error("No se pudo crear el link");
+
+      setLinks((prev) => [...prev, data as ClientLink]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+    }
+  };
+
+  const updateLink = async (updated: ClientLink) => {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("client_links")
+        .update({
+          type: updated.type,
+          label: updated.label,
+          url: updated.url,
+        })
+        .eq("id", updated.id);
+
+      if (error) throw error;
+
+      setLinks((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+    }
+  };
+
+  const deleteLink = async (linkId: string) => {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("client_links")
+        .delete()
+        .eq("id", linkId);
+
+      if (error) throw error;
+
+      setLinks((prev) => prev.filter((l) => l.id !== linkId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+    }
+  };
+
+  return { links, loadingLinks, error, addLink, updateLink, deleteLink };
 }

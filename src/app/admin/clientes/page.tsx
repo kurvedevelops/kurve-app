@@ -190,11 +190,6 @@ const ClientesPage = () => {
     }
   };
 
-  const handleCrearCliente = async (data: NuevoClienteFormData) => {
-    await createNewClient(data);
-    setShowNuevoClienteModal(false);
-    refetchClients();
-  };
 
   const handleOpenEditModal = (client: Client) => {
     setSelectedClient(client);
@@ -432,7 +427,7 @@ const ClientesPage = () => {
       <NuevoClienteModal
         open={showNuevoClienteModal}
         onClose={() => setShowNuevoClienteModal(false)}
-        onSubmit={handleCrearCliente}
+        onSuccess={() => { setShowNuevoClienteModal(false); refetchClients(); }}
       />
 
       {/* Modal editar cliente */}

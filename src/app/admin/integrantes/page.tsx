@@ -53,6 +53,8 @@ export async function editMember(
 }
 
 const MembersPage = () => {
+  const router = useRouter();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -116,12 +118,10 @@ const MembersPage = () => {
     }
   };
 
-  const router = useRouter();
-
   return (
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
       <SidebarAdmin />
-      <main className="flex-1 mt-12 md:mt-0 md:ml-47 lg:ml-64 px-5 py-8 md:p-8">
+      <main className="flex-1 min-w-0 mt-12 md:mt-0 md:ml-47 lg:ml-64 px-5 py-8 md:p-8">
         <div className="hidden md:block mb-3">
           <PageHeader
             badge="Gestion de Miembros"
@@ -143,7 +143,7 @@ const MembersPage = () => {
           </p>
         </div>
 
-        <div className="bg-background rounded-xl border border-border mt-4">
+        <div className="bg-background rounded-xl border border-border mt-4 min-w-0">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 md:p-6 border-b border-border">
             <div className="flex items-center gap-2">
               <span className="text-base font-medium text-foreground">
@@ -187,82 +187,124 @@ const MembersPage = () => {
             onClose={() => setIsModalOpen(false)}
             onSuccess={refetchMembers}
           />
-          <Table>
-            <TableHeader>
-              <TableRow className="px-3.5 py-2.5 text-left text-[11px] font-medium uppercase tracking-wide border-b border-gray-200">
-                <TableHead className="h-12 px-3 font-semibold text-gray-400">
-                  Nombre
-                </TableHead>
 
-                <TableHead className="font-semibold text-gray-400">
-                  Email
-                </TableHead>
+          {searchedMembers.length === 0 ? (
+            <div className="h-80 flex items-center justify-center text-center text-lg font-semibold px-4">
+              {query ? "Sin resultados" : "No hay clientes"}
+            </div>
+          ) : (
+            <>
+              {/* Desktop: tabla */}
+              <div className="hidden lg:block overflow-x-auto min-w-0">
+                <Table className="w-full">
+                  <TableHeader>
+                    <TableRow className="bg-gray-50">
+                      <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
+                        Nombre
+                      </TableHead>
 
-                <TableHead className="font-semibold text-gray-400">
-                  Telefono
-                </TableHead>
+                      <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
+                        Email
+                      </TableHead>
 
-                <TableHead className="font-semibold text-gray-400">
-                  Rol
-                </TableHead>
+                      <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
+                        Telefono
+                      </TableHead>
 
-                <TableHead className="font-semibold text-gray-400">
-                  Estado
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {searchedMembers.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={8}
-                    className="h-80 text-center text-lg font-semibold"
-                  >
-                    {query ? "Sin resultados" : "No hay clientes"}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                searchedMembers.map((member) => (
-                  <TableRow
+                      <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
+                        Rol
+                      </TableHead>
+
+                      <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
+                        Estado
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {searchedMembers.map((member) => (
+                      <TableRow
+                        key={member.id}
+                        className="border-b border-gray-100 cursor-pointer hover:bg-gris-kurve/10"
+                        onClick={() =>
+                          router.push(`/admin/integrantes/${member.id}`)
+                        }
+                      >
+                        <TableCell className="text-sm px-4 py-3.5">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-lg bg-verde-kurve/10 flex items-center justify-center text-xs font-semibold text-verde-kurve shrink-0">
+                              {getInitials(member.full_name)}
+                            </div>
+                            {member.full_name}
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-6 text-sm">
+                          {member.email ? member.email : "No especificado"}
+                        </TableCell>
+                        <TableCell className="px-4 py-6 text-sm">
+                          {member.phone ? member.phone : "No especificado"}
+                        </TableCell>
+                        <TableCell className="px-4 py-6 text-sm">/</TableCell>
+                        <TableCell className="px-4 py-6 text-sm">
+                          {member.active === true ? (
+                            <span className="inline-flex items-center gap-1.5 bg-verde-kurve/10 text-verde-kurve text-xs font-medium px-2.5 py-1 rounded-full">
+                              <span className="w-1.5 h-1.5 rounded-full bg-verde-kurve" />
+                              Activo
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-500 text-xs font-medium px-2.5 py-1 rounded-full">
+                              <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                              Inactivo
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile / tablet: cards */}
+              <div className="lg:hidden divide-y divide-gray-100">
+                {searchedMembers.map((member) => (
+                  <button
                     key={member.id}
-                    className="border-b border-gray-100 cursor-pointer hover:bg-gris-kurve/10"
                     onClick={() =>
                       router.push(`/admin/integrantes/${member.id}`)
                     }
+                    className="w-full text-left p-4 flex items-center gap-3 active:bg-muted/50"
                   >
-                    <TableCell className="text-sm px-4 py-3.5">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-verde-kurve-light flex items-center justify-center text-verde-kurve-dark text-xs font-bold shrink-0">
-                          {getInitials(member.full_name)}
-                        </div>
-                        {member.full_name}
+                    <div className="w-9 h-9 rounded-lg bg-verde-kurve/10 flex items-center justify-center text-xs font-semibold text-verde-kurve shrink-0">
+                      {getInitials(member.full_name)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold text-foreground text-sm truncate">
+                          {member.full_name}
+                        </span>
+                        {member.active === true ? (
+                          <span className="inline-flex items-center gap-1.5 bg-verde-kurve/10 text-verde-kurve text-xs font-medium px-2.5 py-1 rounded-full shrink-0">
+                            <span className="w-1.5 h-1.5 rounded-full bg-verde-kurve" />
+                            Activo
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-500 text-xs font-medium px-2.5 py-1 rounded-full shrink-0">
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                            Inactivo
+                          </span>
+                        )}
                       </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-6 text-sm">
-                      {member.email ? member.email : "No especificado"}
-                    </TableCell>
-                    <TableCell className="px-4 py-6 text-sm">
-                      {member.phone ? member.phone : "No especificado"}
-                    </TableCell>
-                    <TableCell className="px-4 py-6 text-sm">/</TableCell>
-                    <TableCell className="px-4 py-6 text-sm">
-                      {member.active === true ? (
-                        <span className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                          Activo
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-500 text-xs font-medium px-2.5 py-1 rounded-full">
-                          <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-                          Inactivo
-                        </span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                      <span className="block text-xs text-gris-kurve-dark truncate">
+                        {member.email ? member.email : "No especificado"}
+                      </span>
+                      <span className="block text-xs text-gris-kurve-dark truncate">
+                        {member.phone ? member.phone : "No especificado"}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </main>
 
