@@ -238,7 +238,12 @@ export function useClientsByUser(userId?: string) {
     if (userId) fetchClients();
   }, [userId, _cuk]);
 
-  return { clientsId, loadingClientsId, error, refetchClientsId: () => _setCuk((k) => k + 1) };
+  return {
+    clientsId,
+    loadingClientsId,
+    error,
+    refetchClientsId: () => _setCuk((k) => k + 1),
+  };
 }
 
 export function useMembersByClient(clientId?: string | null) {
@@ -324,7 +329,12 @@ export function useClients() {
     fetchClients();
   }, [_ck]);
 
-  return { clients, loadingClients, error, refetchClients: () => _setCk((k) => k + 1) };
+  return {
+    clients,
+    loadingClients,
+    error,
+    refetchClients: () => _setCk((k) => k + 1),
+  };
 }
 
 export function useMembers() {
@@ -354,7 +364,12 @@ export function useMembers() {
     fetchMembers();
   }, [_mk]);
 
-  return { members, loadingMembers, error, refetchMembers: () => _setMk((k) => k + 1) };
+  return {
+    members,
+    loadingMembers,
+    error,
+    refetchMembers: () => _setMk((k) => k + 1),
+  };
 }
 
 export function getInitials(fullName?: string) {
@@ -419,7 +434,11 @@ export function usePackages() {
     };
     fetchPackages();
   }, [_pk]);
-  return { packages, loadingPackages, refetchPackages: () => _setPk((k) => k + 1) };
+  return {
+    packages,
+    loadingPackages,
+    refetchPackages: () => _setPk((k) => k + 1),
+  };
 }
 
 export interface PackageData {
@@ -530,7 +549,11 @@ export function usePackageConsumption(clientId: string) {
     };
     fetchPackageConsumption();
   }, [clientId, _pck]);
-  return { packageConsumption, loadingPackageConsumption, refetchPackageConsumption: () => _setPck((k) => k + 1) };
+  return {
+    packageConsumption,
+    loadingPackageConsumption,
+    refetchPackageConsumption: () => _setPck((k) => k + 1),
+  };
 }
 
 export function useTaskTypes() {
@@ -642,7 +665,13 @@ export function useActivityLogs(
     _alk,
   ]);
 
-  return { activityLogs, loadingActivityLogs, error, totalCount, refetchActivityLogs: () => _setAlk((k) => k + 1) };
+  return {
+    activityLogs,
+    loadingActivityLogs,
+    error,
+    totalCount,
+    refetchActivityLogs: () => _setAlk((k) => k + 1),
+  };
 }
 
 export function useActivityLogDates(userId: string) {
@@ -730,7 +759,12 @@ export function useEditRequests() {
     };
     fetchEditRequests();
   }, [_erk]);
-  return { editRequests, loadingEditRequests, error, refetchEditRequests: () => _setErk((k) => k + 1) };
+  return {
+    editRequests,
+    loadingEditRequests,
+    error,
+    refetchEditRequests: () => _setErk((k) => k + 1),
+  };
 }
 
 export function useEditRequestsById(userId: string) {
@@ -1096,6 +1130,8 @@ export function useClientLinks(clientId: string | null | undefined) {
     const fetchLinks = async () => {
       try {
         const supabase = createClient();
+        const { data: session } = await supabase.auth.getSession();
+        console.log("session:", session);
         const { data, error } = await supabase
           .from("client_links")
           .select("*")

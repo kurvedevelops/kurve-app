@@ -33,6 +33,12 @@ const EDITABLE_FIELDS: { value: EditableField; label: string }[] = [
   { value: "log_date", label: "Fecha" },
 ];
 
+function formatFechaUTC(dateString: string) {
+  return new Date(dateString).toLocaleDateString("es-AR", {
+    timeZone: "UTC", // clave: leemos la fecha tal cual está, sin correrla
+  });
+}
+
 const TimeActivityDrawer = ({
   open,
   onOpenChange,
@@ -158,7 +164,11 @@ const TimeActivityDrawer = ({
                   Hora de registro
                 </label>
                 <p className="mt-1 text-xs font-semibold">
-                  {activity.created_at.slice(11, 16)}
+                  {new Date(activity.created_at).toLocaleTimeString("es-AR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    timeZone: "America/Argentina/Buenos_Aires",
+                  })}
                 </p>
               </div>
             </div>
@@ -169,7 +179,7 @@ const TimeActivityDrawer = ({
                 Historial de correcciones
               </h3>
               <p className="text-xs pt-2 text-muted-foreground font-semibold text-azul-kurve">
-                Últimas 2
+                Últimas
               </p>
             </div>
 
@@ -187,12 +197,11 @@ const TimeActivityDrawer = ({
                     className="rounded-lg border border-gris-kurve p-4"
                   >
                     <p className="text-xs font-medium text-muted-foreground">
-                      {new Date(req.created_at).toLocaleDateString("es-AR")}{" "}
-                      {new Date(req.created_at).toLocaleTimeString("es-AR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
+                      {new Date(req.created_at).toLocaleDateString("es-AR", {
+                        timeZone: "UTC",
                       })}
                     </p>
+                    {console.log(req)}
 
                     <p className="mt-2 text-sm">
                       {EDITABLE_FIELDS.find((f) => f.value === req.field_name)
@@ -202,7 +211,11 @@ const TimeActivityDrawer = ({
                         {req.old_value}
                       </span>
                       <span className="mx-2 text-verde-kurve">→</span>
-                      <span>{req.new_value}</span>
+                      <span>
+                        {req.field_name == "task_type_id"
+                          ? activity.task_types?.name
+                          : req.new_value}
+                      </span>
                     </p>
 
                     {req.reason && (
