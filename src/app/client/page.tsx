@@ -12,7 +12,7 @@ import {
   useClientLinks,
   usePackageByClient,
 } from "@/hooks/middleware";
-import {LinkIcon} from "lucide-react"
+import { LinkIcon } from "lucide-react";
 
 const AlertWrapper = () => {
   RedirectedAlert();
@@ -25,8 +25,7 @@ const ClientPage = () => {
   const { links, loadingLinks } = useClientLinks(clientId);
   const { clientPackage, loadingClientPackage } = usePackageByClient(clientId);
 
-
-  
+  console.log("user", user);
 
   return (
     <div className="min-h-screen w-full bg-muted flex">
@@ -57,24 +56,25 @@ const ClientPage = () => {
             Enlaces Importantes
           </h2>
 
-            {loadingLinks ? (
-              <p className="text-sm text-gray-400">Cargando...</p>
-            ) : links.length === 0 ? (
-              // Empty State
-              <div className="flex flex-col items-center justify-center py-20 bg-white rounded-4xl">
-                <div className="w-16 h-16 rounded-full bg-verde-kurve/10 flex items-center justify-center mb-4">
-                  <LinkIcon size={32} className="text-verde-kurve" />
-                </div>
-
-                <h4 className="text-lg font-bold text-foreground mb-2">
-                  Este cliente todavía no tiene links
-                </h4>
-
-                <p className="text-sm text-gris-kurve-dark text-center max-w-sm mb-6">
-                  El administrador va a cargar los links importantes para el cliente
-                </p>
+          {loadingLinks ? (
+            <p className="text-sm text-gray-400">Cargando...</p>
+          ) : links.length === 0 ? (
+            // Empty State
+            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-4xl">
+              <div className="w-16 h-16 rounded-full bg-verde-kurve/10 flex items-center justify-center mb-4">
+                <LinkIcon size={32} className="text-verde-kurve" />
               </div>
-            ): (
+
+              <h4 className="text-lg font-bold text-foreground mb-2">
+                Este cliente todavía no tiene links
+              </h4>
+
+              <p className="text-sm text-gris-kurve-dark text-center max-w-sm mb-6">
+                El administrador va a cargar los links importantes para el
+                cliente
+              </p>
+            </div>
+          ) : (
             <div className="grid grid-cols-2 gap-6 md:grid-cols-2 lg:grid-cols-4 md:ml-8 ml-0">
               {links.map((link) => {
                 const config = linkTypeConfig[link.type];

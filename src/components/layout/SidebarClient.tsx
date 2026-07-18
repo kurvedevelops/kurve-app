@@ -17,7 +17,9 @@ const SidebarClient = () => {
   const clientId = user?.client_id;
   const { clients, loadingClients } = useClients();
   const client = clients.find((c) => c.id === clientId);
+  console.log(client);
   const { clientPackage, loadingClientPackage } = usePackageByClient(clientId);
+
   const navSections = [
     {
       title: "Tu cuenta",
@@ -27,6 +29,8 @@ const SidebarClient = () => {
       ],
     },
   ];
+
+  console.log("paquete", clientPackage);
 
   return (
     <SidebarBase
@@ -55,8 +59,12 @@ const SidebarClient = () => {
         </div>
       }
       navSections={navSections}
-      userAvatar={getInitials(user?.full_name)}
-      userName={user?.full_name?.toString() || "U"}
+      userAvatar={getInitials(client?.name)}
+      userName={
+        loadingClients
+          ? "Cargando..."
+          : client?.name?.toString() || "Sin nombre"
+      }
       userRole="Cliente"
       showLogout={true}
     />

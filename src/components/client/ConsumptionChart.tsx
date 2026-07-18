@@ -56,11 +56,15 @@ const ConsumptionChart = ({ clientId }: ConsumptionChartProps) => {
   const { data, loading } = useClientConsumption(clientId);
   const { clientPackage, loadingClientPackage } = usePackageByClient(clientId);
 
+  console.log(data);
+
   const consumptionRaw: ClientConsumption | undefined = data?.[0];
   const packageRaw: PackageData | undefined =
     clientPackage && clientPackage.id === consumptionRaw?.package_id
       ? clientPackage
       : undefined;
+
+  console.log("consumptionRaw", consumptionRaw);
 
   if (loading || loadingClientPackage) {
     return (
@@ -70,25 +74,25 @@ const ConsumptionChart = ({ clientId }: ConsumptionChartProps) => {
     );
   }
 
-if (!consumptionRaw || !packageRaw) {
-  return (
-    <div className="rounded-3xl border border-border gap-3 bg-white p-6 shadow-sm flex flex-col items-center justify-center h-96 text-center">
+  if (!consumptionRaw || !packageRaw) {
+    return (
+      <div className="rounded-3xl border border-border gap-3 bg-white p-6 shadow-sm flex flex-col items-center justify-center h-96 text-center">
         <div className="w-16 h-16 rounded-full bg-verde-kurve/10 flex items-center justify-center mb-4">
           <ChartPie className="h-8 w-8 text-verde-kurve" />
         </div>
 
-      <p className="text-lg font-bold text-foreground">
-        No hay información de consumo disponible
-      </p>
+        <p className="text-lg font-bold text-foreground">
+          No hay información de consumo disponible
+        </p>
 
-      <p className="text-sm text-gris-kurve-dark max-w-sm">
-        Cuando el administrador asigne un paquete y se registren horas
-        consumidas, podrás visualizar aquí el progreso y el porcentaje de uso
-        de tu plan.
-      </p>
-    </div>
-  );
-}
+        <p className="text-sm text-gris-kurve-dark max-w-sm">
+          Cuando el administrador asigne un paquete y se registren horas
+          consumidas, podrás visualizar aquí el progreso y el porcentaje de uso
+          de tu plan.
+        </p>
+      </div>
+    );
+  }
 
   const consumption: Consumption = {
     package_name: consumptionRaw.package_name,
