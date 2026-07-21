@@ -10,25 +10,45 @@ const packagePieceSchema = z.object({
 });
 
 // Schema para crear paquetes
-const createPackageSchema = z.object({
-  client_id: z.string().uuid(),
+const createPackageSchema = z
+  .object({
+    client_id: z.string().uuid().nullable().optional(),
 
-  name: z.string().min(2).max(100),
+    name: z.string().min(1).max(100),
 
-  status: z.enum(["active", "paused", "ended"]).optional(),
+    status: z.enum(["active", "paused", "ended"]).optional(),
 
-  start_date: z.string(),
+    start_date: z.string().nullable().optional(),
 
-  end_date: z.string().nullable().optional(),
+    end_date: z.string().nullable().optional(),
 
-  total_hours: z.number().min(0),
+    total_hours: z.number().min(0),
 
-  total_pieces: z.number().int().min(0).nullable().optional(),
+    total_pieces: z.number().int().min(0).nullable().optional(),
 
-  price: z.number().min(0).optional(),
+    price: z.number().min(0).optional(),
 
-  package_pieces: z.array(packagePieceSchema).optional(),
-});
+    package_pieces: z.array(packagePieceSchema).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.client_id && !data.start_date) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "La fecha de inicio es requerida cuando el paquete tiene un cliente asignado",
+        path: ["start_date"],
+      });
+    }
+
+    if (data.start_date && !data.client_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "Debe seleccionar un cliente cuando se especifica una fecha de inicio",
+        path: ["client_id"],
+      });
+    }
+  });
 
 // GET /api/packages
 // Obtener paquetes
@@ -47,7 +67,7 @@ export async function GET() {
         *,
         piece_categories(*)
       )
-    `
+    `,
     )
     .order("created_at", { ascending: false });
 
@@ -57,7 +77,7 @@ export async function GET() {
       {
         error: "Error al obtener paquetes",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -66,7 +86,7 @@ export async function GET() {
     {
       data: packages,
     },
-    { status: 200 }
+    { status: 200 },
   );
 }
 
@@ -89,7 +109,7 @@ export async function POST(request: Request) {
         error: "Datos inválidos",
         details: parsed.error.flatten(),
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -118,7 +138,7 @@ export async function POST(request: Request) {
       {
         error: "Error al crear paquete",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -140,7 +160,7 @@ export async function POST(request: Request) {
         {
           error: "Error al crear piezas del paquete",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   }
@@ -151,6 +171,6 @@ export async function POST(request: Request) {
       message: "Paquete creado correctamente",
       data: createdPackage,
     },
-    { status: 201 }
+    { status: 201 },
   );
 }

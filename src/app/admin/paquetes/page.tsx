@@ -12,6 +12,7 @@ import {
 import { useState } from "react";
 import {
   usePackages,
+  useClients,
   editPackage,
   deletePackage,
   PackageData,
@@ -27,6 +28,15 @@ const PackagesPage = () => {
   );
 
   const { packages, loadingPackages, refetchPackages } = usePackages();
+  const { clients } = useClients();
+
+  const getClientName = (clientId: string | null) => {
+    if (!clientId) return null;
+    return clients.find((c) => c.id === clientId)?.name ?? null;
+  };
+
+  const paquetesBase = packages.filter((pkg) => !pkg.client_id);
+  const paquetesAsignados = packages.filter((pkg) => !!pkg.client_id);
 
   // Abre el modal de edición con el paquete seleccionado
   const handleOpenEdit = (pkg: PackageData) => {
@@ -116,6 +126,93 @@ const PackagesPage = () => {
     },
   ];
 
+  const renderPackageCard = (pkg: PackageData) => {
+    const clientName = getClientName(pkg.client_id);
+
+    return (
+      <Card key={pkg.id} className="overflow-hidden py-0 bg-white">
+        <CardHeader className="flex justify-between p-4 pb-0">
+          <h3 className="text-xl font-bold text-azul-kurve">{pkg.name}</h3>
+          <span
+            className={`px-2 py-1 rounded text-sm font-medium ${
+              pkg.status === "active"
+                ? "bg-verde-kurve/10 text-verde-kurve"
+                : "bg-gray-100 text-gray-500"
+            }`}
+          >
+            {pkg.status === "active" ? "Activo" : "Inactivo"}
+          </span>
+        </CardHeader>
+
+        <CardContent className="px-5 space-y-3">
+          {/* Cliente asignado */}
+          {clientName ? (
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded text-xs font-medium bg-azul-kurve/10 text-azul-kurve">
+                {clientName}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded text-xs font-medium bg-azul-kurve/10 text-azul-kurve">
+                Paquete base
+              </span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <h3 className="font-semibold text-zinc-400/80">Capacidad</h3>
+              <p className="font-semibold">{pkg.total_hours} hs</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-zinc-400/80">Entregables</h3>
+              <p className="font-semibold">{pkg.total_pieces ?? "—"}</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-zinc-400/80">Precio</h3>
+              <p className="font-semibold">
+                {pkg.price != null
+                  ? `$${pkg.price.toLocaleString("es-AR")} USD`
+                  : "—"}
+              </p>
+            </div>
+            {clientName ? (
+              <div>
+                <h3 className="font-semibold text-zinc-400/80">Vigencia</h3>
+                <p className="font-semibold">
+                  {formatDate(pkg.start_date) ?? "—"} —{" "}
+                  {formatDate(pkg.end_date) ?? "Indefinido"}
+                </p>
+              </div>
+            ) : null}
+          </div>
+        </CardContent>
+
+        <CardFooter className="flex items-center justify-between border-t border-gray-200 bg-white px-5 py-3">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="px-6 py-4 cursor-pointer"
+              onClick={() => handleOpenEdit(pkg)}
+            >
+              Editar
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="px-6 py-4 cursor-pointer text-red-500 hover:text-red-600 hover:bg-red-200 hover:border-red-300"
+              onClick={() => handleOpenDelete(pkg)}
+            >
+              Eliminar
+            </Button>
+          </div>
+        </CardFooter>
+      </Card>
+    );
+  };
+
   return (
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
       <SidebarAdmin />
@@ -132,76 +229,44 @@ const PackagesPage = () => {
         {loadingPackages ? (
           <p className="mt-10 text-zinc-400">Cargando paquetes...</p>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {packages.map((pkg) => (
-              <Card key={pkg.id} className="overflow-hidden py-0 bg-white">
-                <CardHeader className="flex justify-between p-4">
-                  <h3 className="text-xl font-bold text-azul-kurve">
-                    {pkg.name}
-                  </h3>
-                  <span
-                    className={`px-2 py-1 rounded text-sm font-medium ${
-                      pkg.status === "active"
-                        ? "bg-verde-kurve/10 text-verde-kurve"
-                        : "bg-gray-100 text-gray-500"
-                    }`}
-                  >
-                    {pkg.status === "active" ? "Activo" : "Inactivo"}
-                  </span>
-                </CardHeader>
+          <div className="space-y-8">
+            {/* Paquetes base */}
+            <section>
+              <h2 className="text-lg font-bold text-foreground mb-4">
+                Paquetes base
+                <span className="ml-2 text-sm font-normal text-zinc-400">
+                  ({paquetesBase.length})
+                </span>
+              </h2>
+              {paquetesBase.length === 0 ? (
+                <p className="text-sm text-zinc-400">
+                  No hay paquetes base creados.
+                </p>
+              ) : (
+                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                  {paquetesBase.map(renderPackageCard)}
+                </div>
+              )}
+            </section>
 
-                <CardContent className="px-5 grid grid-cols-2 gap-2">
-                  <div>
-                    <h3 className="font-semibold text-zinc-400/80">
-                      Capacidad
-                    </h3>
-                    <p className="font-semibold">{pkg.total_hours} hs</p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-zinc-400/80">
-                      Entregables
-                    </h3>
-                    <p className="font-semibold">{pkg.total_pieces ?? "—"}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-zinc-400/80">Precio</h3>
-                    <p className="font-semibold">
-                      {pkg.price != null
-                        ? `$${pkg.price.toLocaleString("es-AR")} ARS`
-                        : "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-zinc-400/80">Vigencia</h3>
-                    <p className="font-semibold">
-                      {formatDate(pkg.start_date) ?? "—"} —{" "}
-                      {formatDate(pkg.end_date) ?? "Indefinido"}
-                    </p>
-                  </div>
-                </CardContent>
-
-                <CardFooter className="flex items-center justify-between border-t border-gray-200 bg-white px-5 py-3">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="px-6 py-4 cursor-pointer"
-                      onClick={() => handleOpenEdit(pkg)}
-                    >
-                      Editar
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="px-6 py-4 cursor-pointer text-red-500 hover:text-red-600 hover:bg-red-200 hover:border-red-300"
-                      onClick={() => handleOpenDelete(pkg)}
-                    >
-                      Eliminar
-                    </Button>
-                  </div>
-                </CardFooter>
-              </Card>
-            ))}
+            {/* Paquetes asignados */}
+            <section>
+              <h2 className="text-lg font-bold text-foreground mb-4">
+                Paquetes asignados
+                <span className="ml-2 text-sm font-normal text-zinc-400">
+                  ({paquetesAsignados.length})
+                </span>
+              </h2>
+              {paquetesAsignados.length === 0 ? (
+                <p className="text-sm text-zinc-400">
+                  No hay paquetes asignados a clientes todavía.
+                </p>
+              ) : (
+                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                  {paquetesAsignados.map(renderPackageCard)}
+                </div>
+              )}
+            </section>
           </div>
         )}
       </main>
