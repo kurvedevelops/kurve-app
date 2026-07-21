@@ -32,7 +32,7 @@ const updatePackageSchema = z.object({
 // Obtener paquete por ID
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   // Crear cliente Supabase
   const supabase = await createClient();
@@ -51,7 +51,7 @@ export async function GET(
         *,
         piece_categories(*)
       )
-    `
+    `,
     )
     .eq("id", id)
     .single();
@@ -62,7 +62,7 @@ export async function GET(
       {
         error: "Paquete no encontrado",
       },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
@@ -71,7 +71,7 @@ export async function GET(
     {
       data: packageData,
     },
-    { status: 200 }
+    { status: 200 },
   );
 }
 
@@ -79,7 +79,7 @@ export async function GET(
 // Editar paquete
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   // Crear cliente Supabase
   const supabase = await createClient();
@@ -100,7 +100,7 @@ export async function PATCH(
         error: "Datos inválidos",
         details: parsed.error.flatten(),
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -121,7 +121,7 @@ export async function PATCH(
       {
         error: "Error al actualizar paquete",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -138,7 +138,7 @@ export async function PATCH(
         {
           error: "Error al actualizar piezas del paquete",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -159,7 +159,7 @@ export async function PATCH(
           {
             error: "Error al actualizar piezas del paquete",
           },
-          { status: 500 }
+          { status: 500 },
         );
       }
     }
@@ -177,7 +177,7 @@ export async function PATCH(
       message,
       data: updatedPackage,
     },
-    { status: 200 }
+    { status: 200 },
   );
 }
 
@@ -185,7 +185,7 @@ export async function PATCH(
 // Cerrar paquete
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   // Crear cliente Supabase
   const supabase = await createClient();
@@ -211,7 +211,7 @@ export async function DELETE(
       {
         error: "Error al cerrar paquete",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -221,6 +221,6 @@ export async function DELETE(
       message: "Paquete cerrado correctamente",
       data: endedPackage,
     },
-    { status: 200 }
+    { status: 200 },
   );
 }
