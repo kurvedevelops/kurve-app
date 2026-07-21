@@ -19,6 +19,7 @@ import {
   useClientLinks,
   usePackageConsumption,
   ClientLink,
+  deletePackage,
 } from "@/hooks/middleware";
 import { linkTypeConfig } from "@/lib/linkTypeConfig";
 import {
@@ -44,8 +45,11 @@ const ClientDetailPage = () => {
   const { links, loadingLinks, addLink, updateLink, deleteLink } =
     useClientLinks(clientId);
   const { clients, loadingClients, refetchClients } = useClients();
-  const { packageConsumption, loadingPackageConsumption, refetchPackageConsumption } =
-    usePackageConsumption(clientId);
+  const {
+    packageConsumption,
+    loadingPackageConsumption,
+    refetchPackageConsumption,
+  } = usePackageConsumption(clientId);
   console.log("Package Consumption:", packageConsumption);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [selectedLink, setSelectedLink] = useState<ClientLink | null>(null);
@@ -57,6 +61,12 @@ const ClientDetailPage = () => {
   const [deletingLinkId, setDeletingLinkId] = useState<string | null>(null);
   const client = clients.find((c) => c.id === clientId);
   const initials = getInitials(client?.name);
+  const [unassignConfirm, setUnassignConfirm] = useState<{
+    open: boolean;
+    packageId: string;
+    packageName: string;
+  }>({ open: false, packageId: "", packageName: "" });
+  const [unassigningId, setUnassigningId] = useState<string | null>(null);
 
   const handleActions = {
     edit: () => setShowEditarClienteModal(true),
@@ -67,6 +77,20 @@ const ClientDetailPage = () => {
     await assignPackage(clientId, data);
     setShowAsignarPaqueteModal(false);
     refetchPackageConsumption();
+  };
+
+  const handleUnassignPackage = async (packageId: string) => {
+    try {
+      setUnassigningId(packageId);
+      await deletePackage(packageId);
+      setUnassignConfirm({ open: false, packageId: "", packageName: "" });
+      refetchPackageConsumption();
+      toast.success("Paquete desasignado exitosamente");
+    } catch {
+      toast.error("Error al desasignar el paquete");
+    } finally {
+      setUnassigningId(null);
+    }
   };
 
   const handleEditarCliente = async (data: EditarClienteFormData) => {
@@ -264,10 +288,26 @@ const ClientDetailPage = () => {
                           : "Indefinido"}
                       </p>
                     </div>
-                    <span className="px-3 py-1 mt-3 rounded-full text-xs font-bold bg-verde-kurve/10 text-verde-kurve">
-                      ●{" "}
-                      {pkg.package_status === "active" ? "Activo" : "Inactivo"}
-                    </span>
+                    <div className="flex items-center gap-2 mt-3">
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-verde-kurve/10 text-verde-kurve">
+                        ●{" "}
+                        {pkg.package_status === "active"
+                          ? "Activo"
+                          : "Inactivo"}
+                      </span>
+                      <button
+                        onClick={() =>
+                          setUnassignConfirm({
+                            open: true,
+                            packageId: pkg.package_id,
+                            packageName: pkg.package_name,
+                          })
+                        }
+                        className="px-3 py-1 rounded-full text-xs font-bold bg-red-50 text-red-500 hover:bg-red-100 transition-colors cursor-pointer"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                   {/* Stats Grid */}
                   <div className="grid grid-cols-2 gap-4">
@@ -424,12 +464,12 @@ const ClientDetailPage = () => {
         onSubmit={handleAsignarPaquete}
       />
       <ConfirmDeleteModal
-        open={deleteLinkConfirm.open}
-        entityName={deleteLinkConfirm.linkLabel}
-        loading={deletingLinkId === deleteLinkConfirm.linkId}
-        onConfirm={() => handleDeleteLink(deleteLinkConfirm.linkId)}
+        open={unassignConfirm.open}
+        entityName={unassignConfirm.packageName}
+        loading={unassigningId === unassignConfirm.packageId}
+        onConfirm={() => handleUnassignPackage(unassignConfirm.packageId)}
         onCancel={() =>
-          setDeleteLinkConfirm({ open: false, linkId: "", linkLabel: "" })
+          setUnassignConfirm({ open: false, packageId: "", packageName: "" })
         }
       />
     </div>

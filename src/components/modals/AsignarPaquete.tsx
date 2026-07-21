@@ -4,10 +4,12 @@ import { z } from "zod";
 import { BaseModal } from "./ModalBase";
 import { toast } from "sonner";
 import { ConfirmAsignarPaqueteModal } from "./ConfirmarAsignacionModal";
+import { usePackages } from "@/hooks/middleware"; // ajustar si el hook tiene otro nombre/ruta
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
 const asignarPaqueteSchema = z.object({
+  packageId: z.string().uuid().optional(), // presente si se está usando un paquete existente
   nombrePaquete: z
     .string()
     .min(1, "El nombre del paquete es requerido")
@@ -50,6 +52,7 @@ interface AsignarPaqueteModalProps {
 type FormErrors = Partial<Record<keyof AsignarPaqueteFormData, string>>;
 
 const initialForm: AsignarPaqueteFormData = {
+  packageId: undefined,
   nombrePaquete: "",
   horasTotales: 0,
   precio: 0,
@@ -87,6 +90,11 @@ export function AsignarPaqueteModal({
   onClose,
   onSubmit,
 }: AsignarPaqueteModalProps) {
+  const [modo, setModo] = useState<"nuevo" | "existente">("nuevo");
+  const { packages } = usePackages();
+
+  const paquetesBase = packages.filter((p) => !p.client_id);
+
   const [form, setForm] = useState<AsignarPaqueteFormData>(initialForm);
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
@@ -95,11 +103,12 @@ export function AsignarPaqueteModal({
   const [validatedData, setValidatedData] =
     useState<AsignarPaqueteFormData | null>(null);
 
-  // Inicializar publicaciones
+  // Reset al abrir
   useEffect(() => {
     if (open) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm(initialForm);
+      setModo("nuevo");
       setErrors({});
       setTouched({});
     }
@@ -118,6 +127,34 @@ export function AsignarPaqueteModal({
       ...prev,
       [field]: validateField(field, form[field]),
     }));
+  }
+
+  function handleModoChange(nuevoModo: "nuevo" | "existente") {
+    setModo(nuevoModo);
+    setForm(initialForm);
+    setErrors({});
+    setTouched({});
+  }
+
+  function handleSeleccionarPaquete(packageId: string) {
+    if (!packageId) {
+      setForm(initialForm);
+      return;
+    }
+    const pkg = packages.find((p) => p.id === packageId);
+    if (!pkg) return;
+
+    setForm({
+      packageId: pkg.id,
+      nombrePaquete: pkg.name,
+      horasTotales: pkg.total_hours,
+      precio: pkg.price ?? 0,
+      fechaInicio: pkg.start_date || new Date().toISOString().split("T")[0],
+      fechaFin: pkg.end_date ?? "",
+      publicaciones: { total: pkg.total_pieces ?? 0 },
+    });
+    setErrors({});
+    setTouched({});
   }
 
   async function handleSubmit() {
@@ -186,6 +223,58 @@ export function AsignarPaqueteModal({
           },
         ]}
       >
+        {/* Selector de modo */}
+        <div className="flex gap-2 p-1 rounded-lg bg-muted w-fit">
+          <button
+            type="button"
+            onClick={() => handleModoChange("nuevo")}
+            className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+              modo === "nuevo"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-gris-kurve-dark"
+            }`}
+          >
+            Crear nuevo
+          </button>
+          <button
+            type="button"
+            onClick={() => handleModoChange("existente")}
+            className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+              modo === "existente"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-gris-kurve-dark"
+            }`}
+          >
+            Usar paquete existente
+          </button>
+        </div>
+
+        {/* Selector de paquete existente */}
+        {modo === "existente" && (
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">
+              Paquete <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={form.packageId ?? ""}
+              onChange={(e) => handleSeleccionarPaquete(e.target.value)}
+              className={inputClass("packageId")}
+            >
+              <option value="">Seleccioná un paquete</option>
+              {paquetesBase.map((pkg) => (
+                <option key={pkg.id} value={pkg.id}>
+                  {pkg.name} — {pkg.client_id ? pkg.client_id : "Paquete base"}
+                </option>
+              ))}
+            </select>
+            {paquetesBase.length === 0 && (
+              <p className="text-xs text-gris-kurve-dark mt-1">
+                No hay paquetes disponibles. Creá uno nuevo.
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Nombre del paquete */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">
@@ -198,6 +287,7 @@ export function AsignarPaqueteModal({
             onChange={(e) => handleChange("nombrePaquete", e.target.value)}
             onBlur={() => handleBlur("nombrePaquete")}
             className={inputClass("nombrePaquete")}
+            disabled={modo === "existente" && !form.packageId}
           />
           {errors.nombrePaquete && touched.nombrePaquete && (
             <p className="text-xs text-red-500 mt-1">{errors.nombrePaquete}</p>
@@ -216,7 +306,6 @@ export function AsignarPaqueteModal({
               value={form.horasTotales || ""}
               onChange={(e) => {
                 const value = e.target.value;
-                // ✅ Convertir a número
                 const numValue = value === "" ? 0 : parseInt(value);
                 if (numValue >= 0) {
                   handleChange("horasTotales", numValue);
@@ -225,6 +314,7 @@ export function AsignarPaqueteModal({
               onBlur={() => handleBlur("horasTotales")}
               className={inputClass("horasTotales")}
               min="0"
+              disabled={modo === "existente" && !form.packageId}
             />
             {errors.horasTotales && touched.horasTotales && (
               <p className="text-xs text-red-500 mt-1">{errors.horasTotales}</p>
@@ -251,6 +341,7 @@ export function AsignarPaqueteModal({
               onBlur={() => handleBlur("precio")}
               className={inputClass("precio")}
               min="0"
+              disabled={modo === "existente" && !form.packageId}
             />
             {errors.precio && touched.precio && (
               <p className="text-xs text-red-500 mt-1">{errors.precio}</p>
@@ -325,7 +416,9 @@ export function AsignarPaqueteModal({
         {/* Nota */}
         <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
           <p className="text-xs text-blue-600">
-            El cliente verá su consumo en tiempo real
+            {modo === "existente"
+              ? "Podés editar los datos del paquete antes de asignarlo."
+              : "El cliente verá su consumo en tiempo real"}
           </p>
         </div>
       </BaseModal>
