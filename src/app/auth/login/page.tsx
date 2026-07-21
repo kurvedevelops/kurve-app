@@ -194,12 +194,6 @@ export default function LoginPage() {
                     {errors.password.message}
                   </span>
                 )}
-                <button
-                  type="button"
-                  className="text-sm text-azul-kurve font-semibold self-end mt-1"
-                >
-                  ¿Olvidaste tu contraseña?
-                </button>
               </div>
 
               <button

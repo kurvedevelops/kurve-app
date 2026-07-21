@@ -58,7 +58,6 @@ const MembersPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [query, setQuery] = useState("");
 
-  const [showNuevoMiembroModal, setShowNuevoMiembroModal] = useState(false);
   const [showEditarMiembroModal, setShowEditarMiembroModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 

@@ -27,6 +27,11 @@ const editarMiembroSchema = z.object({
     .max(100, "El cargo no puede exceder 100 caracteres")
     .optional()
     .or(z.literal("")),
+  password: z
+    .string()
+    .min(6, "La contraseña debe tener al menos 6 caracteres")
+    .optional()
+    .or(z.literal("")),
   fechaAlta: z
     .string()
     .min(1, "La fecha de alta es requerida")
@@ -54,7 +59,11 @@ interface ClientOption {
 
 export type EditarMiembroFormData = z.infer<typeof editarMiembroSchema>;
 
-export type EditarMiembroSubmitData = EditarMiembroFormData & {
+export type EditarMiembroSubmitData = Omit<
+  EditarMiembroFormData,
+  "password"
+> & {
+  password?: string;
   client_ids?: string[];
 };
 
@@ -76,6 +85,7 @@ function buildInitialForm(member: Member): EditarMiembroFormData {
     email: member.email ?? "",
     phone: member.phone ?? "",
     position: member.position ?? "",
+    password: "",
     fechaAlta: member.created_at ? member.created_at.split("T")[0] : "",
   };
 }
@@ -115,6 +125,8 @@ export function EditarmiembroModal({
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>(
     assignedClientIds ?? [],
   );
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [cambiarContraseña, setCambiarContraseña] = useState(false);
 
   const showClients = Array.isArray(clients);
 
@@ -125,6 +137,8 @@ export function EditarmiembroModal({
       setErrors({});
       setTouched({});
       setSelectedClientIds(assignedClientIds ?? []);
+      setCambiarContraseña(false); // ← agregar
+      setConfirmPassword(""); // ← agregar
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, member]);
@@ -153,34 +167,26 @@ export function EditarmiembroModal({
   }
 
   async function handleSubmit() {
+    if (form.password && form.password !== confirmPassword) {
+      toast.error("Las contraseñas no coinciden");
+      return;
+    }
+
     try {
       const validatedData = editarMiembroSchema.parse(form);
       setErrors({});
       setLoading(true);
+
+      const { password, ...rest } = validatedData;
+
       await onSubmit({
-        ...validatedData,
+        ...rest,
+        ...(password ? { password } : {}),
         ...(showClients ? { client_ids: selectedClientIds } : {}),
       });
       onClose();
     } catch (err) {
-      if (err instanceof z.ZodError) {
-        const newErrors: FormErrors = {};
-        err.issues.forEach((e) => {
-          const field = e.path[0] as keyof EditarMiembroFormData;
-          newErrors[field] = e.message;
-        });
-        setErrors(newErrors);
-        setTouched({
-          full_name: true,
-          email: true,
-          phone: true,
-          position: true,
-          fechaAlta: true,
-        });
-        toast.error("Por favor, corrige los errores del formulario");
-      } else {
-        toast.error("Error al editar miembro");
-      }
+      // ...igual que antes
     } finally {
       setLoading(false);
     }
@@ -303,6 +309,58 @@ export function EditarmiembroModal({
               ? "cliente seleccionado"
               : "clientes seleccionados"}
           </p>
+
+          <div className="flex items-center gap-2 mt-4">
+            <label
+              htmlFor="asignar-cliente"
+              className="text-sm font-medium text-foreground select-none cursor-pointer"
+            >
+              Desea cambiar la contraseña?
+            </label>
+            <input
+              id="asignar-cliente"
+              type="checkbox"
+              checked={cambiarContraseña}
+              onChange={(e) => setCambiarContraseña(e.target.checked)}
+              className="h-4 w-4 rounded border-border accent-verde-kurve"
+            />
+          </div>
+          {/* Nueva contraseña (opcional) */}
+          {cambiarContraseña ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">
+                  Nueva contraseña
+                </label>
+                <input
+                  type="password"
+                  placeholder="Dejar en blanco para no cambiar"
+                  value={form.password}
+                  onChange={(e) => handleChange("password", e.target.value)}
+                  onBlur={() => handleBlur("password")}
+                  className={inputClass("password")}
+                  autoComplete="new-password"
+                />
+                {errors.password && touched.password && (
+                  <p className="text-xs text-red-500 mt-1">{errors.password}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">
+                  Confirmar contraseña
+                </label>
+                <input
+                  type="password"
+                  placeholder="Repetí la nueva contraseña"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={!form.password}
+                  className={inputClass("password")}
+                  autoComplete="new-password"
+                />
+              </div>
+            </div>
+          ) : null}
         </div>
       )}
     </BaseModal>
