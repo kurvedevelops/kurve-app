@@ -120,7 +120,7 @@ export async function POST(request: Request) {
   const { data: createdPackage, error: packageError } = await supabase
     .from("packages")
     .insert({
-      client_id: parsed.data.client_id,
+      client_id: parsed.data.client_id ?? "",
       name: parsed.data.name,
       status: parsed.data.status ?? "active",
       start_date: parsed.data.start_date,
