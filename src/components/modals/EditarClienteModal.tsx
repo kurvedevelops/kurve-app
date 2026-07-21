@@ -22,6 +22,11 @@ const editarClienteSchema = z.object({
     .email("El email debe ser válido")
     .optional()
     .or(z.literal("")),
+  password: z
+    .string()
+    .min(6, "La contraseña debe tener al menos 6 caracteres")
+    .optional()
+    .or(z.literal("")),
   telefono: z
     .string()
     .regex(/^[\d\s\-\+\(\)]*$/, "El teléfono contiene caracteres inválidos")
@@ -53,11 +58,18 @@ export interface Client {
 
 export type EditarClienteFormData = z.infer<typeof editarClienteSchema>;
 
+export type EditarClienteSubmitData = Omit<
+  EditarClienteFormData,
+  "password"
+> & {
+  password?: string;
+};
+
 interface EditarClienteModalProps {
   open: boolean;
   onClose: () => void;
   client: Client;
-  onSubmit: (data: EditarClienteFormData) => void | Promise<void>;
+  onSubmit: (data: EditarClienteSubmitData) => void | Promise<void>;
 }
 
 type FormErrors = Partial<Record<keyof EditarClienteFormData, string>>;
@@ -67,6 +79,7 @@ function buildInitialForm(client: Client): EditarClienteFormData {
     name: client.name ?? "",
     razonSocial: client.legal_name ?? "",
     email: client.email ?? "",
+    password: "",
     telefono: client.phone ?? "",
     fechaAlta: client.created_at ? client.created_at.split("T")[0] : "",
     status: client.status ?? "active",
@@ -103,6 +116,8 @@ export function EditarClienteModal({
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [cambiarContraseña, setCambiarContraseña] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -129,11 +144,22 @@ export function EditarClienteModal({
   }
 
   async function handleSubmit() {
+    if (form.password && form.password !== confirmPassword) {
+      toast.error("Las contraseñas no coinciden");
+      return;
+    }
+
     try {
       const validatedData = editarClienteSchema.parse(form);
       setErrors({});
       setLoading(true);
-      await onSubmit(validatedData);
+
+      const { password, ...rest } = validatedData;
+
+      await onSubmit({
+        ...rest,
+        ...(password ? { password } : {}),
+      });
       toast.success("Cliente editado exitosamente");
       onClose();
     } catch (err) {
@@ -314,6 +340,59 @@ export function EditarClienteModal({
           <p className="text-xs text-red-500 mt-1">{errors.status}</p>
         )}
       </div>
+
+      {/* Cambiar contraseña */}
+      <div className="flex items-center gap-2">
+        <input
+          id="cambiar-contrasena-cliente"
+          type="checkbox"
+          checked={cambiarContraseña}
+          onChange={(e) => setCambiarContraseña(e.target.checked)}
+          className="h-4 w-4 rounded border-border accent-verde-kurve"
+        />
+        <label
+          htmlFor="cambiar-contrasena-cliente"
+          className="text-sm font-medium text-foreground select-none cursor-pointer"
+        >
+          ¿Desea cambiar la contraseña?
+        </label>
+      </div>
+
+      {cambiarContraseña && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">
+              Nueva contraseña
+            </label>
+            <input
+              type="password"
+              placeholder="Nueva contraseña"
+              value={form.password}
+              onChange={(e) => handleChange("password", e.target.value)}
+              onBlur={() => handleBlur("password")}
+              className={inputClass("password")}
+              autoComplete="new-password"
+            />
+            {errors.password && touched.password && (
+              <p className="text-xs text-red-500 mt-1">{errors.password}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">
+              Confirmar contraseña
+            </label>
+            <input
+              type="password"
+              placeholder="Repetí la nueva contraseña"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={!form.password}
+              className={inputClass("password")}
+              autoComplete="new-password"
+            />
+          </div>
+        </div>
+      )}
     </BaseModal>
   );
 }

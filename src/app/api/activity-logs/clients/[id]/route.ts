@@ -1,86 +1,77 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
+import { requireAdmin } from "@/lib/supabase/guard";
 
 // Schema para editar clientes
 const updateClientSchema = z.object({
   name: z.string().min(2).max(100).optional(),
+
+  email: z.email().optional(),
+
+  password: z.string().min(6).optional(), // <- nuevo
 
   status: z.enum(["active", "paused", "ended"]).optional(),
 
   start_date: z.string().nullable().optional(),
 
   end_date: z.string().nullable().optional(),
+
+  legal_name: z.string().max(100).nullable().optional(),
+
+  phone: z.string().max(50).nullable().optional(),
 });
 
 // GET /api/clients/:id
 // Obtener cliente por ID
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  // Crear cliente Supabase
   const supabase = await createClient();
-
-  // Obtener ID desde params
   const { id } = await params;
 
-  // Buscar cliente
   const { data: client, error } = await supabase
     .from("clients")
     .select("*")
     .eq("id", id)
     .single();
 
-  // Manejar error
   if (error || !client) {
     return NextResponse.json(
-      {
-        error: "Cliente no encontrado",
-      },
-      { status: 404 }
+      { error: "Cliente no encontrado" },
+      { status: 404 },
     );
   }
 
-  // Respuesta exitosa
-  return NextResponse.json(
-    {
-      data: client,
-    },
-    { status: 200 }
-  );
+  return NextResponse.json({ data: client }, { status: 200 });
 }
 
 // PATCH /api/clients/:id
 // Editar cliente
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  // Crear cliente Supabase
-  const supabase = await createClient();
+  const guard = await requireAdmin();
+  if (guard.error) return guard.error;
 
-  // Obtener ID
+  // Usamos service client porque necesitamos tocar Auth (password)
+  const supabase = createServiceClient();
   const { id } = await params;
-
-  // Obtener body
   const body = await request.json();
 
-  // Validar body con Zod
   const parsed = updateClientSchema.safeParse(body);
 
-  // Manejar error de validación
   if (!parsed.success) {
     return NextResponse.json(
-      {
-        error: "Datos inválidos",
-        details: parsed.error.flatten(),
-      },
-      { status: 400 }
+      { error: "Datos inválidos", details: parsed.error.flatten() },
+      { status: 400 },
     );
   }
 
-  // Si mandan name verificar duplicados
+  // Si mandan name, verificar duplicados
   if (parsed.data.name) {
     const { data: existingClient } = await supabase
       .from("clients")
@@ -91,39 +82,104 @@ export async function PATCH(
 
     if (existingClient) {
       return NextResponse.json(
-        {
-          error: "Ya existe un cliente con ese nombre",
-        },
-        { status: 409 }
+        { error: "Ya existe un cliente con ese nombre" },
+        { status: 409 },
       );
     }
   }
 
-  // Actualizar cliente
+  // Si mandan email o password, hay que tocar la cuenta de login del cliente
+  if (parsed.data.email || parsed.data.password) {
+    // Buscar la cuenta de login asociada a este cliente
+    const { data: clientUser, error: findUserError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("client_id", id)
+      .eq("role", "client")
+      .maybeSingle();
+
+    if (findUserError || !clientUser) {
+      return NextResponse.json(
+        {
+          error:
+            "Este cliente no tiene una cuenta de acceso asociada. No se pudo actualizar email/contraseña.",
+        },
+        { status: 404 },
+      );
+    }
+
+    // Si mandan email, verificar que no esté en uso por otro usuario
+    if (parsed.data.email) {
+      const { data: existingEmail } = await supabase
+        .from("users")
+        .select("id")
+        .eq("email", parsed.data.email)
+        .neq("id", clientUser.id)
+        .maybeSingle();
+
+      if (existingEmail) {
+        return NextResponse.json(
+          { error: "Ya existe un usuario con ese email" },
+          { status: 409 },
+        );
+      }
+    }
+
+    const authUpdate: { email?: string; password?: string } = {};
+    if (parsed.data.email) authUpdate.email = parsed.data.email;
+    if (parsed.data.password) authUpdate.password = parsed.data.password;
+
+    const { error: authError } = await supabase.auth.admin.updateUserById(
+      clientUser.id,
+      authUpdate,
+    );
+
+    if (authError) {
+      console.error(
+        "Error al actualizar cuenta del cliente:",
+        authError.message,
+        authError,
+      );
+      return NextResponse.json(
+        {
+          error: "Error al actualizar cuenta del cliente",
+          detail: authError.message,
+        },
+        { status: 500 },
+      );
+    }
+
+    // Mantener sincronizada la tabla users con el nuevo email
+    if (parsed.data.email) {
+      await supabase
+        .from("users")
+        .update({ email: parsed.data.email })
+        .eq("id", clientUser.id);
+    }
+  }
+
+  // Separar email/password (no son columnas de clients) del resto
+  const { email, password, ...clientFields } = parsed.data;
+
+  // Actualizar cliente en la tabla clients
   const { data: updatedClient, error } = await supabase
     .from("clients")
-    .update(parsed.data)
+    .update(clientFields)
     .eq("id", id)
     .select()
     .single();
 
-  // Manejar error
   if (error || !updatedClient) {
+    console.error("Error al actualizar cliente:", error?.message, error);
     return NextResponse.json(
-      {
-        error: "Error al actualizar cliente",
-      },
-      { status: 500 }
+      { error: "Error al actualizar cliente", detail: error?.message },
+      { status: 500 },
     );
   }
 
-  // Respuesta exitosa
   return NextResponse.json(
-    {
-      message: "Cliente actualizado correctamente",
-      data: updatedClient,
-    },
-    { status: 200 }
+    { message: "Cliente actualizado correctamente", data: updatedClient },
+    { status: 200 },
   );
 }
 
@@ -131,16 +187,14 @@ export async function PATCH(
 // Soft delete del cliente: no se borra, se marca como ended
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  // Crear cliente Supabase
-  const supabase = await createClient();
+  const guard = await requireAdmin();
+  if (guard.error) return guard.error;
 
-  // Obtener ID
+  const supabase = await createClient();
   const { id } = await params;
 
-  // No eliminamos físicamente el cliente.
-  // Lo marcamos como ended para conservar historial.
   const { data: endedClient, error } = await supabase
     .from("clients")
     .update({
@@ -151,22 +205,15 @@ export async function DELETE(
     .select()
     .single();
 
-  // Manejar error
   if (error || !endedClient) {
     return NextResponse.json(
-      {
-        error: "Error al desactivar cliente",
-      },
-      { status: 500 }
+      { error: "Error al desactivar cliente" },
+      { status: 500 },
     );
   }
 
-  // Respuesta exitosa
   return NextResponse.json(
-    {
-      message: "Cliente desactivado correctamente",
-      data: endedClient,
-    },
-    { status: 200 }
+    { message: "Cliente desactivado correctamente", data: endedClient },
+    { status: 200 },
   );
 }
