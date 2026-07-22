@@ -26,7 +26,9 @@ const MemberDetail = () => {
   const { members, loadingMembers, refetchMembers } = useMembers();
   const { id } = useParams();
   const memberDetail = members.find((m) => m.id === id);
-  const { clientsId, loadingClientsId, refetchClientsId } = useClientsByUser(memberDetail?.id);
+  const { clientsId, loadingClientsId, refetchClientsId } = useClientsByUser(
+    memberDetail?.id,
+  );
   const { clients, loadingClients } = useClients();
   const clientIds = clientsId.map((c) => c.client_id);
   const clientesAsociados = clients.filter((client) =>
@@ -92,6 +94,7 @@ const MemberDetail = () => {
         phone: data.phone || null,
         position: data.position || null,
         client_ids: data.client_ids ?? [],
+        ...(data.password ? { password: data.password } : {}), // ← agregar
       }),
     });
 

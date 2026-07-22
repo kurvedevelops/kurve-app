@@ -28,7 +28,7 @@ const TeamPage = () => {
     membersIdByClient.includes(member.id),
   );
 
-  console.log(membersIdByClient);
+  console.log("membersIdByClient", membersIdByClient);
   console.log("assignedMembers:", assignedMembers);
 
   return (

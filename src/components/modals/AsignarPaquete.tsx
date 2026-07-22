@@ -325,7 +325,7 @@ export function AsignarPaqueteModal({
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">
-              Precio (ARS)
+              Precio (USD)
             </label>
             <input
               type="number"

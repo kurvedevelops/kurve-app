@@ -56,15 +56,11 @@ const ConsumptionChart = ({ clientId }: ConsumptionChartProps) => {
   const { data, loading } = useClientConsumption(clientId);
   const { clientPackage, loadingClientPackage } = usePackageByClient(clientId);
 
-  console.log(data);
-
   const consumptionRaw: ClientConsumption | undefined = data?.[0];
   const packageRaw: PackageData | undefined =
     clientPackage && clientPackage.id === consumptionRaw?.package_id
       ? clientPackage
       : undefined;
-
-  console.log("consumptionRaw", consumptionRaw);
 
   if (loading || loadingClientPackage) {
     return (
