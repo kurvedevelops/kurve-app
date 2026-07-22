@@ -72,7 +72,7 @@ const PackageSummaryCard = ({
         </div>
       </div>
 
-      <div className="rounded-2xl bg-muted/30 p-4">
+      <div className="rounded-2xl bg-muted/30 py-4 flex justify-between items-center text-center">
         <h3 className="text-xl font-bold">{clientPackage.name}</h3>
 
         <div
