@@ -6,6 +6,9 @@ import { createClient } from "@/lib/supabase/server";
 const draftActivityLogSchema = z.object({
   client_id: z.string().uuid(),
 
+  // Paquete seleccionado (opcional en borrador, requerido al publicar)
+  package_id: z.string().uuid().nullable().optional(),
+
   task_type_id: z.string().uuid(),
 
   // Categoría opcional
@@ -89,6 +92,7 @@ export async function POST(request: Request) {
   const draftPayload = {
     user_id: user.id,
     client_id: parsed.data.client_id,
+    package_id: parsed.data.package_id ?? null,
     task_type_id: parsed.data.task_type_id,
     category_id: parsed.data.category_id ?? null,
     log_date: parsed.data.log_date ?? new Date().toISOString().split("T")[0],

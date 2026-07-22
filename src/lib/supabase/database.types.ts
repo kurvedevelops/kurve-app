@@ -89,6 +89,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "activity_logs_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "v_client_consumption"
+            referencedColumns: ["package_id"]
+          },
+          {
+            foreignKeyName: "activity_logs_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "v_consumption_by_task_type"
+            referencedColumns: ["package_id"]
+          },
+          {
             foreignKeyName: "activity_logs_subtype_id_fkey"
             columns: ["subtype_id"]
             isOneToOne: false
@@ -345,6 +359,45 @@ export type Database = {
           },
         ]
       }
+      member_task_types: {
+        Row: {
+          created_at: string
+          id: string
+          is_primary: boolean
+          task_type_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          task_type_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          task_type_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_task_types_task_type_id_fkey"
+            columns: ["task_type_id"]
+            isOneToOne: false
+            referencedRelation: "task_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_task_types_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           channel: Database["public"]["Enums"]["notification_channel"]
@@ -439,7 +492,7 @@ export type Database = {
       packages: {
         Row: {
           block_on_limit: boolean
-          client_id: string
+          client_id: string | null
           created_at: string
           end_date: string | null
           id: string
@@ -452,7 +505,7 @@ export type Database = {
         }
         Insert: {
           block_on_limit?: boolean
-          client_id: string
+          client_id?: string | null
           created_at?: string
           end_date?: string | null
           id?: string
@@ -465,7 +518,7 @@ export type Database = {
         }
         Update: {
           block_on_limit?: boolean
-          client_id?: string
+          client_id?: string | null
           created_at?: string
           end_date?: string | null
           id?: string
@@ -677,14 +730,14 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
       }
-      recalculate_package_consumption: {
-        Args: { p_package_id: string }
-        Returns: undefined
-      }
       get_active_package_id: { Args: { p_client_id: string }; Returns: string }
       get_my_client_ids: { Args: never; Returns: string[] }
       recalculate_client_consumption: {
         Args: { p_client_id: string }
+        Returns: undefined
+      }
+      recalculate_package_consumption: {
+        Args: { p_package_id: string }
         Returns: undefined
       }
     }
