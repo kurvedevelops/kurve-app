@@ -267,10 +267,6 @@ export function useMembersByClient(clientId?: string | null) {
           .select("user_id")
           .eq("client_id", clientId);
 
-        console.log("clientId usado:", clientId);
-        console.log("data completa:", data);
-        console.log("cantidad de filas:", data?.length);
-
         if (error) throw error;
         setMembersIdByClient(data.map((row) => row.user_id));
       } catch (err) {
@@ -513,6 +509,7 @@ export function usePackageByClient(clientId: string | null | undefined) {
           .from("packages")
           .select("*")
           .eq("client_id", clientId)
+          .eq("status", "active")
           .maybeSingle();
 
         if (error) throw error;
