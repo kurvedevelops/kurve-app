@@ -9,6 +9,8 @@ const updateMemberSchema = z.object({
 
   email: z.email().optional(),
 
+  password: z.string().min(6).optional(), // <- nuevo
+
   active: z.boolean().optional(),
 
   phone: z.string().max(50).optional().nullable(),
@@ -22,7 +24,7 @@ const updateMemberSchema = z.object({
 // Obtener integrante por ID
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const guard = await requireAdmin();
   if (guard.error) return guard.error;
@@ -47,7 +49,7 @@ export async function GET(
       {
         error: "Integrante no encontrado",
       },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
@@ -56,7 +58,7 @@ export async function GET(
     {
       data: member,
     },
-    { status: 200 }
+    { status: 200 },
   );
 }
 
@@ -64,7 +66,7 @@ export async function GET(
 // Editar integrante
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const guard = await requireAdmin();
   if (guard.error) return guard.error;
@@ -88,7 +90,7 @@ export async function PATCH(
         error: "Datos inválidos",
         details: parsed.error.flatten(),
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -106,13 +108,35 @@ export async function PATCH(
         {
           error: "Ya existe un usuario con ese email",
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
   }
 
-  // Separar client_ids (no es columna de users) de los campos del usuario
-  const { client_ids, ...userFields } = parsed.data;
+  // Si mandan password, actualizarla en Auth primero
+  if (parsed.data.password) {
+    const { error: passError } = await supabase.auth.admin.updateUserById(id, {
+      password: parsed.data.password,
+    });
+
+    if (passError) {
+      console.error(
+        "Error al actualizar contraseña:",
+        passError.message,
+        passError,
+      );
+      return NextResponse.json(
+        {
+          error: "Error al actualizar contraseña",
+          detail: passError.message,
+        },
+        { status: 500 },
+      );
+    }
+  }
+
+  // Separar client_ids y password (no son columnas de users) de los campos del usuario
+  const { client_ids, password, ...userFields } = parsed.data;
 
   // Actualizar integrante en public.users
   const { data: updatedMember, error } = await supabase
@@ -131,7 +155,7 @@ export async function PATCH(
         error: "Error al actualizar integrante",
         detail: error?.message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -143,14 +167,19 @@ export async function PATCH(
       .eq("user_id", id);
 
     if (deleteError) {
-      console.error("Error al limpiar clientes del integrante:", deleteError.message, deleteError);
+      console.error(
+        "Error al limpiar clientes del integrante:",
+        deleteError.message,
+        deleteError,
+      );
       return NextResponse.json(
         {
-          error: "El integrante se actualizó pero no se pudieron reasignar los clientes.",
+          error:
+            "El integrante se actualizó pero no se pudieron reasignar los clientes.",
           detail: deleteError.message,
           data: updatedMember,
         },
-        { status: 207 }
+        { status: 207 },
       );
     }
 
@@ -165,14 +194,19 @@ export async function PATCH(
         .insert(rows);
 
       if (assignError) {
-        console.error("Error al reasignar clientes al integrante:", assignError.message, assignError);
+        console.error(
+          "Error al reasignar clientes al integrante:",
+          assignError.message,
+          assignError,
+        );
         return NextResponse.json(
           {
-            error: "El integrante se actualizó pero no se pudieron reasignar los clientes.",
+            error:
+              "El integrante se actualizó pero no se pudieron reasignar los clientes.",
             detail: assignError.message,
             data: updatedMember,
           },
-          { status: 207 }
+          { status: 207 },
         );
       }
     }
@@ -184,7 +218,7 @@ export async function PATCH(
       message: "Integrante actualizado correctamente",
       data: updatedMember,
     },
-    { status: 200 }
+    { status: 200 },
   );
 }
 
@@ -192,7 +226,7 @@ export async function PATCH(
 // Desactivar integrante
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const guard = await requireAdmin();
   if (guard.error) return guard.error;
@@ -220,7 +254,7 @@ export async function DELETE(
       {
         error: "Error al desactivar integrante",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -230,6 +264,6 @@ export async function DELETE(
       message: "Integrante desactivado correctamente",
       data: disabledMember,
     },
-    { status: 200 }
+    { status: 200 },
   );
 }

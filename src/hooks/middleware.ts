@@ -3,7 +3,10 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tables } from "@/lib/supabase/database.types";
 import { NuevoClienteFormData } from "@/components/modals/NuevoClienteModal";
-import { EditarClienteFormData } from "@/components/modals/EditarClienteModal";
+import {
+  EditarClienteFormData,
+  EditarClienteSubmitData,
+} from "@/components/modals/EditarClienteModal";
 import { AsignarPaqueteFormData } from "@/components/modals/AsignarPaquete";
 import {
   AprovedCorrectionData,
@@ -32,23 +35,27 @@ export const formatDate = (date: string | null) => {
 
 export async function editClient(
   clientId: string,
-  data: EditarClienteFormData,
+  data: EditarClienteSubmitData,
 ) {
-  const supabase = createClient();
-
-  const { error } = await supabase
-    .from("clients")
-    .update({
+  const res = await fetch(`/api/activity-logs/clients/${clientId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
       name: data.name,
-      legal_name: data.razonSocial,
-      email: data.email,
-      phone: data.telefono,
-      created_at: data.fechaAlta,
+      legal_name: data.razonSocial || null,
+      email: data.email || undefined,
+      phone: data.telefono || null,
       status: data.status,
-    })
-    .eq("id", clientId);
+      ...(data.password ? { password: data.password } : {}),
+    }),
+  });
 
-  if (error) throw error;
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "Error desconocido" }));
+    throw new Error(body.error ?? "Error al editar cliente");
+  }
+
+  return res.json();
 }
 
 export async function deleteClient(clientId: string) {
@@ -259,10 +266,6 @@ export function useMembersByClient(clientId?: string | null) {
           .from("client_users")
           .select("user_id")
           .eq("client_id", clientId);
-
-        console.log("clientId usado:", clientId);
-        console.log("data completa:", data);
-        console.log("cantidad de filas:", data?.length);
 
         if (error) throw error;
         setMembersIdByClient(data.map((row) => row.user_id));
@@ -506,6 +509,7 @@ export function usePackageByClient(clientId: string | null | undefined) {
           .from("packages")
           .select("*")
           .eq("client_id", clientId)
+          .eq("status", "active")
           .maybeSingle();
 
         if (error) throw error;

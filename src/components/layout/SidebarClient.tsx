@@ -17,7 +17,6 @@ const SidebarClient = () => {
   const clientId = user?.client_id;
   const { clients, loadingClients } = useClients();
   const client = clients.find((c) => c.id === clientId);
-  console.log(client);
   const { clientPackage, loadingClientPackage } = usePackageByClient(clientId);
 
   const navSections = [
@@ -29,8 +28,6 @@ const SidebarClient = () => {
       ],
     },
   ];
-
-  console.log("paquete", clientPackage);
 
   return (
     <SidebarBase

@@ -8,6 +8,7 @@ import {
   useTaskTypesConfig,
   useTaskSubtypesConfig,
 } from "../../../hooks/middleware";
+import CambiarContraseñaAdmin from "@/components/admin/CambiarContraseñaAdmin";
 
 const ConfigurationPage = () => {
   const { tasks, loadingTasks, updateTask, addTask } = useTaskTypesConfig();
@@ -56,6 +57,13 @@ const ConfigurationPage = () => {
               >
                 Tareas
               </TabsTrigger>
+
+              <TabsTrigger
+                value="cuenta"
+                className="text-xl font-bold text-gray-300 cursor-pointer pb-4"
+              >
+                Mi cuenta
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="tarea">
@@ -81,6 +89,9 @@ const ConfigurationPage = () => {
                   onAdd={addSubtype}
                 />
               )}
+            </TabsContent>
+            <TabsContent value="cuenta">
+              <CambiarContraseñaAdmin />
             </TabsContent>
           </Tabs>
         </div>
