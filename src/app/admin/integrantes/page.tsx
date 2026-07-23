@@ -32,7 +32,7 @@ export interface Member {
   email: string;
   role: string;
   phone: string;
-  task_type_id: string | null;
+  task_type_id: string;
   active: boolean;
   created_at: string;
 }

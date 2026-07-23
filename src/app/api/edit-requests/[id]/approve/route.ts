@@ -11,7 +11,7 @@ import type { Tables } from "@/lib/supabase/database.types";
 // en una sola transacción Postgres vía approve_edit_request().
 export async function POST(
   _request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const guard = await requireAdmin();
   if (guard.error) return guard.error;
@@ -21,17 +21,23 @@ export async function POST(
 
   // Transacción atómica: aplica corrección en activity_logs + marca como aprobada.
   // SELECT FOR UPDATE dentro de la función previene aprobaciones dobles concurrentes.
-  const { data: approvedRequest, error: txError } = await supabase
-    .rpc("approve_edit_request", {
+  const { data: approvedRequest, error: txError } = await supabase.rpc(
+    "approve_edit_request",
+    {
       p_request_id: id,
       p_reviewer_id: guard.user.id,
-    });
+    },
+  );
 
   if (txError || !approvedRequest) {
     const isNotFound = txError?.message === "edit_request_not_found";
     return NextResponse.json(
-      { error: isNotFound ? "Solicitud no encontrada o ya fue procesada" : "Error al aprobar solicitud" },
-      { status: isNotFound ? 404 : 500 }
+      {
+        error: isNotFound
+          ? "Solicitud no encontrada o ya fue procesada"
+          : "Error al aprobar solicitud",
+      },
+      { status: isNotFound ? 404 : 500 },
     );
   }
 
@@ -79,6 +85,6 @@ export async function POST(
 
   return NextResponse.json(
     { message: "Solicitud aprobada correctamente", data: approved },
-    { status: 200 }
+    { status: 200 },
   );
 }

@@ -86,7 +86,7 @@ const TaskSubtypesOrder = ({ taskTypes }: TaskSubtypesOrderProps) => {
   };
 
   return (
-    <div className="mt-10">
+    <div className="mt-5">
       {/* Selector de cargo */}
       <div className="flex flex-wrap gap-2 mb-6">
         {taskTypes.map((tt) => (
