@@ -25,6 +25,7 @@ export interface User {
   created_at: string; // timestamptz -> ISO string
   phone: string | null;
   client_id: string | null; // uuid, solo presente cuando role === 'client'
+  task_type_id: string;
 }
 
 export const formatDate = (date: string | null) => {
@@ -1024,6 +1025,38 @@ export type TaskSubtype = {
   name: string;
   active: boolean;
 };
+
+export function useOrderedTaskSubtypes() {
+  const [orderedSubtypes, setOrderedSubtypes] = useState<any[]>([]);
+  const [loadingOrderedSubtypes, setLoadingOrderedSubtypes] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchOrderedSubtypes = async () => {
+      setLoadingOrderedSubtypes(true);
+      try {
+        const supabase = createClient();
+
+        const { data, error } = await supabase
+          .from("task_type_subtypes_order")
+          .select("priority, task_subtypes(*)")
+          .order("priority");
+
+        if (error) throw error;
+
+        setOrderedSubtypes((data ?? []).map((row) => row.task_subtypes));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoadingOrderedSubtypes(false);
+      }
+    };
+
+    fetchOrderedSubtypes();
+  }, []);
+
+  return { orderedSubtypes, loadingOrderedSubtypes, error };
+}
 
 export function useTaskSubtypesConfig() {
   const [subtypes, setSubtypes] = useState<TaskSubtype[]>([]);

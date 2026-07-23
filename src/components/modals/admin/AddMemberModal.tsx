@@ -1,4 +1,5 @@
 import Modal from "@/components/modals/Modal";
+import { useTaskTypes } from "@/hooks/middleware";
 import { useFormik } from "formik";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -8,7 +9,7 @@ type AddMemberFormValues = {
   email: string;
   password: string;
   phone: string;
-  position: string;
+  task_type_id: string;
 };
 
 export const addMemberSchema = z.object({
@@ -21,8 +22,8 @@ export const addMemberSchema = z.object({
     .string()
     .min(1, "El email es obligatorio")
     .email("Ingresa un email válido"),
-
   password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
+  task_type_id: z.string().min(1, "Selecciona un cargo"),
 });
 
 const validate = (values: AddMemberFormValues) => {
@@ -48,13 +49,15 @@ const AddMemberModal = ({
   onClose: () => void;
   onSuccess?: () => void;
 }) => {
+  const { tasks } = useTaskTypes();
+
   const formik = useFormik<AddMemberFormValues>({
     initialValues: {
       name: "",
       email: "",
       password: "",
       phone: "",
-      position: "",
+      task_type_id: "",
     },
 
     validate,
@@ -70,12 +73,14 @@ const AddMemberModal = ({
           email: values.email,
           password: values.password,
           phone: values.phone || null,
-          position: values.position || null,
+          task_type_id: values.task_type_id,
         }),
       });
 
       if (!response.ok) {
-        const body = await response.json().catch(() => ({ error: "Error desconocido" }));
+        const body = await response
+          .json()
+          .catch(() => ({ error: "Error desconocido" }));
         toast.error("No se pudo crear el integrante", {
           description: body.error ?? "Error desconocido",
         });
@@ -148,7 +153,7 @@ const AddMemberModal = ({
 
           <div>
             <label
-              htmlFor="role"
+              htmlFor="password"
               className="block text-sm font-medium text-azul-kurve mb-2"
             >
               Contraseña
@@ -190,20 +195,31 @@ const AddMemberModal = ({
 
             <div>
               <label
-                htmlFor="position"
+                htmlFor="task_type_id"
                 className="block text-sm font-medium text-azul-kurve mb-2"
               >
-                Cargo / especialidad
+                Cargo
               </label>
-              <input
-                type="text"
-                id="position"
-                placeholder="Ej: Community Manager"
-                value={formik.values.position}
+              <select
+                id="task_type_id"
+                name="task_type_id"
+                value={formik.values.task_type_id}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 className="w-full h-11 px-3 rounded-lg border border-slate-300 bg-white text-sm outline-none focus:ring-1 focus:ring-verde-kurve"
-              />
+              >
+                <option value="">Selecciona el cargo</option>
+                {tasks.map((cargo) => (
+                  <option key={cargo.id} value={cargo.id}>
+                    {cargo.name}
+                  </option>
+                ))}
+              </select>
+              {formik.touched.task_type_id && formik.errors.task_type_id && (
+                <p className="mt-1 text-xs text-red-500">
+                  {formik.errors.task_type_id}
+                </p>
+              )}
             </div>
           </div>
 

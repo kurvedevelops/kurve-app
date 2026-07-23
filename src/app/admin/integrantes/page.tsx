@@ -12,7 +12,12 @@ import {
 import AddMemberModal from "@/components/modals/admin/AddMemberModal";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { deleteMember, getInitials, useMembers } from "@/hooks/middleware";
+import {
+  deleteMember,
+  getInitials,
+  useMembers,
+  useTaskTypes,
+} from "@/hooks/middleware";
 import { ConfirmDeleteModal } from "@/components/modals/BorrarEntidadModal";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -27,7 +32,7 @@ export interface Member {
   email: string;
   role: string;
   phone: string;
-  position: string | null;
+  task_type_id: string | null;
   active: boolean;
   created_at: string;
 }
@@ -44,7 +49,7 @@ export async function editMember(
       full_name: data.full_name,
       email: data.email,
       phone: data.phone,
-      position: data.position || null,
+      task_type_id: data.task_type_id,
       created_at: data.fechaAlta,
     })
     .eq("id", memberId);
@@ -62,6 +67,7 @@ const MembersPage = () => {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
   const { members, loadingMembers, refetchMembers } = useMembers();
+  const { tasks } = useTaskTypes();
 
   const searchedMembers = members.filter((c) => {
     const matchesSearch = c.full_name
@@ -237,12 +243,17 @@ const MembersPage = () => {
                           </div>
                         </TableCell>
                         <TableCell className="px-4 py-6 text-sm">
-                          {member.email ? member.email : "No especificado"}
+                          {member.email ? member.email : "-"}
                         </TableCell>
                         <TableCell className="px-4 py-6 text-sm">
-                          {member.phone ? member.phone : "No especificado"}
+                          {member.phone ? member.phone : "-"}
                         </TableCell>
-                        <TableCell className="px-4 py-6 text-sm">/</TableCell>
+                        <TableCell className="px-4 py-6 text-sm">
+                          {member.task_type_id
+                            ? tasks.find((t) => t.id === member.task_type_id)
+                                ?.name
+                            : "-"}
+                        </TableCell>
                         <TableCell className="px-4 py-6 text-sm">
                           {member.active === true ? (
                             <span className="inline-flex items-center gap-1.5 bg-verde-kurve/10 text-verde-kurve text-xs font-medium px-2.5 py-1 rounded-full">

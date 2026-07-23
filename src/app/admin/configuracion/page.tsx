@@ -4,6 +4,7 @@ import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import TaskTypesTable from "@/components/admin/TaskTypeTable";
 import TaskSubtypesTable from "@/components/admin/TaskSubtypesTable";
+import TaskSubtypesOrder from "@/components/admin/TaskSubtypesOrder";
 import {
   useTaskTypesConfig,
   useTaskSubtypesConfig,
@@ -12,6 +13,8 @@ import CambiarContraseñaAdmin from "@/components/admin/CambiarContraseñaAdmin"
 
 const ConfigurationPage = () => {
   const { tasks, loadingTasks, updateTask, addTask } = useTaskTypesConfig();
+
+  const activeTasks = tasks.filter((t) => t.active);
   const { subtypes, loadingSubtypes, updateSubtype, addSubtype } =
     useTaskSubtypesConfig();
 
@@ -59,6 +62,13 @@ const ConfigurationPage = () => {
               </TabsTrigger>
 
               <TabsTrigger
+                value="orden"
+                className="text-xl font-bold text-gray-300 cursor-pointer pb-4"
+              >
+                Orden por cargo
+              </TabsTrigger>
+
+              <TabsTrigger
                 value="cuenta"
                 className="text-xl font-bold text-gray-300 cursor-pointer pb-4"
               >
@@ -90,6 +100,15 @@ const ConfigurationPage = () => {
                 />
               )}
             </TabsContent>
+
+            <TabsContent value="orden">
+              {loadingTasks ? (
+                <p className="text-sm text-gray-400 mt-10 ml-4">Cargando...</p>
+              ) : (
+                <TaskSubtypesOrder taskTypes={activeTasks} />
+              )}
+            </TabsContent>
+
             <TabsContent value="cuenta">
               <CambiarContraseñaAdmin />
             </TabsContent>
