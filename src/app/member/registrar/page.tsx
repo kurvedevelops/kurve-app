@@ -6,12 +6,12 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Clock, Plus, MessageSquare } from "lucide-react";
 import {
-  usePieceCategories,
   useClients,
   useClientsByUser,
   useCurrentUser,
   useTaskTypes,
   useActivityLogs,
+  useOrderedTaskSubtypes,
   useTaskSubtypesConfig,
 } from "@/hooks/middleware";
 import { createClient } from "@/lib/supabase/client";
@@ -61,12 +61,9 @@ const RegistrarHorasPage = () => {
   const { clients, loadingClients } = useClients();
   const { clientsId, loadingClientsId } = useClientsByUser(user?.id || "");
   const { tasks, loadingTasks } = useTaskTypes();
-  const { activityLogs, loadingActivityLogs, refetchActivityLogs } = useActivityLogs(user?.id || "");
-  const { subtypes, loadingSubtypes } = useTaskSubtypesConfig();
-
-  const communityManagementId = tasks.find(
-    (t) => t.name === "Community management",
-  )?.id;
+  const { activityLogs, loadingActivityLogs, refetchActivityLogs } =
+    useActivityLogs(user?.id || "");
+  const { orderedSubtypes, loadingOrderedSubtypes } = useOrderedTaskSubtypes();
 
   const userClients = clients.filter((client) =>
     clientsId.some((item) => item.client_id === client.id),
@@ -141,7 +138,7 @@ const RegistrarHorasPage = () => {
   const formik = useFormik({
     initialValues: {
       client_id: "",
-      task_type_id: "",
+      task_type_id: user?.task_type_id ?? "",
       log_date: new Date().toISOString().split("T")[0],
       hours: 0,
       is_publication: false,
@@ -149,6 +146,7 @@ const RegistrarHorasPage = () => {
       pieces_count: 0,
       notes: "",
     },
+    enableReinitialize: true,
     validationSchema: registroSchema,
     onSubmit: async (values, { setSubmitting, resetForm, setStatus }) => {
       if (!user?.id) {
@@ -337,34 +335,12 @@ const RegistrarHorasPage = () => {
                 {/* Tarea */}
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-semibold text-foreground">
-                    Rol
+                    Cargo
                   </label>
-                  <select
-                    name="task_type_id"
-                    value={formik.values.task_type_id}
-                    onChange={(e) => {
-                      formik.handleChange(e);
-                      if (e.target.value !== communityManagementId) {
-                        formik.setFieldValue("pieces_count", 0);
-                        formik.setFieldValue("category_id", "");
-                      }
-                    }}
-                    onBlur={formik.handleBlur}
-                    className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
-                  >
-                    <option value="">Selecciona tu rol</option>
-                    {tasks.map((tarea) => (
-                      <option key={tarea.id} value={tarea.id}>
-                        {tarea.name}
-                      </option>
-                    ))}
-                  </select>
-                  {formik.touched.task_type_id &&
-                    formik.errors.task_type_id && (
-                      <p className="text-xs text-red-500">
-                        {formik.errors.task_type_id}
-                      </p>
-                    )}
+                  <div className="px-2 py-2.5 border border-border rounded-lg bg-muted text-foreground">
+                    {tasks.find((t) => t.id === user?.task_type_id)?.name ??
+                      "Sin cargo asignado"}
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-2">
@@ -379,7 +355,7 @@ const RegistrarHorasPage = () => {
                     className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
                   >
                     <option value="">Selecciona una tarea</option>
-                    {subtypes.map((subtype) => (
+                    {orderedSubtypes.map((subtype) => (
                       <option key={subtype.id} value={subtype.id}>
                         {subtype.name}
                       </option>

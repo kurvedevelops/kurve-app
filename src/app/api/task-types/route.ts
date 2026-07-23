@@ -5,19 +5,33 @@ import { requireAdmin } from "@/lib/supabase/guard";
 
 const createTaskTypeSchema = z.object({
   name: z.string().min(2).max(100),
-  counts_as_piece: z.boolean().default(false),
-  allowed_roles: z
-    .array(z.enum(["admin", "member", "client"]))
-    .default(["admin", "member"]),
   active: z.boolean().default(true),
 });
 
-// GET /api/task-types — lista todos (activos e inactivos), solo admin
+// GET /api/task-types
 export async function GET() {
-  const guard = await requireAdmin();
-  if (guard.error) return guard.error;
-
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  }
+
+  const { data: profile } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile) {
+    return NextResponse.json(
+      { error: "Usuario no encontrado" },
+      { status: 404 },
+    );
+  }
 
   const { data, error } = await supabase
     .from("task_types")
@@ -27,7 +41,7 @@ export async function GET() {
   if (error) {
     return NextResponse.json(
       { error: "Error al obtener tipos de tarea" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -47,11 +61,10 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Datos inválidos", details: parsed.error.flatten() },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
-  // Verificar nombre duplicado
   const { data: existing } = await supabase
     .from("task_types")
     .select("id")
@@ -61,7 +74,7 @@ export async function POST(request: Request) {
   if (existing) {
     return NextResponse.json(
       { error: "Ya existe un tipo de tarea con ese nombre" },
-      { status: 409 }
+      { status: 409 },
     );
   }
 
@@ -69,8 +82,6 @@ export async function POST(request: Request) {
     .from("task_types")
     .insert({
       name: parsed.data.name,
-      counts_as_piece: parsed.data.counts_as_piece,
-      allowed_roles: parsed.data.allowed_roles,
       active: parsed.data.active,
     })
     .select()
@@ -79,12 +90,12 @@ export async function POST(request: Request) {
   if (error || !data) {
     return NextResponse.json(
       { error: "Error al crear tipo de tarea" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
   return NextResponse.json(
     { message: "Tipo de tarea creado correctamente", data },
-    { status: 201 }
+    { status: 201 },
   );
 }

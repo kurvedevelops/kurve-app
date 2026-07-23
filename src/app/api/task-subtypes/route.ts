@@ -4,37 +4,26 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/supabase/guard";
 
 const createSubtypeSchema = z.object({
-  task_type_id: z.string().uuid(),
   name: z.string().min(2).max(100),
   active: z.boolean().default(true),
-  display_order: z.number().int().min(0).default(0),
 });
 
-// GET /api/task-subtypes?task_type_id=uuid — listar subtareas
-export async function GET(request: Request) {
+// GET /api/task-subtypes — listar el catálogo completo de subtareas
+export async function GET() {
   const guard = await requireAdmin();
   if (guard.error) return guard.error;
 
   const supabase = await createClient();
 
-  const { searchParams } = new URL(request.url);
-  const taskTypeId = searchParams.get("task_type_id");
-
-  let query = supabase
+  const { data, error } = await supabase
     .from("task_subtypes")
     .select("*")
-    .order("display_order", { ascending: true });
-
-  if (taskTypeId) {
-    query = query.eq("task_type_id", taskTypeId);
-  }
-
-  const { data, error } = await query;
+    .order("created_at", { ascending: true });
 
   if (error) {
     return NextResponse.json(
       { error: "Error al obtener subtareas" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -42,6 +31,9 @@ export async function GET(request: Request) {
 }
 
 // POST /api/task-subtypes — crear subtarea, solo admin
+// Ya no recibe task_type_id ni display_order: es una tarea del catálogo
+// general. El orden por cargo se define aparte en
+// /api/task-types/[id]/subtypes-order.
 export async function POST(request: Request) {
   const guard = await requireAdmin();
   if (guard.error) return guard.error;
@@ -54,31 +46,28 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Datos inválidos", details: parsed.error.flatten() },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
-  // Verificar que el task_type existe
-  const { data: taskType, error: taskTypeError } = await supabase
-    .from("task_types")
+  const { data: existing } = await supabase
+    .from("task_subtypes")
     .select("id")
-    .eq("id", parsed.data.task_type_id)
-    .single();
+    .ilike("name", parsed.data.name)
+    .maybeSingle();
 
-  if (taskTypeError || !taskType) {
+  if (existing) {
     return NextResponse.json(
-      { error: "Tipo de tarea no encontrado" },
-      { status: 404 }
+      { error: "Ya existe una subtarea con ese nombre" },
+      { status: 409 },
     );
   }
 
   const { data, error } = await supabase
     .from("task_subtypes")
     .insert({
-      task_type_id: parsed.data.task_type_id,
       name: parsed.data.name,
       active: parsed.data.active,
-      display_order: parsed.data.display_order,
     })
     .select()
     .single();
@@ -86,12 +75,12 @@ export async function POST(request: Request) {
   if (error || !data) {
     return NextResponse.json(
       { error: "Error al crear subtarea" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
   return NextResponse.json(
     { message: "Subtarea creada correctamente", data },
-    { status: 201 }
+    { status: 201 },
   );
 }

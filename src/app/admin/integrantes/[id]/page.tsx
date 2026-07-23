@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight, UserMinus, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link2, User, Plus } from "lucide-react";
+import { useTaskTypes } from "@/hooks/middleware";
 import {
   assignClientToUser,
   deleteMember,
@@ -35,6 +36,10 @@ const MemberDetail = () => {
     clientIds.includes(client.id),
   );
   const [selectedClientId, setSelectedClientId] = useState("");
+  const { tasks } = useTaskTypes();
+  const cargoNombre = tasks.find(
+    (t) => t.id === memberDetail?.task_type_id,
+  )?.name;
 
   const clientesLibres = clients.filter(
     (client) => !clientIds.includes(client.id),
@@ -92,9 +97,9 @@ const MemberDetail = () => {
       body: JSON.stringify({
         full_name: data.full_name,
         phone: data.phone || null,
-        position: data.position || null,
+        task_type_id: data.task_type_id || null,
         client_ids: data.client_ids ?? [],
-        ...(data.password ? { password: data.password } : {}), // ← agregar
+        ...(data.password ? { password: data.password } : {}),
       }),
     });
 
@@ -145,7 +150,7 @@ const MemberDetail = () => {
               <div className="flex gap-4">
                 <p className="text-gray-600 text-xs">
                   <span className="text-xs font-semibold">Cargo: </span>
-                  {memberDetail?.position || "Sin especificar"}
+                  {cargoNombre || "Sin especificar"}
                 </p>
                 <p className="text-gray-600 text-xs">
                   <span className="text-xs font-semibold">Email: </span>
