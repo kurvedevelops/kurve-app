@@ -89,6 +89,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "activity_logs_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "v_client_consumption"
+            referencedColumns: ["package_id"]
+          },
+          {
+            foreignKeyName: "activity_logs_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "v_consumption_by_task_type"
+            referencedColumns: ["package_id"]
+          },
+          {
             foreignKeyName: "activity_logs_subtype_id_fkey"
             columns: ["subtype_id"]
             isOneToOne: false
@@ -345,6 +359,45 @@ export type Database = {
           },
         ]
       }
+      member_task_subtypes: {
+        Row: {
+          created_at: string
+          id: string
+          priority: number
+          task_subtype_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          priority: number
+          task_subtype_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          priority?: number
+          task_subtype_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_task_subtypes_task_subtype_id_fkey"
+            columns: ["task_subtype_id"]
+            isOneToOne: false
+            referencedRelation: "task_subtypes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_task_subtypes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           channel: Database["public"]["Enums"]["notification_channel"]
@@ -439,7 +492,7 @@ export type Database = {
       packages: {
         Row: {
           block_on_limit: boolean
-          client_id: string
+          client_id: string | null
           created_at: string
           end_date: string | null
           id: string
@@ -452,7 +505,7 @@ export type Database = {
         }
         Insert: {
           block_on_limit?: boolean
-          client_id: string
+          client_id?: string | null
           created_at?: string
           end_date?: string | null
           id?: string
@@ -465,7 +518,7 @@ export type Database = {
         }
         Update: {
           block_on_limit?: boolean
-          client_id?: string
+          client_id?: string | null
           created_at?: string
           end_date?: string | null
           id?: string
@@ -511,33 +564,58 @@ export type Database = {
         Row: {
           active: boolean
           created_at: string
-          display_order: number
           id: string
           name: string
-          task_type_id: string | null
           updated_at: string
         }
         Insert: {
           active?: boolean
           created_at?: string
-          display_order?: number
           id?: string
           name: string
-          task_type_id?: string | null
           updated_at?: string
         }
         Update: {
           active?: boolean
           created_at?: string
-          display_order?: number
           id?: string
           name?: string
-          task_type_id?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      task_type_subtypes_order: {
+        Row: {
+          created_at: string
+          id: string
+          priority: number
+          task_subtype_id: string
+          task_type_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          priority: number
+          task_subtype_id: string
+          task_type_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          priority?: number
+          task_subtype_id?: string
+          task_type_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "task_subtypes_task_type_id_fkey"
+            foreignKeyName: "task_type_subtypes_order_task_subtype_id_fkey"
+            columns: ["task_subtype_id"]
+            isOneToOne: false
+            referencedRelation: "task_subtypes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_type_subtypes_order_task_type_id_fkey"
             columns: ["task_type_id"]
             isOneToOne: false
             referencedRelation: "task_types"
@@ -548,24 +626,18 @@ export type Database = {
       task_types: {
         Row: {
           active: boolean
-          allowed_roles: Database["public"]["Enums"]["user_role"][]
-          counts_as_piece: boolean
           created_at: string
           id: string
           name: string
         }
         Insert: {
           active?: boolean
-          allowed_roles?: Database["public"]["Enums"]["user_role"][]
-          counts_as_piece?: boolean
           created_at?: string
           id?: string
           name: string
         }
         Update: {
           active?: boolean
-          allowed_roles?: Database["public"]["Enums"]["user_role"][]
-          counts_as_piece?: boolean
           created_at?: string
           id?: string
           name?: string
@@ -581,8 +653,8 @@ export type Database = {
           full_name: string
           id: string
           phone: string | null
-          position: string | null
           role: Database["public"]["Enums"]["user_role"]
+          task_type_id: string | null
         }
         Insert: {
           active?: boolean
@@ -592,8 +664,8 @@ export type Database = {
           full_name?: string
           id: string
           phone?: string | null
-          position?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          task_type_id?: string | null
         }
         Update: {
           active?: boolean
@@ -603,8 +675,8 @@ export type Database = {
           full_name?: string
           id?: string
           phone?: string | null
-          position?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          task_type_id?: string | null
         }
         Relationships: [
           {
@@ -612,6 +684,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "users_task_type_id_fkey"
+            columns: ["task_type_id"]
+            isOneToOne: false
+            referencedRelation: "task_types"
             referencedColumns: ["id"]
           },
         ]
@@ -677,14 +756,14 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
       }
-      recalculate_package_consumption: {
-        Args: { p_package_id: string }
-        Returns: undefined
-      }
       get_active_package_id: { Args: { p_client_id: string }; Returns: string }
       get_my_client_ids: { Args: never; Returns: string[] }
       recalculate_client_consumption: {
         Args: { p_client_id: string }
+        Returns: undefined
+      }
+      recalculate_package_consumption: {
+        Args: { p_package_id: string }
         Returns: undefined
       }
     }

@@ -10,7 +10,7 @@ const createMemberSchema = z.object({
   password: z.string().min(6),
   client_ids: z.array(z.string().uuid()).optional().default([]),
   phone: z.string().max(50).optional().nullable(),
-  position: z.string().max(100).optional().nullable(),
+  task_type_id: z.string().uuid(),
 });
 
 // GET /api/members
@@ -36,7 +36,7 @@ export async function GET() {
       {
         error: "Error al obtener integrantes",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -45,7 +45,7 @@ export async function GET() {
     {
       data: members,
     },
-    { status: 200 }
+    { status: 200 },
   );
 }
 
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
         error: "Datos inválidos",
         details: parsed.error.flatten(),
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
     if (existingUser.active) {
       return NextResponse.json(
         { error: "Ya existe un integrante activo con ese email" },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -98,17 +98,24 @@ export async function POST(request: Request) {
         role: "member",
         active: true,
         phone: parsed.data.phone ?? null,
-        position: parsed.data.position ?? null,
+        task_type_id: parsed.data.task_type_id,
       })
       .eq("id", existingUser.id)
       .select()
       .single();
 
     if (reactivateError) {
-      console.error("Error al reactivar integrante:", reactivateError.message, reactivateError);
+      console.error(
+        "Error al reactivar integrante:",
+        reactivateError.message,
+        reactivateError,
+      );
       return NextResponse.json(
-        { error: "Error al reactivar integrante", detail: reactivateError.message },
-        { status: 500 }
+        {
+          error: "Error al reactivar integrante",
+          detail: reactivateError.message,
+        },
+        { status: 500 },
       );
     }
 
@@ -120,23 +127,30 @@ export async function POST(request: Request) {
         client_id: clientId,
         user_id: existingUser.id,
       }));
-      const { error: assignError } = await supabase.from("client_users").insert(rows);
+      const { error: assignError } = await supabase
+        .from("client_users")
+        .insert(rows);
       if (assignError) {
-        console.error("Error al reasignar clientes:", assignError.message, assignError);
+        console.error(
+          "Error al reasignar clientes:",
+          assignError.message,
+          assignError,
+        );
         return NextResponse.json(
           {
-            error: "El integrante se reactivó pero no se pudieron asignar los clientes. Asignalos desde el detalle.",
+            error:
+              "El integrante se reactivó pero no se pudieron asignar los clientes. Asignalos desde el detalle.",
             detail: assignError.message,
             data: reactivated,
           },
-          { status: 207 }
+          { status: 207 },
         );
       }
     }
 
     return NextResponse.json(
       { message: "Integrante reactivado correctamente", data: reactivated },
-      { status: 200 }
+      { status: 200 },
     );
   }
 
@@ -150,12 +164,16 @@ export async function POST(request: Request) {
 
   // Manejar error auth
   if (authError || !authUser.user) {
-    console.error("Error al crear usuario en Auth:", authError?.message, authError);
+    console.error(
+      "Error al crear usuario en Auth:",
+      authError?.message,
+      authError,
+    );
     return NextResponse.json(
       {
         error: "Error al crear usuario en Auth",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -169,7 +187,7 @@ export async function POST(request: Request) {
       role: "member",
       active: true,
       phone: parsed.data.phone ?? null,
-      position: parsed.data.position ?? null,
+      task_type_id: parsed.data.task_type_id,
     })
     .eq("id", authUser.user.id)
     .select()
@@ -177,13 +195,17 @@ export async function POST(request: Request) {
 
   // Manejar error DB
   if (insertError) {
-    console.error("Error al actualizar integrante en users:", insertError.message, insertError);
+    console.error(
+      "Error al actualizar integrante en users:",
+      insertError.message,
+      insertError,
+    );
     return NextResponse.json(
       {
         error: "Error al crear integrante",
         detail: insertError.message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -199,16 +221,21 @@ export async function POST(request: Request) {
       .insert(rows);
 
     if (assignError) {
-      console.error("Error al asignar clientes al integrante:", assignError.message, assignError);
+      console.error(
+        "Error al asignar clientes al integrante:",
+        assignError.message,
+        assignError,
+      );
       // El integrante ya se creó correctamente. Informamos el éxito parcial
       // para que el admin pueda asignar los clientes desde el detalle.
       return NextResponse.json(
         {
-          error: "El integrante se creó pero no se pudieron asignar los clientes. Asignalos desde el detalle del integrante.",
+          error:
+            "El integrante se creó pero no se pudieron asignar los clientes. Asignalos desde el detalle del integrante.",
           detail: assignError.message,
           data: member,
         },
-        { status: 207 }
+        { status: 207 },
       );
     }
   }
@@ -219,6 +246,6 @@ export async function POST(request: Request) {
       message: "Integrante creado correctamente",
       data: member,
     },
-    { status: 201 }
+    { status: 201 },
   );
 }
