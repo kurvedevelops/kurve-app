@@ -132,9 +132,9 @@ const ClientesPage = () => {
   const { clients, loadingClients, refetchClients } = useClients();
   const { packages, loadingPackages } = usePackages();
   const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "paused">(
-    "all",
-  );
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "paused" | "ended"
+  >("all");
   const [openStatusDropdown, setOpenStatusDropdown] = useState(false);
 
   const [showNuevoClienteModal, setShowNuevoClienteModal] = useState(false);
@@ -144,17 +144,24 @@ const ClientesPage = () => {
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  type ActiveClient = Omit<Client, "status"> & { status: "active" | "paused" };
+  type ActiveClient = Omit<Client, "status"> & {
+    status: "active" | "paused" | "ended";
+  };
+
 
   const filteredClients = clients.filter(
-    (c): c is ActiveClient => c.status === "active" || c.status === "paused",
+    (c): c is ActiveClient =>
+      c.status === "active" || c.status === "paused" || c.status === "ended",
   );
 
-  const searchedClients = filteredClients.filter((c) => {
-    const matchesSearch = c.name.toLowerCase().includes(query.toLowerCase());
-    const matchesStatus = statusFilter === "all" || c.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+const searchedClients = filteredClients.filter((c) => {
+  const matchesSearch = c.name.toLowerCase().includes(query.toLowerCase());
+  const matchesStatus =
+    statusFilter === "all"
+      ? c.status !== "ended"
+      : c.status === statusFilter;
+  return matchesSearch && matchesStatus;
+});
 
   const [deleteConfirm, setDeleteConfirm] = useState<{
     open: boolean;
@@ -190,7 +197,6 @@ const ClientesPage = () => {
     }
   };
 
-
   const handleOpenEditModal = (client: Client) => {
     setSelectedClient(client);
     setShowEditarClienteModal(true);
@@ -221,6 +227,7 @@ const ClientesPage = () => {
     all: "Todos los estados",
     active: "Activos",
     paused: "Pausados",
+    ended: "Inactivo",
   };
 
   return (
@@ -266,7 +273,9 @@ const ClientesPage = () => {
                       <button
                         key={value}
                         onClick={() => {
-                          setStatusFilter(value as "all" | "active" | "paused");
+                          setStatusFilter(
+                            value as "all" | "active" | "paused" | "ended",
+                          );
                           setOpenStatusDropdown(false);
                         }}
                         className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
@@ -377,6 +386,11 @@ const ClientesPage = () => {
                             <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
                             Pausado
                           </span>
+                        ) : client.status === "ended" ? (
+                          <span className="inline-flex items-center gap-1.5 bg-red-500/10 text-red-500 text-xs font-medium px-2.5 py-1 rounded-full">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                            Inactivo
+                          </span>
                         ) : null}
                       </td>
                       <td className="py-3.5">
@@ -427,7 +441,10 @@ const ClientesPage = () => {
       <NuevoClienteModal
         open={showNuevoClienteModal}
         onClose={() => setShowNuevoClienteModal(false)}
-        onSuccess={() => { setShowNuevoClienteModal(false); refetchClients(); }}
+        onSuccess={() => {
+          setShowNuevoClienteModal(false);
+          refetchClients();
+        }}
       />
 
       {/* Modal editar cliente */}

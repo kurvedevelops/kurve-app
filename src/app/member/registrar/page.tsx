@@ -64,6 +64,8 @@ const RegistrarHorasPage = () => {
   const { activityLogs, loadingActivityLogs, refetchActivityLogs } = useActivityLogs(user?.id || "");
   const { subtypes, loadingSubtypes } = useTaskSubtypesConfig();
 
+  console.log("actividades",activityLogs )
+
   const communityManagementId = tasks.find(
     (t) => t.name === "Community management",
   )?.id;
@@ -148,6 +150,7 @@ const RegistrarHorasPage = () => {
       subtype_id: "",
       pieces_count: 0,
       notes: "",
+      package_id: "",
     },
     validationSchema: registroSchema,
     onSubmit: async (values, { setSubmitting, resetForm, setStatus }) => {
@@ -167,6 +170,7 @@ const RegistrarHorasPage = () => {
           hours: values.hours,
           pieces_count: values.pieces_count,
           notes: values.notes || null,
+          package_id: values.package_id || null,
         });
 
         if (error) throw error;
@@ -236,6 +240,31 @@ const RegistrarHorasPage = () => {
       localStorage.removeItem("activity_draft");
     }
   }, []);
+
+useEffect(() => {
+  const fetchActivePackage = async () => {
+    if (!formik.values.client_id) {
+      formik.setFieldValue("package_id", "");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/clients/${formik.values.client_id}/active-package`);
+      console.log("Status del endpoint:", res.status); // 👈 nuevo
+      if (!res.ok) {
+        formik.setFieldValue("package_id", "");
+        return;
+      }
+      const data = await res.json();
+      console.log("Data recibida:", data); // 👈 nuevo
+      formik.setFieldValue("package_id", data.id ?? "");
+    } catch (err) {
+      console.error("Error al traer paquete activo:", err);
+      formik.setFieldValue("package_id", "");
+    }
+  };
+
+  fetchActivePackage();
+}, [formik.values.client_id]);
 
   return (
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
