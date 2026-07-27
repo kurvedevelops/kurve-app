@@ -16,7 +16,7 @@ import {
 } from "@/hooks/middleware";
 import { createClient } from "@/lib/supabase/client";
 import Swal from "sweetalert2";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const registroSchema = Yup.object().shape({
@@ -64,6 +64,8 @@ const RegistrarHorasPage = () => {
   const { activityLogs, loadingActivityLogs, refetchActivityLogs } =
     useActivityLogs(user?.id || "");
   const { orderedSubtypes, loadingOrderedSubtypes } = useOrderedTaskSubtypes();
+  const [activePackages, setActivePackages] = useState<any[]>([]);
+
 
   const userClients = clients.filter((client) =>
     clientsId.some((item) => item.client_id === client.id),
@@ -150,6 +152,7 @@ const RegistrarHorasPage = () => {
     enableReinitialize: true,
     validationSchema: registroSchema,
     onSubmit: async (values, { setSubmitting, resetForm, setStatus }) => {
+      console.log("package_id antes de insertar:", values.package_id);
       if (!user?.id) {
         setStatus({ error: "Usuario no autenticado" });
         setSubmitting(false);
@@ -238,29 +241,40 @@ const RegistrarHorasPage = () => {
   }, []);
 
 useEffect(() => {
-  const fetchActivePackage = async () => {
+  const fetchActivePackages = async () => {
     if (!formik.values.client_id) {
+      setActivePackages([]);
       formik.setFieldValue("package_id", "");
       return;
     }
     try {
       const res = await fetch(`/api/clients/${formik.values.client_id}/active-package`);
-      console.log("Status del endpoint:", res.status); // 👈 nuevo
       if (!res.ok) {
+        setActivePackages([]);
         formik.setFieldValue("package_id", "");
         return;
       }
-      const data = await res.json();
-      console.log("Data recibida:", data); // 👈 nuevo
-      formik.setFieldValue("package_id", data.id ?? "");
+
+      const json = await res.json();
+      const packages = json.data ?? [];
+
+      setActivePackages(packages);
+
+      if (packages.length === 1) {
+        formik.setFieldValue("package_id", packages[0].package_id);
+      } else {
+        formik.setFieldValue("package_id", "");
+      }
     } catch (err) {
-      console.error("Error al traer paquete activo:", err);
+      console.error("Error al traer paquetes activos:", err);
+      setActivePackages([]);
       formik.setFieldValue("package_id", "");
     }
   };
 
-  fetchActivePackage();
+  fetchActivePackages();
 }, [formik.values.client_id]);
+
 
   return (
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
