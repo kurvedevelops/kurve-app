@@ -55,7 +55,7 @@ const PackageSummaryCard = ({
   }
   const status = statusStyles[clientPackage.status];
   return (
-    <div className="rounded-3xl border border-border bg-white p-6 shadow-sm h-full">
+    <div className="rounded-3xl border border-border bg-white p-6 shadow-sm">
       <div className="flex items-center gap-3">
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-verde-kurve/10">
           <Package className="h-6 w-6 text-verde-kurve-dark" />
@@ -72,7 +72,7 @@ const PackageSummaryCard = ({
         </div>
       </div>
 
-      <div className="rounded-2xl bg-muted/30 py-4 flex justify-between items-center text-center">
+      <div className="rounded-2xl py-4 flex justify-between items-center text-center">
         <h3 className="text-xl font-bold">{clientPackage.name}</h3>
 
         <div

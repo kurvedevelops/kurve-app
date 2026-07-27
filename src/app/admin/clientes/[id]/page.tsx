@@ -20,6 +20,7 @@ import {
   usePackageConsumption,
   ClientLink,
   deletePackage,
+  useClientConsumptionByTaskType,
 } from "@/hooks/middleware";
 import { linkTypeConfig } from "@/lib/linkTypeConfig";
 import {
@@ -308,7 +309,7 @@ const ClientDetailPage = () => {
               )}
             </div>
           ) : (
-            <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
               <ConsumptionChart clientId={clientId} />
               <ConsumptionPackageSection clientId={clientId} />
             </div>

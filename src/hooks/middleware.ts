@@ -561,6 +561,52 @@ export function usePackageConsumption(clientId: string) {
   };
 }
 
+export interface ConsumptionByTaskType {
+  client_id: string;
+  package_id: string;
+  subtype_id: string;
+  task_name: string;
+  consumed_hours: number;
+  percent_of_total: number;
+}
+
+export function useClientConsumptionByTaskType(clientId: string) {
+  const [consumptionByTask, setConsumptionByTask] = useState<
+    ConsumptionByTaskType[] | undefined
+  >();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!clientId) return;
+  });
+
+  useEffect(() => {
+    const fetchConsumptionByTask = async () => {
+      setLoading(true);
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("v_consumption_by_task_type")
+          .select("*")
+          .eq("client_id", clientId)
+          .order("consumed_hours", { ascending: false });
+
+        if (error) throw error;
+
+        setConsumptionByTask(data as ConsumptionByTaskType[]);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchConsumptionByTask();
+  }, [clientId]);
+
+  return { consumptionByTask, loading };
+}
+
 export function useTaskTypes() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [loadingTasks, setLoadingTasks] = useState(true);
@@ -717,6 +763,7 @@ export function useActivityLogsForRequests() {
             *,
             users (id, full_name),
             task_types ( id, name ),
+            task_subtypes (id, name),
             clients ( id, name ),
             piece_categories ( id, name )
           `,
