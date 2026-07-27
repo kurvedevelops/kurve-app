@@ -22,7 +22,7 @@ const ConfigurationPage = () => {
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
       <SidebarAdmin />
       <main className="flex-1 md:ml-47 lg:ml-64 px-5 py-8 md:p-8">
-        <div className="hidden md:block mb-3">
+        <div className="block mb-3">
           <PageHeader
             badge=""
             title="Configuracion"
@@ -30,19 +30,8 @@ const ConfigurationPage = () => {
           />
         </div>
 
-        <div className="md:hidden mb-6">
-          <p className="text-xs font-bold text-verde-kurve uppercase tracking-wide mb-2">
-            Configuracion
-          </p>
-          <h1 className="text-2xl font-bold text-foreground mb-1">
-            Configuracion
-          </h1>
-          <p className="text-sm text-gris-kurve-dark">
-            Define los parametros vase para la operacion del sistema
-          </p>
-        </div>
-        <div className="mt-10">
-          <Tabs defaultValue="tarea" className="mt-10">
+        <div className="mt-5">
+          <Tabs defaultValue="tarea" className="mt-5">
             <TabsList
               variant="line"
               className=" md:gap-5 border-b border-gray-300/40"

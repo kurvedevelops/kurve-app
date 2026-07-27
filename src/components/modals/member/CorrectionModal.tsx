@@ -1,21 +1,19 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BaseModal } from "@/components/modals/ModalBase";
 import { Info } from "lucide-react";
-import { ActivityLogWithRelations, useTaskTypes } from "@/hooks/middleware";
+import {
+  ActivityLogWithRelations,
+  useOrderedTaskSubtypes,
+} from "@/hooks/middleware";
 
 // Valores exactos del enum `editable_field` de la DB
-export type EditableField = "hours" | "task_type_id" | "log_date" | "notes";
-
-interface ActivityLog {
-  id: string;
-  clients?: { name: string };
-  task_types?: { name: string };
-  hours?: number;
-  pieces_count?: number;
-  status?: string;
-  log_date?: string;
-}
+export type EditableField =
+  | "hours"
+  | "subtype_id"
+  | "log_date"
+  | "notes"
+  | "pieces_count";
 
 interface CorrectionModalProps {
   open: boolean;
@@ -44,25 +42,19 @@ export interface AprovedCorrectionData {
 
 const EDITABLE_FIELDS: { value: EditableField; label: string }[] = [
   { value: "hours", label: "Horas" },
-  { value: "task_type_id", label: "Tarea" },
+  { value: "subtype_id", label: "Tarea" },
   { value: "log_date", label: "Fecha" },
 ];
-
-const NEW_VALUE_PLACEHOLDER: Record<EditableField, string> = {
-  hours: "Ej: 5",
-  task_type_id: "Ej: Edicion de video",
-  notes: "Ej: Falta el renderizado",
-  log_date: "Ej: 2026-06-10",
-};
 
 const OLD_VALUE_MAP: Record<
   EditableField,
   (a: ActivityLogWithRelations) => string
 > = {
   hours: (a) => String(a.hours ?? ""),
-  task_type_id: (a) => String(a.task_types?.name ?? ""),
+  subtype_id: (a) => String(a.task_subtypes?.name ?? ""),
   log_date: (a) => a.log_date ?? "",
   notes: (a) => a.notes ?? "",
+  pieces_count: (a) => String(a.pieces_count ?? ""),
 };
 
 export function CorrectionModal({
@@ -81,7 +73,13 @@ export function CorrectionModal({
     setValuesByField((prev) => ({ ...prev, [fieldName]: val }));
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
-  const { tasks, loadingTasks } = useTaskTypes();
+  const { orderedSubtypes } = useOrderedTaskSubtypes();
+  const editableFields: { value: EditableField; label: string }[] = [
+    { value: "hours", label: "Horas" },
+    { value: "subtype_id", label: "Tarea" },
+    { value: "log_date", label: "Fecha" },
+    { value: "pieces_count" as const, label: "Cantidad de piezas" },
+  ];
   const [errorsByField, setErrorsByField] = useState<
     Record<string, string | null>
   >({});
@@ -163,7 +161,7 @@ export function CorrectionModal({
           }}
         >
           <option value="">Seleccionar campo</option>
-          {EDITABLE_FIELDS.map((f) => (
+          {editableFields.map((f) => (
             <option key={f.value} value={f.value}>
               {f.label}
             </option>
@@ -188,7 +186,7 @@ export function CorrectionModal({
             <label className="text-sm font-medium text-foreground">
               Valor correcto <span className="text-red-500">*</span>
             </label>
-            {fieldName === "task_type_id" ? (
+            {fieldName === "subtype_id" ? (
               <select
                 value={newValue}
                 onChange={(e) => setNewValue(e.target.value)}
@@ -196,8 +194,8 @@ export function CorrectionModal({
                 className="px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-verde-kurve disabled:bg-muted disabled:cursor-not-allowed"
               >
                 <option value="">Selecciona la nueva tarea</option>
-                {tasks.map((tarea) => (
-                  <option key={tarea.id} value={tarea.id}>
+                {orderedSubtypes.map((tarea) => (
+                  <option key={tarea.id} value={tarea.task_subtype_id}>
                     {tarea.name}
                   </option>
                 ))}
@@ -268,6 +266,24 @@ export function CorrectionModal({
                   <p className="text-xs text-red-500">{fieldError}</p>
                 )}
               </>
+            ) : fieldName === "pieces_count" ? (
+              <input
+                type="number"
+                value={newValue}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10);
+                  if (val < 1) {
+                    setFieldError("Ingresa al menos 1 pieza");
+                  } else {
+                    setFieldError(null);
+                    setNewValue(e.target.value);
+                  }
+                }}
+                min={1}
+                step={1}
+                placeholder="Ej: 3"
+                className="px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-verde-kurve"
+              />
             ) : null}
           </div>
         </div>

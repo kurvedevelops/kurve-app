@@ -38,7 +38,7 @@ const TaskSubtypesTable = ({
   };
 
   return (
-    <div className="bg-white rounded-xl overflow-hidden shadow-sm overflow-x-auto mt-10 md:mx-20">
+    <div className="bg-white rounded-xl overflow-hidden shadow-sm overflow-x-auto mt-4 md:mx-20">
       <div className="flex items-center justify-between mb-5 gap-3 mt-4 ml-4 mr-4">
         <h2 className="text-base font-medium text-gray-900">
           Registro de tareas
@@ -91,7 +91,7 @@ const TaskSubtypesTable = ({
                 key={subtype.id}
                 className="border-b border-gray-100 hover:bg-muted/50 transition-colors"
               >
-                <TableCell className="text-sm px-4 py-6 w-75">
+                <TableCell className="text-sm px-4 py-6 max-w-53 truncate">
                   {subtype.name}
                 </TableCell>
 

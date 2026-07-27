@@ -845,8 +845,8 @@ export async function createCorrectionRequest(
     status: "pending",
     created_at: new Date().toISOString().split("T")[0],
   });
-
   if (error) throw error;
+  console.log(error);
 }
 
 export async function AproveEditRequest(

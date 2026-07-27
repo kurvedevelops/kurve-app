@@ -14,6 +14,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import BottomNav from "@/components/layout/BottomNav";
+import { navItems } from "@/components/layout/NavItems";
 
 const ClientesAsignadosPage = () => {
   const { user, loadingUser } = useCurrentUser();
@@ -57,8 +59,52 @@ const ClientesAsignadosPage = () => {
           </div>
         ) : (
           <>
-            {/* Tabla - md+ */}
-            <div className="bg-white border border-[#E4E4E4] overflow-hidden overflow-x-auto rounded-lg">
+            {/* Mobile/tablet: cards */}
+            <div className="flex flex-col gap-3 lg:hidden">
+              {clientesAsignados.map((client) => (
+                <div
+                  key={client.id}
+                  className="bg-white border border-[#E4E4E4] rounded-lg p-4"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-semibold text-foreground truncate">
+                      {client.name}
+                    </p>
+                    {client.status ? (
+                      <span
+                        className={`inline-block text-xs font-medium px-2 py-1 rounded-full flex-shrink-0 ${
+                          client.status === "active"
+                            ? "bg-verde-kurve text-white"
+                            : "bg-gris-kurve-dark/10 text-gris-kurve-dark"
+                        }`}
+                      >
+                        {client.status === "active" ? "Activo" : "Pausado"}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-gris-kurve-dark">—</span>
+                    )}
+                  </div>
+
+                  <div className="mt-2 flex flex-col gap-1 text-sm">
+                    <div className="flex justify-between gap-2">
+                      <span className="text-gris-kurve-dark">Email</span>
+                      <span className="font-semibold truncate">
+                        {client.email || "—"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-gris-kurve-dark">Teléfono</span>
+                      <span className="font-semibold">
+                        {client.phone || "—"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Tabla - lg+ */}
+            <div className="hidden lg:block bg-white border border-[#E4E4E4] rounded-lg overflow-hidden">
               <Table className="w-full">
                 <TableHeader>
                   <TableRow className="bg-gray-50">
@@ -114,6 +160,7 @@ const ClientesAsignadosPage = () => {
           </>
         )}
       </main>
+      <BottomNav items={navItems} onFabClick={() => {}} />
     </div>
   );
 };

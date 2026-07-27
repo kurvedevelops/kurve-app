@@ -126,26 +126,14 @@ const MembersPage = () => {
   return (
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
       <SidebarAdmin />
-      <main className="flex-1 min-w-0 mt-12 md:mt-0 md:ml-47 lg:ml-64 px-5 py-8 md:p-8">
-        <div className="hidden md:block mb-3">
+      <main className="flex-1 min-w-0 md:mt-0 md:ml-47 lg:ml-64 px-5 py-8 md:p-8">
+        <div className="block mb-3">
           <PageHeader
             badge="Gestion de Miembros"
             title="Integrantes"
             subtitle="Revisa y administra los miembros de tu equipo"
             actions={acciones}
           />
-        </div>
-
-        <div className="md:hidden mb-6">
-          <p className="text-xs font-bold text-verde-kurve uppercase tracking-wide mb-2">
-            INTEGRANTES
-          </p>
-          <h1 className="text-2xl font-bold text-foreground mb-1">
-            Listado de Integrantes
-          </h1>
-          <p className="text-sm text-gris-kurve-dark">
-            Gestiona los miembros de tu equipo
-          </p>
         </div>
 
         <div className="bg-background rounded-xl border border-border mt-4 min-w-0">
@@ -303,6 +291,13 @@ const MembersPage = () => {
                           </span>
                         )}
                       </div>
+                      <span className="block text-xs text-gris-kurve-dark truncate">
+                        {member.task_type_id
+                          ? tasks.find(
+                              (task) => task.id === member.task_type_id,
+                            )?.name
+                          : "No especificado"}
+                      </span>
                       <span className="block text-xs text-gris-kurve-dark truncate">
                         {member.email ? member.email : "No especificado"}
                       </span>

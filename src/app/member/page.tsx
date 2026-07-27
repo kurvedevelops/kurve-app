@@ -6,6 +6,8 @@ import { Plus, CheckSquare, Clock, MessageSquare } from "lucide-react";
 import RedirectedAlert from "@/hooks/redirectedAlert";
 import { Suspense } from "react";
 import { useRouter } from "next/navigation";
+import { navItems } from "@/components/layout/NavItems";
+import { useActivityLogs, useCurrentUser } from "@/hooks/middleware";
 
 const AlertWrapper = () => {
   RedirectedAlert();
@@ -13,52 +15,11 @@ const AlertWrapper = () => {
 };
 
 const MemberPage = () => {
-  const navItems = [
-    {
-      label: "Inicio",
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-        </svg>
-      ),
-      href: "/member",
-    },
-    {
-      label: "Actividades",
-      icon: <Clock size={24} />,
-      href: "/member/mis-actividades",
-    },
-    {
-      label: "Registrar",
-      icon: <Plus size={28} />,
-      href: "/member/registrar",
-      isFab: true,
-    },
-    {
-      label: "Correciones",
-      icon: <CheckSquare size={24} />,
-      href: "/member/mis-solicitudes",
-    },
-    {
-      label: "Clientes",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
-      ),
-      href: "/member/clientes-asignados",
-    },
-  ];
-
   const router = useRouter();
+  const { user } = useCurrentUser();
+  const { activityLogs } = useActivityLogs(user?.id);
+  const hoy = new Date().toISOString().split("T")[0];
+  const actividadesHoy = activityLogs.filter((log) => log.log_date === hoy);
 
   const handleFabClick = () => {
     router.push("/member/registrar");
@@ -108,18 +69,55 @@ const MemberPage = () => {
         {/* Today's Activities Section */}
         <div className="mb-8">
           <h3 className="text-xs font-black uppercase tracking-wide text-gris-kurve-dark mb-4">
-            HOY
+            ACTIVIDADES DE HOY
           </h3>
-          <div className="bg-background p-8 md:p-12 rounded-lg border border-dashed border-border flex flex-col items-center justify-center min-h-80">
-            <div className="w-16 md:w-20 h-16 md:h-20 bg-verde-kurve/10 rounded-full flex items-center justify-center mb-6">
-              <CheckSquare className="w-8 md:w-10 h-8 md:h-10 text-verde-kurve" />
-            </div>
-            <h3 className="text-lg md:text-xl font-bold text-foreground mb-2 text-center">
-              Aún sin actividad de hoy
-            </h3>
-            <p className="text-sm text-gris-kurve-dark text-center max-w-md mb-6">
-              Cuando registres tu primera tarea aparecerá aquí. ¡Comienza ahora!
-            </p>
+          <div className="bg-background p-6 rounded-lg border border-border">
+            {actividadesHoy.length === 0 ? (
+              <div className="p-8 md:p-12 flex flex-col items-center justify-center min-h-80">
+                <div className="w-16 md:w-20 h-16 md:h-20 bg-verde-kurve/10 rounded-full flex items-center justify-center mb-6">
+                  <CheckSquare className="w-8 md:w-10 h-8 md:h-10 text-verde-kurve" />
+                </div>
+                <h3 className="text-lg md:text-xl font-bold text-foreground mb-2 text-center">
+                  Aún sin actividad de hoy
+                </h3>
+                <p className="text-sm text-gris-kurve-dark text-center max-w-md mb-6">
+                  Cuando registres tu primera tarea aparecerá aquí. ¡Comienza
+                  ahora!
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3 pt-2">
+                {actividadesHoy.map((log, index) => (
+                  <div
+                    key={log.id}
+                    className={`flex items-start gap-3 pb-4 border-b border-border ${
+                      index === actividadesHoy.length - 1
+                        ? "border-b-0 pb-0"
+                        : ""
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">
+                        {log.task_subtypes?.name}
+                      </p>
+                      <p className="text-xs text-gris-kurve-dark">
+                        {log.clients?.name} • {log.log_date}
+                      </p>
+                      {log.notes && (
+                        <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                          {log.notes}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      <p className="text-sm font-bold text-verde-kurve">
+                        {log.hours}h
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </main>

@@ -7,6 +7,7 @@ import {
   useActivityLogsForRequests,
   useCurrentUser,
   useEditRequests,
+  useOrderedTaskSubtypes,
   useTaskTypes,
   useUsers,
 } from "@/hooks/middleware";
@@ -61,6 +62,7 @@ const CorrecionesPage = () => {
   const { user, loadingUser } = useCurrentUser();
   const { users, loadingUsers } = useUsers();
   const { tasks, loadingTasks } = useTaskTypes();
+  const { orderedSubtypes } = useOrderedTaskSubtypes();
 
   const userId = user?.id;
 
@@ -94,7 +96,8 @@ const CorrecionesPage = () => {
     }
   };
 
-  const { editRequests, loadingEditRequests, refetchEditRequests } = useEditRequests();
+  const { editRequests, loadingEditRequests, refetchEditRequests } =
+    useEditRequests();
 
   const filteredRequests =
     statusFilter === "all"
@@ -168,7 +171,7 @@ const CorrecionesPage = () => {
           </div>
 
           {/* Table */}
-          <div className="overflow-visible">
+          <div className="hidden lg:block overflow-visible">
             <Table className="w-full">
               <TableHeader>
                 <TableRow className="bg-gray-50">
@@ -216,12 +219,12 @@ const CorrecionesPage = () => {
                         </TableCell>
 
                         <TableCell className="font-semibold">
-                          {tasks.find(
+                          {orderedSubtypes.find(
                             (task) =>
                               task.id ===
                               activityLogs.find(
                                 (log) => log.id === req.activity_log_id,
-                              )?.task_type_id,
+                              )?.subtype_id,
                           )?.name ?? "-"}
                         </TableCell>
 
@@ -338,6 +341,135 @@ const CorrecionesPage = () => {
                 )}
               </TableBody>
             </Table>
+          </div>
+
+          {/* Cards - mobile */}
+          <div className="lg:hidden flex flex-col gap-3 p-4">
+            {filteredRequests.length === 0 ? (
+              <p className="py-16 text-center text-sm text-gris-kurve-dark">
+                No hay correcciones para revisar.
+              </p>
+            ) : (
+              filteredRequests.map((req) => {
+                const isExpanded = expandedRows.has(req.id);
+                const log = activityLogs.find(
+                  (l) => l.id === req.activity_log_id,
+                );
+                const taskName =
+                  orderedSubtypes.find((t) => t.id === log?.subtype_id)?.name ??
+                  "-";
+                const memberName =
+                  users.find((u) => u.id === req.requested_by)?.full_name ??
+                  "-";
+                const newValueDisplay =
+                  req.field_name === "task_type_id"
+                    ? tasks.find((t) => t.id == req.new_value)?.name
+                    : req.new_value;
+
+                return (
+                  <div
+                    key={req.id}
+                    className="rounded-xl border border-border bg-white overflow-hidden"
+                  >
+                    <button
+                      onClick={() => toggleRow(req.id)}
+                      className="w-full text-left p-4 flex items-start justify-between gap-2 active:bg-muted/40"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-semibold text-foreground text-sm truncate">
+                          {memberName}
+                        </p>
+                        <p className="text-xs text-gris-kurve-dark mt-0.5 w-70 md:w-full">
+                          {taskName}
+                        </p>
+                        <p className="text-xs text-gris-kurve-dark mt-0.5">
+                          {log?.log_date ?? "-"}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-2 shrink-0">
+                        <span
+                          className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${
+                            req.status === "approved"
+                              ? "bg-green-100 text-green-800"
+                              : req.status === "pending"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {req.status === "approved"
+                            ? "Aprobada"
+                            : req.status === "pending"
+                              ? "Pendiente"
+                              : "Rechazada"}
+                        </span>
+                        <ChevronDown
+                          size={16}
+                          className={`text-gris-kurve-dark transition-transform ${
+                            isExpanded ? "rotate-180" : ""
+                          }`}
+                        />
+                      </div>
+                    </button>
+
+                    {isExpanded && (
+                      <div className="px-4 pb-4 flex flex-col gap-3 border-t border-border pt-3">
+                        <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-red-500 mb-1">
+                            Valor anterior
+                          </p>
+                          <p className="text-sm font-medium text-red-800 break-words">
+                            {req.old_value ?? "-"}
+                          </p>
+                        </div>
+
+                        <div className="rounded-lg border border-green-200 bg-green-50 p-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-green-600 mb-1">
+                            Valor nuevo
+                          </p>
+                          <p className="text-sm font-medium text-green-800 break-words">
+                            {newValueDisplay}
+                          </p>
+                        </div>
+
+                        {req.reason && (
+                          <div className="rounded-lg border border-border bg-background p-3">
+                            <p className="text-[11px] font-semibold uppercase tracking-wide text-gris-kurve-dark mb-1">
+                              Motivo
+                            </p>
+                            <p className="text-sm text-foreground break-words">
+                              {req.reason}
+                            </p>
+                          </div>
+                        )}
+
+                        {req.status === "pending" && (
+                          <div className="flex gap-3">
+                            <Button
+                              variant="outline"
+                              className="flex-1 h-9 rounded-lg text-sm hover:bg-verde-kurve/60 hover:text-verde-kurve-dark bg-verde-kurve/30 text-verde-kurve-dark"
+                              onClick={() =>
+                                handleAproveRequest(req, req.requested_by)
+                              }
+                            >
+                              Aprobar
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="flex-1 h-9 rounded-lg text-sm hover:bg-red-600/70 hover:text-red-850 bg-red-600/50 text-red-800"
+                              onClick={() => {
+                                if (user) handleRejectReq(req.id, user.id);
+                              }}
+                            >
+                              Rechazar
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </main>

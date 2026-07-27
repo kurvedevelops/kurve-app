@@ -147,13 +147,17 @@ const ClientesPage = () => {
   type ActiveClient = Omit<Client, "status"> & {
     status: "active" | "paused" | "ended";
   };
+<<<<<<< HEAD
 
+=======
+>>>>>>> d9ec24e (Arreglos y mejoras de responsive)
 
   const filteredClients = clients.filter(
     (c): c is ActiveClient =>
       c.status === "active" || c.status === "paused" || c.status === "ended",
   );
 
+<<<<<<< HEAD
 const searchedClients = filteredClients.filter((c) => {
   const matchesSearch = c.name.toLowerCase().includes(query.toLowerCase());
   const matchesStatus =
@@ -162,6 +166,16 @@ const searchedClients = filteredClients.filter((c) => {
       : c.status === statusFilter;
   return matchesSearch && matchesStatus;
 });
+=======
+  const searchedClients = filteredClients.filter((c) => {
+    const matchesSearch = c.name.toLowerCase().includes(query.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all"
+        ? c.status === "active" || c.status === "paused"
+        : c.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+>>>>>>> d9ec24e (Arreglos y mejoras de responsive)
 
   const [deleteConfirm, setDeleteConfirm] = useState<{
     open: boolean;
@@ -206,12 +220,13 @@ const searchedClients = filteredClients.filter((c) => {
     try {
       if (!selectedClient) return;
       await editClient(selectedClient.id, data);
+      toast.success("Cliente editado correctamente");
 
       refetchClients();
       setShowEditarClienteModal(false);
       setSelectedClient(null);
-    } catch (error) {
-      console.error("Error al editar cliente:", error);
+    } catch {
+      toast.error("Error al editar cliente");
     }
   };
 
@@ -227,7 +242,11 @@ const searchedClients = filteredClients.filter((c) => {
     all: "Todos los estados",
     active: "Activos",
     paused: "Pausados",
+<<<<<<< HEAD
     ended: "Inactivo",
+=======
+    ended: "Inactivos",
+>>>>>>> d9ec24e (Arreglos y mejoras de responsive)
   };
 
   return (
@@ -387,8 +406,13 @@ const searchedClients = filteredClients.filter((c) => {
                             Pausado
                           </span>
                         ) : client.status === "ended" ? (
+<<<<<<< HEAD
                           <span className="inline-flex items-center gap-1.5 bg-red-500/10 text-red-500 text-xs font-medium px-2.5 py-1 rounded-full">
                             <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+=======
+                          <span className="inline-flex items-center gap-1.5 bg-gray-500/20 text-gray-500 text-xs font-medium px-2.5 py-1 rounded-full">
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-500" />
+>>>>>>> d9ec24e (Arreglos y mejoras de responsive)
                             Inactivo
                           </span>
                         ) : null}

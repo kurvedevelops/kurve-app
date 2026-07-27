@@ -74,6 +74,16 @@ const ClientDetailPage = () => {
   };
 
   const handleAsignarPaquete = async (data: AsignarPaqueteFormData) => {
+    if (packageConsumption.length > 0) {
+      toast.error("Este cliente ya tiene un paquete asignado");
+      setShowAsignarPaqueteModal(false);
+      return;
+    }
+    if (client?.status === "ended") {
+      toast.error("Cambiá el estado del cliente antes de asignar un paquete");
+      setShowAsignarPaqueteModal(false);
+      return;
+    }
     await assignPackage(clientId, data);
     setShowAsignarPaqueteModal(false);
     refetchPackageConsumption();
@@ -129,6 +139,19 @@ const ClientDetailPage = () => {
       setDeletingLinkId(null);
     }
   };
+  if (loadingClients) {
+    return (
+      <div className="min-h-screen w-full bg-muted flex">
+        <SidebarAdmin />
+        <main className="flex-1 md:ml-45 lg:ml-64 px-5 py-8 md:p-8 flex items-center justify-center min-h-screen">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 border-2 border-verde-kurve border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-gris-kurve-dark">Cargando cliente...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   if (!client)
     return (
@@ -137,29 +160,39 @@ const ClientDetailPage = () => {
       </div>
     );
 
+  const hasPackageAssigned = packageConsumption.length > 0;
+  const clientIsEnded = client.status === "ended";
+  const canAssignPackage = !hasPackageAssigned && !clientIsEnded;
+
   const actions = [
     {
       label: "Editar",
       variant: "secondary" as const,
       onClick: () => setShowEditarClienteModal(true),
     },
-    {
-      label: "+ Asignar paquete",
-      variant: "primary" as const,
-      onClick: () => setShowAsignarPaqueteModal(true),
-    },
+    ...(canAssignPackage
+      ? [
+          {
+            label: "+ Asignar paquete",
+            variant: "primary" as const,
+            onClick: () => setShowAsignarPaqueteModal(true),
+          },
+        ]
+      : []),
   ];
 
   const statusColor =
     client.status === "active"
       ? "bg-verde-kurve/10 text-verde-kurve"
-      : "bg-yellow-500/20 text-yellow-500";
+      : client.status === "paused"
+        ? "bg-yellow-500/20 text-yellow-500"
+        : "bg-gray-500/20 text-gray-500";
 
   return (
     <div className="min-h-screen w-full bg-muted flex">
       <SidebarAdmin />
 
-      <main className="flex-1 md:ml-45 lg:ml-64 px-5 py-8 md:p-8">
+      <main className="flex-1 md:ml-45 lg:ml-64 px-5 py-8 md:p-8 overflow-x-hidden">
         <PageHeader
           badge={`Clientes • ${client.name}`}
           title="Detalle del cliente"
@@ -168,36 +201,36 @@ const ClientDetailPage = () => {
 
         {/* Header Section */}
         <div className="flex flex-col bg-white p-5 rounded-xl md:flex-row md:items-start md:justify-between gap-4 mb-4 mt-4 border border-border">
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-4 min-w-0">
             {/* Client Avatar */}
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-verde-kurve-dark to-verde-kurve flex items-center justify-center text-white font-bold text-2xl">
+            <div className="w-20 h-20 rounded-2xl bg-linear-to-br from-verde-kurve-dark to-verde-kurve flex items-center justify-center text-white font-bold text-2xl shrink-0">
               {initials}
             </div>
 
             {/* Client Info */}
-            <div className="flex-1 self-center pl-3">
+            <div className="flex-1 self-center pl-3 min-w-0">
               <h2 className="text-[22px] font-bold text-foreground mb-1">
                 {client.name}
               </h2>
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 {/* Status Badge */}
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`text-xs font-bold px-3 py-1 rounded-full ${statusColor}`}
-                  >
-                    {client.status === "active" ? "● Activo" : "● Pausado"}
-                  </span>
-                </div>
-
-                <span className="flex flex-col gap-1 text-sm text-gris-kurve-dark">
-                  •
+                <span
+                  className={`text-xs font-bold px-3 py-1 rounded-full ${statusColor}`}
+                >
+                  {client.status === "active"
+                    ? "● Activo"
+                    : client.status === "paused"
+                      ? "● Pausado"
+                      : "● Inactivo"}
                 </span>
 
-                {/* Contact Info */}
-                <div className="flex flex-col gap-1 text-sm text-gris-kurve-dark">
-                  {client.created_at && (
-                    <div className="flex items-center gap-2">
+                {client.created_at && (
+                  <>
+                    <span className="text-sm text-gris-kurve-dark hidden sm:inline">
+                      •
+                    </span>
+                    <div className="flex items-center gap-2 text-sm text-gris-kurve-dark">
                       <Calendar size={16} />
                       <span>
                         Alta:{" "}
@@ -206,33 +239,29 @@ const ClientDetailPage = () => {
                         )}
                       </span>
                     </div>
-                  )}
-                </div>
+                  </>
+                )}
 
                 {client.email ? (
                   <>
-                    <span className="flex flex-col gap-1 text-sm text-gris-kurve-dark">
+                    <span className="text-sm text-gris-kurve-dark hidden sm:inline">
                       •
                     </span>
-                    <div className="flex flex-col gap-1 text-sm text-gris-kurve-dark">
-                      <div className="flex items-center gap-2">
-                        <Mail size={16} />
-                        <span>{client.email}</span>
-                      </div>
+                    <div className="flex items-center gap-2 text-sm text-gris-kurve-dark min-w-0">
+                      <Mail size={16} className="flex-shrink-0" />
+                      <span className="truncate">{client.email}</span>
                     </div>
                   </>
                 ) : null}
 
                 {client.phone ? (
                   <>
-                    <span className="flex flex-col gap-1 text-sm text-gris-kurve-dark">
+                    <span className="text-sm text-gris-kurve-dark hidden sm:inline">
                       •
                     </span>
-                    <div className="flex flex-col gap-1 text-sm text-gris-kurve-dark">
-                      <div className="flex items-center gap-2">
-                        <Phone size={16} />
-                        <span>{client.phone}</span>
-                      </div>
+                    <div className="flex items-center gap-2 text-sm text-gris-kurve-dark">
+                      <Phone size={16} />
+                      <span>{client.phone}</span>
                     </div>
                   </>
                 ) : null}
@@ -246,7 +275,6 @@ const ClientDetailPage = () => {
         {/* Paquete Section */}
         <div className="bg-background rounded-xl border border-border p-8">
           {packageConsumption.length === 0 ? (
-            // Empty State
             <div className="flex flex-col items-center justify-center py-20">
               <div className="w-16 h-16 rounded-full bg-verde-kurve/10 flex items-center justify-center mb-4">
                 <Package size={32} className="text-verde-kurve" />
@@ -256,26 +284,35 @@ const ClientDetailPage = () => {
                 Este cliente todavía no tiene paquete
               </h4>
 
-              <p className="text-sm text-gris-kurve-dark text-center max-w-sm mb-6">
-                Asigná el primer paquete con la cantidad de horas contratadas y
-                la distribución de piezas por categoría.
-              </p>
+              {client.status === "ended" ? (
+                <p className="text-sm text-gris-kurve-dark text-center max-w-sm mb-6">
+                  Este cliente está marcado como finalizado. Cambiá su estado
+                  antes de asignarle un paquete.
+                </p>
+              ) : (
+                <>
+                  <p className="text-sm text-gris-kurve-dark text-center max-w-sm mb-6">
+                    Asigná el primer paquete con la cantidad de horas
+                    contratadas y la distribución de piezas por categoría.
+                  </p>
 
-              <button
-                onClick={handleActions.assignPackage}
-                className="px-6 py-2 bg-verde-kurve text-white rounded-lg hover:bg-verde-kurve-dark transition-colors font-semibold"
-              >
-                + Asignar paquete
-              </button>
+                  <button
+                    onClick={handleActions.assignPackage}
+                    className="px-6 py-2 bg-verde-kurve text-white rounded-lg hover:bg-verde-kurve-dark transition-colors font-semibold"
+                  >
+                    + Asignar paquete
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             <>
               {packageConsumption.map((pkg) => (
                 <div key={pkg.package_id} className="mb-2">
                   {/* Package Header */}
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h4 className="text-xl font-bold text-foreground mb-1">
+                  <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0">
+                      <h4 className="text-xl font-bold text-foreground mb-1 break-words">
                         {pkg.package_name}
                       </h4>
                       <p className="text-sm text-gris-kurve-dark">
@@ -288,7 +325,7 @@ const ClientDetailPage = () => {
                           : "Indefinido"}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 mt-3">
+                    <div className="flex items-center gap-2 mt-3 flex-shrink-0">
                       <span className="px-3 py-1 rounded-full text-xs font-bold bg-verde-kurve/10 text-verde-kurve">
                         ●{" "}
                         {pkg.package_status === "active"
@@ -373,7 +410,7 @@ const ClientDetailPage = () => {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {links.map((link) => {
                     const config = linkTypeConfig[link.type];
                     const Icon = config.icon;

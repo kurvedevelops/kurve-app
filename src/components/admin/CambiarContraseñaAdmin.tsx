@@ -145,7 +145,7 @@ export default function CambiarContraseñaAdmin() {
   }
 
   return (
-    <div className="max-w-md mt-10 ml-4">
+    <div className="max-w-md mt-4 ml-4">
       <h3 className="text-lg font-bold text-foreground mb-1">
         Cambiar contraseña
       </h3>
