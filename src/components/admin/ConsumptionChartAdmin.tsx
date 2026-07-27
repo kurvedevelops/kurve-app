@@ -53,10 +53,9 @@ const ConsumptionChartAdmin = () => {
   const { data, loading, error } = useClientConsumption();
   const router = useRouter();
 
-
-    const handleBarClick = (entry: any) => {
+  const handleBarClick = (entry: any) => {
     if (entry?.client_id) {
-      router.push(`/admin/clientes/${entry.client_id}/consumo`);
+      router.push(`/admin/clientes/${entry.client_id}`);
     }
   };
 
@@ -116,7 +115,12 @@ const ConsumptionChartAdmin = () => {
             onClick={handleBarClick}
             minPointSize={4}
           />
-          <Bar dataKey="consumed_hours" radius={[6, 6, 0, 0]} minPointSize={4} onClick={handleBarClick}>
+          <Bar
+            dataKey="consumed_hours"
+            radius={[6, 6, 0, 0]}
+            minPointSize={4}
+            onClick={handleBarClick}
+          >
             {data.map((entry, index) => (
               <Cell key={index} fill={getColor(entry.traffic_light)} />
             ))}
