@@ -5,6 +5,7 @@ import {
   ClientConsumption,
   PackageData,
   useClientConsumption,
+  useClientConsumptionByTaskType,
   usePackageByClient,
 } from "@/hooks/middleware";
 
@@ -55,6 +56,8 @@ const ConsumptionChart = ({ clientId }: ConsumptionChartProps) => {
   const router = useRouter();
   const { data, loading } = useClientConsumption(clientId);
   const { clientPackage, loadingClientPackage } = usePackageByClient(clientId);
+  const { consumptionByTask: byTask, loading: loadingByTask } =
+    useClientConsumptionByTaskType(clientId);
 
   const consumptionRaw: ClientConsumption | undefined = data?.[0];
   const packageRaw: PackageData | undefined =
@@ -177,6 +180,42 @@ const ConsumptionChart = ({ clientId }: ConsumptionChartProps) => {
             {consumption.remaining_hours} hs
           </span>
         </div>
+      </div>
+      <div className="mt-6 border-t border-border pt-4">
+        <h3 className="text-sm font-semibold text-verde-kurve-dark mb-3">
+          Consumo por tarea
+        </h3>
+
+        {loadingByTask ? (
+          <p className="text-sm text-muted-foreground">Cargando detalle...</p>
+        ) : !byTask || byTask.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No hay consumo por tarea registrado.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {byTask.map((item) => (
+              <div key={item.subtype_id}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="font-medium text-foreground">
+                    {item.task_name}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {item.consumed_hours} hs ({item.percent_of_total}%)
+                  </span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-[#ECECEC] overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-verde-kurve transition-all"
+                    style={{
+                      width: `${Math.min(item.percent_of_total, 100)}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
