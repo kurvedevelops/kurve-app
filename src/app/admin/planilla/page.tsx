@@ -72,6 +72,8 @@ const TimeTemplatesPage = () => {
     currentPage * PAGE_SIZE,
   );
 
+  console.log(paginatedLogs);
+
   const handleFilter = () => {
     setAppliedClient(filterClient);
     setAppliedMember(filterMember);
@@ -120,7 +122,7 @@ const TimeTemplatesPage = () => {
         act.clients?.name ?? "-",
         act.users?.full_name ?? "-",
         formatDate(act.log_date),
-        act.task_types?.name ?? "-",
+        act.task_subtypes?.name ?? "-",
         act.pieces_count ?? "-",
         act.hours ?? "-",
         act.notes ?? "-",
@@ -311,8 +313,8 @@ const TimeTemplatesPage = () => {
                           <TableCell className="px-4 py-6 text-sm">
                             {formatDate(act.log_date)}
                           </TableCell>
-                          <TableCell className="px-4 py-6 text-sm">
-                            {act.task_types?.name}
+                          <TableCell className="px-4 py-6 text-sm w-fit truncate">
+                            {act.task_subtypes?.name}
                           </TableCell>
                           <TableCell className="px-4 py-6 text-sm">
                             {act.pieces_count}
@@ -353,7 +355,7 @@ const TimeTemplatesPage = () => {
                           <span className="font-medium text-foreground">
                             Tarea:
                           </span>{" "}
-                          {act.task_types?.name ?? "-"}
+                          {act.task_subtypes?.name ?? "-"}
                         </span>
                         <span>
                           <span className="font-medium text-foreground">
