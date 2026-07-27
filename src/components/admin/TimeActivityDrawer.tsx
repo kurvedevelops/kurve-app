@@ -27,10 +27,11 @@ interface TimeActivityDrawerProps {
   };
 }
 
-const EDITABLE_FIELDS: { value: EditableField; label: string }[] = [
+const editableFields: { value: EditableField; label: string }[] = [
   { value: "hours", label: "Horas" },
-  { value: "task_type_id", label: "Tarea" },
+  { value: "subtype_id", label: "Tarea" },
   { value: "log_date", label: "Fecha" },
+  { value: "pieces_count" as const, label: "Cantidad de piezas" },
 ];
 
 function formatFechaUTC(dateString: string) {
@@ -57,14 +58,14 @@ const TimeActivityDrawer = ({
         showCloseButton={false}
         className="overflow-y-auto bg-white border-l-0!"
       >
-        <div className="px-4 py-8 border-b border-gray-200/90">
+        <div className="px-4 py-4 border-b border-gray-200/90">
           <SheetTitle className="text-2xl font-bold text-azul-kurve">
             Detalle de actividad
           </SheetTitle>
         </div>
 
-        <div className="px-6 py-2 space-y-6">
-          <section className="">
+        <div className="px-6 space-y-6">
+          <section>
             <h3 className="text-lg text-azul-kurve font-semibold mb-5 border-b pb-2 border-gray-200/90">
               Información general
             </h3>
@@ -186,45 +187,70 @@ const TimeActivityDrawer = ({
             <div className="space-y-3">
               {loadingEditRequests ? (
                 <p className="text-xs text-muted-foreground">Cargando...</p>
-              ) : editRequests.length === 0 ? (
+              ) : editRequests.filter(
+                  (req) =>
+                    req.request_status === "approved" ||
+                    req.request_status === "pending",
+                ).length === 0 ? (
                 <p className="text-xs text-muted-foreground">
                   No hay correcciones registradas para esta actividad.
                 </p>
               ) : (
-                editRequests.map((req) => (
-                  <div
-                    key={req.id}
-                    className="rounded-lg border border-gris-kurve p-4"
-                  >
-                    <p className="text-xs font-medium text-muted-foreground">
-                      {new Date(req.created_at).toLocaleDateString("es-AR", {
-                        timeZone: "UTC",
-                      })}
-                    </p>
-                    {console.log(req)}
+                editRequests
+                  .filter(
+                    (req) =>
+                      req.request_status === "approved" ||
+                      req.request_status === "pending",
+                  )
+                  .map((req) => (
+                    <div
+                      key={req.id}
+                      className="rounded-lg border border-gris-kurve p-4"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-medium text-muted-foreground">
+                          {new Date(req.created_at).toLocaleDateString(
+                            "es-AR",
+                            {
+                              timeZone: "UTC",
+                            },
+                          )}
+                        </p>
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
+                            req.request_status === "approved"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {req.request_status === "approved"
+                            ? "Aprobada"
+                            : "Pendiente"}
+                        </span>
+                      </div>
 
-                    <p className="mt-2 text-sm">
-                      {EDITABLE_FIELDS.find((f) => f.value === req.field_name)
-                        ?.label ?? req.field_name}
-                      :
-                      <span className="line-through text-gray-400 ml-1">
-                        {req.old_value}
-                      </span>
-                      <span className="mx-2 text-verde-kurve">→</span>
-                      <span>
-                        {req.field_name == "task_type_id"
-                          ? activity.task_types?.name
-                          : req.new_value}
-                      </span>
-                    </p>
-
-                    {req.reason && (
-                      <p className="mt-1 text-xs text-muted-foreground italic">
-                        Motivo: {req.reason}
+                      <p className="mt-2 text-sm">
+                        {editableFields.find((f) => f.value === req.field_name)
+                          ?.label ?? req.field_name}
+                        :
+                        <span className="line-through text-gray-400 ml-1">
+                          {req.old_value}
+                        </span>
+                        <span className="mx-2 text-verde-kurve">→</span>
+                        <span>
+                          {req.field_name == "task_type_id"
+                            ? activity.task_types?.name
+                            : req.new_value}
+                        </span>
                       </p>
-                    )}
-                  </div>
-                ))
+
+                      {req.reason && (
+                        <p className="mt-1 text-xs text-muted-foreground italic">
+                          Motivo: {req.reason}
+                        </p>
+                      )}
+                    </div>
+                  ))
               )}
             </div>
           </section>

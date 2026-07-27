@@ -4,6 +4,7 @@ import SidebarAdmin from "@/components/layout/SidebarAdmin";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import TaskTypesTable from "@/components/admin/TaskTypeTable";
 import TaskSubtypesTable from "@/components/admin/TaskSubtypesTable";
+import TaskSubtypesOrder from "@/components/admin/TaskSubtypesOrder";
 import {
   useTaskTypesConfig,
   useTaskSubtypesConfig,
@@ -12,6 +13,8 @@ import CambiarContraseñaAdmin from "@/components/admin/CambiarContraseñaAdmin"
 
 const ConfigurationPage = () => {
   const { tasks, loadingTasks, updateTask, addTask } = useTaskTypesConfig();
+
+  const activeTasks = tasks.filter((t) => t.active);
   const { subtypes, loadingSubtypes, updateSubtype, addSubtype } =
     useTaskSubtypesConfig();
 
@@ -19,7 +22,7 @@ const ConfigurationPage = () => {
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
       <SidebarAdmin />
       <main className="flex-1 md:ml-47 lg:ml-64 px-5 py-8 md:p-8">
-        <div className="hidden md:block mb-3">
+        <div className="block mb-3">
           <PageHeader
             badge=""
             title="Configuracion"
@@ -27,19 +30,8 @@ const ConfigurationPage = () => {
           />
         </div>
 
-        <div className="md:hidden mb-6">
-          <p className="text-xs font-bold text-verde-kurve uppercase tracking-wide mb-2">
-            Configuracion
-          </p>
-          <h1 className="text-2xl font-bold text-foreground mb-1">
-            Configuracion
-          </h1>
-          <p className="text-sm text-gris-kurve-dark">
-            Define los parametros vase para la operacion del sistema
-          </p>
-        </div>
-        <div className="mt-10">
-          <Tabs defaultValue="tarea" className="mt-10">
+        <div className="mt-5">
+          <Tabs defaultValue="tarea" className="mt-5">
             <TabsList
               variant="line"
               className=" md:gap-5 border-b border-gray-300/40"
@@ -56,6 +48,13 @@ const ConfigurationPage = () => {
                 className="text-xl font-bold text-gray-300 cursor-pointer pb-4"
               >
                 Tareas
+              </TabsTrigger>
+
+              <TabsTrigger
+                value="orden"
+                className="text-xl font-bold text-gray-300 cursor-pointer pb-4"
+              >
+                Orden por cargo
               </TabsTrigger>
 
               <TabsTrigger
@@ -90,6 +89,15 @@ const ConfigurationPage = () => {
                 />
               )}
             </TabsContent>
+
+            <TabsContent value="orden">
+              {loadingTasks ? (
+                <p className="text-sm text-gray-400 mt-10 ml-4">Cargando...</p>
+              ) : (
+                <TaskSubtypesOrder taskTypes={activeTasks} />
+              )}
+            </TabsContent>
+
             <TabsContent value="cuenta">
               <CambiarContraseñaAdmin />
             </TabsContent>

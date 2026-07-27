@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { z } from "zod";
 import { BaseModal } from "./ModalBase";
 import { toast } from "sonner";
+import { useTaskTypes } from "@/hooks/middleware";
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
@@ -22,11 +23,7 @@ const editarMiembroSchema = z.object({
     .regex(/^[\d\s\-\+\(\)]*$/, "El teléfono contiene caracteres inválidos")
     .optional()
     .or(z.literal("")),
-  position: z
-    .string()
-    .max(100, "El cargo no puede exceder 100 caracteres")
-    .optional()
-    .or(z.literal("")),
+  task_type_id: z.string().min(1, "El cargo es requerido"),
   password: z
     .string()
     .min(6, "La contraseña debe tener al menos 6 caracteres")
@@ -47,7 +44,7 @@ interface Member {
   email: string;
   role: string;
   phone: string;
-  position?: string | null;
+  task_type_id: string;
   active: boolean;
   created_at: string;
 }
@@ -84,7 +81,7 @@ function buildInitialForm(member: Member): EditarMiembroFormData {
     full_name: member.full_name ?? "",
     email: member.email ?? "",
     phone: member.phone ?? "",
-    position: member.position ?? "",
+    task_type_id: member.task_type_id ?? "",
     password: "",
     fechaAlta: member.created_at ? member.created_at.split("T")[0] : "",
   };
@@ -116,6 +113,7 @@ export function EditarmiembroModal({
   clients,
   assignedClientIds,
 }: EditarmiembroModalProps) {
+  const { tasks } = useTaskTypes();
   const [form, setForm] = useState<EditarMiembroFormData>(() =>
     buildInitialForm(member),
   );
@@ -258,19 +256,28 @@ export function EditarmiembroModal({
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">
-            Cargo / especialidad
+          <label
+            htmlFor="task_type_id"
+            className="block text-sm font-medium text-foreground mb-1.5"
+          >
+            Cargo
           </label>
-          <input
-            type="text"
-            placeholder="Ej: Community Manager"
-            value={form.position}
-            onChange={(e) => handleChange("position", e.target.value)}
-            onBlur={() => handleBlur("position")}
-            className={inputClass("position")}
-          />
-          {errors.position && touched.position && (
-            <p className="text-xs text-red-500 mt-1">{errors.position}</p>
+          <select
+            id="task_type_id"
+            value={form.task_type_id}
+            onChange={(e) => handleChange("task_type_id", e.target.value)}
+            onBlur={() => handleBlur("task_type_id")}
+            className={inputClass("task_type_id")}
+          >
+            <option value="">Selecciona el cargo</option>
+            {tasks.map((cargo) => (
+              <option key={cargo.id} value={cargo.id}>
+                {cargo.name}
+              </option>
+            ))}
+          </select>
+          {errors.task_type_id && touched.task_type_id && (
+            <p className="text-xs text-red-500 mt-1">{errors.task_type_id}</p>
           )}
         </div>
       </div>

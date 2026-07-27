@@ -15,7 +15,7 @@ const updateMemberSchema = z.object({
 
   phone: z.string().max(50).optional().nullable(),
 
-  position: z.string().max(100).optional().nullable(),
+  task_type_id: z.string().uuid().optional().nullable(),
 
   client_ids: z.array(z.string().uuid()).optional(),
 });

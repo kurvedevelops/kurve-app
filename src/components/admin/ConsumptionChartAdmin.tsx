@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useClientConsumption } from "@/hooks/middleware";
 import { BarChart2 } from "lucide-react";
 import {
@@ -22,7 +23,7 @@ const CustomTooltip = ({ active, payload }: any) => {
     const d = payload[0].payload;
     return (
       <div className="bg-white border border-gray-200 rounded-lg px-3 py-2 shadow text-sm">
-        <p className="font-semibold text-gray-800 mb-1">{d.package_name}</p>
+        <p className="font-semibold text-gray-800 mb-1">{d.client_name}</p>
         <p className="text-gray-400">
           Total:{" "}
           <span className="text-gray-700 font-medium">{d.total_hours} hs</span>
@@ -50,10 +51,18 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 const ConsumptionChartAdmin = () => {
   const { data, loading, error } = useClientConsumption();
+  const router = useRouter();
+
+
+    const handleBarClick = (entry: any) => {
+    if (entry?.client_id) {
+      router.push(`/admin/clientes/${entry.client_id}/consumo`);
+    }
+  };
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl border border-border shadow-sm p-6 flex items-center justify-center min-h-[380px] flex-1">
+      <div className="bg-white rounded-2xl border border-border shadow-sm p-6 flex items-center justify-center min-h-95 flex-1">
         <p className="text-sm text-gray-400">Cargando datos...</p>
       </div>
     );
@@ -61,7 +70,7 @@ const ConsumptionChartAdmin = () => {
 
   if (error || data.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col items-center justify-center min-h-[380px] flex-1">
+      <div className="bg-white rounded-2xl border border-border shadow-sm p-6 flex flex-col items-center justify-center min-h-95 flex-1">
         <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-4">
           <BarChart2 className="w-6 h-6 text-gray-400" />
         </div>
@@ -104,9 +113,10 @@ const ConsumptionChartAdmin = () => {
             dataKey="total_hours"
             fill="#06b6d4"
             radius={[6, 6, 0, 0]}
+            onClick={handleBarClick}
             minPointSize={4}
           />
-          <Bar dataKey="consumed_hours" radius={[6, 6, 0, 0]} minPointSize={4}>
+          <Bar dataKey="consumed_hours" radius={[6, 6, 0, 0]} minPointSize={4} onClick={handleBarClick}>
             {data.map((entry, index) => (
               <Cell key={index} fill={getColor(entry.traffic_light)} />
             ))}

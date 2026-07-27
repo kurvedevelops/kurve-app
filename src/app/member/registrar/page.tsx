@@ -6,18 +6,19 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Clock, Plus, MessageSquare } from "lucide-react";
 import {
-  usePieceCategories,
   useClients,
   useClientsByUser,
   useCurrentUser,
   useTaskTypes,
   useActivityLogs,
+  useOrderedTaskSubtypes,
   useTaskSubtypesConfig,
 } from "@/hooks/middleware";
 import { createClient } from "@/lib/supabase/client";
 import Swal from "sweetalert2";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { navItems } from "@/components/layout/NavItems";
 
 const registroSchema = Yup.object().shape({
   client_id: Yup.string().required("Selecciona un cliente"),
@@ -61,12 +62,11 @@ const RegistrarHorasPage = () => {
   const { clients, loadingClients } = useClients();
   const { clientsId, loadingClientsId } = useClientsByUser(user?.id || "");
   const { tasks, loadingTasks } = useTaskTypes();
-  const { activityLogs, loadingActivityLogs, refetchActivityLogs } = useActivityLogs(user?.id || "");
-  const { subtypes, loadingSubtypes } = useTaskSubtypesConfig();
+  const { activityLogs, loadingActivityLogs, refetchActivityLogs } =
+    useActivityLogs(user?.id || "");
+  const { orderedSubtypes, loadingOrderedSubtypes } = useOrderedTaskSubtypes();
+  const [activePackages, setActivePackages] = useState<any[]>([]);
 
-  const communityManagementId = tasks.find(
-    (t) => t.name === "Community management",
-  )?.id;
 
   const userClients = clients.filter((client) =>
     clientsId.some((item) => item.client_id === client.id),
@@ -91,66 +91,24 @@ const RegistrarHorasPage = () => {
     })
     .reduce((total, log) => total + log.hours, 0);
 
-  const navItems = [
-    {
-      label: "Inicio",
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-        </svg>
-      ),
-      href: "/member",
-    },
-    {
-      label: "Actividades",
-      icon: <Clock size={24} />,
-      href: "/member/activities",
-    },
-    {
-      label: "Registrar",
-      icon: <Plus size={28} />,
-      href: "/member/register",
-      isFab: true,
-    },
-    {
-      label: "Mensajes",
-      icon: <MessageSquare size={24} />,
-      href: "/member/messages",
-    },
-    {
-      label: "Perfil",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
-      ),
-      href: "/member/profile",
-    },
-  ];
-
   const router = useRouter();
 
   const formik = useFormik({
     initialValues: {
       client_id: "",
-      task_type_id: "",
+      task_type_id: user?.task_type_id ?? "",
       log_date: new Date().toISOString().split("T")[0],
       hours: 0,
       is_publication: false,
       subtype_id: "",
       pieces_count: 0,
       notes: "",
+      package_id: "",
     },
+    enableReinitialize: true,
     validationSchema: registroSchema,
     onSubmit: async (values, { setSubmitting, resetForm, setStatus }) => {
+      console.log("package_id antes de insertar:", values.package_id);
       if (!user?.id) {
         setStatus({ error: "Usuario no autenticado" });
         setSubmitting(false);
@@ -167,6 +125,7 @@ const RegistrarHorasPage = () => {
           hours: values.hours,
           pieces_count: values.pieces_count,
           notes: values.notes || null,
+          package_id: values.package_id || null,
         });
 
         if (error) throw error;
@@ -200,7 +159,7 @@ const RegistrarHorasPage = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       const values = formik.values;
-      if (values.client_id || values.task_type_id) {
+      if (values.client_id || values.subtype_id) {
         localStorage.setItem("activity_draft", JSON.stringify(values));
       } else {
         localStorage.removeItem("activity_draft");
@@ -215,10 +174,11 @@ const RegistrarHorasPage = () => {
 
     try {
       const parsed = JSON.parse(draft);
-      if (parsed.client_id || parsed.task_type_id) {
+      if (parsed.client_id || parsed.subtype_id) {
         formik.setValues({
           ...formik.initialValues,
           ...parsed,
+          task_type_id: user?.task_type_id ?? "",
         });
 
         Swal.fire({
@@ -236,6 +196,42 @@ const RegistrarHorasPage = () => {
       localStorage.removeItem("activity_draft");
     }
   }, []);
+
+useEffect(() => {
+  const fetchActivePackages = async () => {
+    if (!formik.values.client_id) {
+      setActivePackages([]);
+      formik.setFieldValue("package_id", "");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/clients/${formik.values.client_id}/active-package`);
+      if (!res.ok) {
+        setActivePackages([]);
+        formik.setFieldValue("package_id", "");
+        return;
+      }
+
+      const json = await res.json();
+      const packages = json.data ?? [];
+
+      setActivePackages(packages);
+
+      if (packages.length === 1) {
+        formik.setFieldValue("package_id", packages[0].package_id);
+      } else {
+        formik.setFieldValue("package_id", "");
+      }
+    } catch (err) {
+      console.error("Error al traer paquetes activos:", err);
+      setActivePackages([]);
+      formik.setFieldValue("package_id", "");
+    }
+  };
+
+  fetchActivePackages();
+}, [formik.values.client_id]);
+
 
   return (
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
@@ -337,34 +333,12 @@ const RegistrarHorasPage = () => {
                 {/* Tarea */}
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-semibold text-foreground">
-                    Rol
+                    Cargo
                   </label>
-                  <select
-                    name="task_type_id"
-                    value={formik.values.task_type_id}
-                    onChange={(e) => {
-                      formik.handleChange(e);
-                      if (e.target.value !== communityManagementId) {
-                        formik.setFieldValue("pieces_count", 0);
-                        formik.setFieldValue("category_id", "");
-                      }
-                    }}
-                    onBlur={formik.handleBlur}
-                    className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
-                  >
-                    <option value="">Selecciona tu rol</option>
-                    {tasks.map((tarea) => (
-                      <option key={tarea.id} value={tarea.id}>
-                        {tarea.name}
-                      </option>
-                    ))}
-                  </select>
-                  {formik.touched.task_type_id &&
-                    formik.errors.task_type_id && (
-                      <p className="text-xs text-red-500">
-                        {formik.errors.task_type_id}
-                      </p>
-                    )}
+                  <div className="px-2 py-2.5 border border-border rounded-lg bg-muted text-foreground">
+                    {tasks.find((t) => t.id === user?.task_type_id)?.name ??
+                      "Sin cargo asignado"}
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-2">
@@ -379,7 +353,7 @@ const RegistrarHorasPage = () => {
                     className="px-2 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-verde-kurve"
                   >
                     <option value="">Selecciona una tarea</option>
-                    {subtypes.map((subtype) => (
+                    {orderedSubtypes.map((subtype) => (
                       <option key={subtype.id} value={subtype.id}>
                         {subtype.name}
                       </option>
@@ -534,7 +508,7 @@ const RegistrarHorasPage = () => {
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-foreground truncate">
-                        {log.task_types?.name}
+                        {log.task_subtypes?.name}
                       </p>
                       <p className="text-xs text-gris-kurve-dark">
                         {log.clients?.name} • {log.log_date}

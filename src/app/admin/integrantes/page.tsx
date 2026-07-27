@@ -12,7 +12,12 @@ import {
 import AddMemberModal from "@/components/modals/admin/AddMemberModal";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { deleteMember, getInitials, useMembers } from "@/hooks/middleware";
+import {
+  deleteMember,
+  getInitials,
+  useMembers,
+  useTaskTypes,
+} from "@/hooks/middleware";
 import { ConfirmDeleteModal } from "@/components/modals/BorrarEntidadModal";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -27,7 +32,7 @@ export interface Member {
   email: string;
   role: string;
   phone: string;
-  position: string | null;
+  task_type_id: string;
   active: boolean;
   created_at: string;
 }
@@ -44,7 +49,7 @@ export async function editMember(
       full_name: data.full_name,
       email: data.email,
       phone: data.phone,
-      position: data.position || null,
+      task_type_id: data.task_type_id,
       created_at: data.fechaAlta,
     })
     .eq("id", memberId);
@@ -62,6 +67,7 @@ const MembersPage = () => {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
   const { members, loadingMembers, refetchMembers } = useMembers();
+  const { tasks } = useTaskTypes();
 
   const searchedMembers = members.filter((c) => {
     const matchesSearch = c.full_name
@@ -120,26 +126,14 @@ const MembersPage = () => {
   return (
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
       <SidebarAdmin />
-      <main className="flex-1 min-w-0 mt-12 md:mt-0 md:ml-47 lg:ml-64 px-5 py-8 md:p-8">
-        <div className="hidden md:block mb-3">
+      <main className="flex-1 min-w-0 md:mt-0 md:ml-47 lg:ml-64 px-5 py-8 md:p-8">
+        <div className="block mb-3">
           <PageHeader
             badge="Gestion de Miembros"
             title="Integrantes"
             subtitle="Revisa y administra los miembros de tu equipo"
             actions={acciones}
           />
-        </div>
-
-        <div className="md:hidden mb-6">
-          <p className="text-xs font-bold text-verde-kurve uppercase tracking-wide mb-2">
-            INTEGRANTES
-          </p>
-          <h1 className="text-2xl font-bold text-foreground mb-1">
-            Listado de Integrantes
-          </h1>
-          <p className="text-sm text-gris-kurve-dark">
-            Gestiona los miembros de tu equipo
-          </p>
         </div>
 
         <div className="bg-background rounded-xl border border-border mt-4 min-w-0">
@@ -237,12 +231,17 @@ const MembersPage = () => {
                           </div>
                         </TableCell>
                         <TableCell className="px-4 py-6 text-sm">
-                          {member.email ? member.email : "No especificado"}
+                          {member.email ? member.email : "-"}
                         </TableCell>
                         <TableCell className="px-4 py-6 text-sm">
-                          {member.phone ? member.phone : "No especificado"}
+                          {member.phone ? member.phone : "-"}
                         </TableCell>
-                        <TableCell className="px-4 py-6 text-sm">/</TableCell>
+                        <TableCell className="px-4 py-6 text-sm">
+                          {member.task_type_id
+                            ? tasks.find((t) => t.id === member.task_type_id)
+                                ?.name
+                            : "-"}
+                        </TableCell>
                         <TableCell className="px-4 py-6 text-sm">
                           {member.active === true ? (
                             <span className="inline-flex items-center gap-1.5 bg-verde-kurve/10 text-verde-kurve text-xs font-medium px-2.5 py-1 rounded-full">
@@ -292,6 +291,13 @@ const MembersPage = () => {
                           </span>
                         )}
                       </div>
+                      <span className="block text-xs text-gris-kurve-dark truncate">
+                        {member.task_type_id
+                          ? tasks.find(
+                              (task) => task.id === member.task_type_id,
+                            )?.name
+                          : "No especificado"}
+                      </span>
                       <span className="block text-xs text-gris-kurve-dark truncate">
                         {member.email ? member.email : "No especificado"}
                       </span>

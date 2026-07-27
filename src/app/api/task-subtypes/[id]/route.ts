@@ -6,13 +6,12 @@ import { requireAdmin } from "@/lib/supabase/guard";
 const updateSubtypeSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   active: z.boolean().optional(),
-  display_order: z.number().int().min(0).optional(),
 });
 
 // PATCH /api/task-subtypes/:id — editar subtarea
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const guard = await requireAdmin();
   if (guard.error) return guard.error;
@@ -26,8 +25,24 @@ export async function PATCH(
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Datos inválidos", details: parsed.error.flatten() },
-      { status: 400 }
+      { status: 400 },
     );
+  }
+
+  if (parsed.data.name) {
+    const { data: existing } = await supabase
+      .from("task_subtypes")
+      .select("id")
+      .ilike("name", parsed.data.name)
+      .neq("id", id)
+      .maybeSingle();
+
+    if (existing) {
+      return NextResponse.json(
+        { error: "Ya existe una subtarea con ese nombre" },
+        { status: 409 },
+      );
+    }
   }
 
   const { data, error } = await supabase
@@ -40,20 +55,20 @@ export async function PATCH(
   if (error || !data) {
     return NextResponse.json(
       { error: "Subtarea no encontrada o error al actualizar" },
-      { status: error ? 500 : 404 }
+      { status: error ? 500 : 404 },
     );
   }
 
   return NextResponse.json(
     { message: "Subtarea actualizada correctamente", data },
-    { status: 200 }
+    { status: 200 },
   );
 }
 
 // DELETE /api/task-subtypes/:id — soft delete (active = false)
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const guard = await requireAdmin();
   if (guard.error) return guard.error;
@@ -71,12 +86,12 @@ export async function DELETE(
   if (error || !data) {
     return NextResponse.json(
       { error: "Subtarea no encontrada o error al desactivar" },
-      { status: error ? 500 : 404 }
+      { status: error ? 500 : 404 },
     );
   }
 
   return NextResponse.json(
     { message: "Subtarea desactivada correctamente", data },
-    { status: 200 }
+    { status: 200 },
   );
 }

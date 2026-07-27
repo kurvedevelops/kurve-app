@@ -217,9 +217,9 @@ const PackagesPage = () => {
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
       <SidebarAdmin />
       <main className="flex-1 md:ml-47 lg:ml-64 px-5 py-8 md:p-8">
-        <div className="hidden md:block mb-3">
+        <div className="block mb-3">
           <PageHeader
-            badge=""
+            badge="Gestion de Paquetes"
             title="Paquetes"
             subtitle="Revisa y modifica los paquetes disponibles para el cliente"
             actions={actions}
