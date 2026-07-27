@@ -124,13 +124,7 @@ const ConsumptionChart = ({ clientId }: ConsumptionChartProps) => {
           Visualiza el consumo de horas de tu paquete actual.
         </p>
       </div>
-<<<<<<< HEAD
-      <div
-        className="flex flex-col items-center transition-opacity hover:opacity-90"
-      >
-=======
       <div className="flex flex-col items-center transition-opacity hover:opacity-90">
->>>>>>> d9ec24e (Arreglos y mejoras de responsive)
         <div className="relative w-60 h-60">
           <svg width="240" height="240" viewBox="0 0 240 240">
             <circle
