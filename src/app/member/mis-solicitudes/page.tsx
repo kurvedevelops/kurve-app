@@ -4,6 +4,7 @@ import {
   useActivityLogsForRequests,
   useCurrentUser,
   useEditRequestsById,
+  useOrderedTaskSubtypes,
   useTaskTypes,
 } from "@/hooks/middleware";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -17,6 +18,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import SidebarMember from "@/components/layout/SidebarMember";
+import BottomNav from "@/components/layout/BottomNav";
+import { navItems } from "@/components/layout/NavItems";
 
 const MisSolicitudesPage = () => {
   const statusLabels = {
@@ -35,6 +38,7 @@ const MisSolicitudesPage = () => {
   const { activityLogs, loadingActivityLogs } = useActivityLogsForRequests();
   const { user, loadingUser } = useCurrentUser();
   const { tasks, loadingTasks } = useTaskTypes();
+  const { orderedSubtypes } = useOrderedTaskSubtypes();
 
   const { editRequests, loadingEditRequests } = useEditRequestsById(
     user?.id || "",
@@ -48,7 +52,7 @@ const MisSolicitudesPage = () => {
   return (
     <div className="min-h-screen w-full bg-muted flex">
       <SidebarMember />
-      <main className="flex-1 md:ml-45 lg:ml-64 px-5 py-8 md:p-8">
+      <main className="flex-1 mb-15 md:ml-45 lg:ml-64 px-5 py-8 md:p-8 overflow-x-hidden">
         <PageHeader
           badge="Solicitudes de correccion"
           title="Listado de solicitudes"
@@ -112,23 +116,113 @@ const MisSolicitudesPage = () => {
           </div>
 
           {/* Table */}
-          <div className="overflow-visible">
-            <Table className="w-full">
+          {/* Mobile/tablet: cards */}
+          <div className="flex flex-col gap-3 p-4 lg:hidden">
+            {filteredRequests.length === 0 ? (
+              <p className="py-16 text-center text-sm text-gris-kurve-dark">
+                Todas tus solicitudes fueron revisadas.
+              </p>
+            ) : (
+              filteredRequests.map((req) => {
+                const log = activityLogs.find(
+                  (l) => l.id === req.activity_log_id,
+                );
+                const taskName =
+                  orderedSubtypes.find((task) => task.id === log?.subtype_id)
+                    ?.name ?? "-";
+
+                return (
+                  <div
+                    key={req.id}
+                    className="border-b border-border pb-5 p-2 min-w-0 overflow-hidden"
+                  >
+                    <div className="flex items-start justify-between gap-2 min-w-0">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-foreground truncate">
+                          {taskName}
+                        </p>
+                        <p className="text-xs text-gris-kurve-dark">
+                          {log?.log_date} • {req.created_at.split("T")[0]}
+                        </p>
+                      </div>
+                      <span
+                        className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium flex-shrink-0 ${
+                          req.status === "approved"
+                            ? "bg-green-100 text-green-800"
+                            : req.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {req.status === "approved"
+                          ? "Aprobada"
+                          : req.status === "pending"
+                            ? "Pendiente"
+                            : "Rechazada"}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 flex flex-col gap-2">
+                      <div className="rounded-lg border border-red-200 bg-red-50 p-3 min-w-0">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-red-500 mb-1">
+                          Valor anterior
+                        </p>
+                        <p className="text-sm font-medium text-red-800 break-words">
+                          {req.old_value ?? "-"}
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg border border-green-200 bg-green-50 p-3 min-w-0">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-green-600 mb-1">
+                          Valor nuevo
+                        </p>
+                        <p className="text-sm font-medium text-green-800 break-words">
+                          {req.field_name === "task_type_id"
+                            ? tasks.find((task) => task.id == req.new_value)
+                                ?.name
+                            : req.field_name === "subtype_id"
+                              ? (orderedSubtypes.find(
+                                  (task) => task.id == req.new_value,
+                                )?.name ?? req.new_value)
+                              : req.new_value}
+                        </p>
+                      </div>
+
+                      {req.reason && (
+                        <div className="rounded-lg border border-border bg-background p-3 min-w-0">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-gris-kurve-dark mb-1">
+                            Motivo
+                          </p>
+                          <p className="text-sm text-foreground break-words">
+                            {req.reason}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Table - lg+ */}
+          <div className="hidden lg:block overflow-visible">
+            <Table className="w-full table-fixed">
               <TableHeader>
                 <TableRow className="bg-gray-50">
-                  <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
+                  <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border w-[28%]">
                     Tarea
                   </TableHead>
 
-                  <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
+                  <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border w-[18%]">
                     Fecha
                   </TableHead>
 
-                  <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
+                  <TableHead className="px-4 py-3 text-left text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border w-[24%]">
                     Estado
                   </TableHead>
 
-                  <TableHead className="px-4 py-3 text-center text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border">
+                  <TableHead className="px-4 py-3 text-center text-[11px] font-medium text-gris-kurve-dark uppercase tracking-wide border-b border-border w-[18%]">
                     Solicitado
                   </TableHead>
                 </TableRow>
@@ -137,7 +231,7 @@ const MisSolicitudesPage = () => {
               <TableBody>
                 {filteredRequests.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-80 text-center text-lg">
+                    <TableCell colSpan={4} className="h-80 text-center text-lg">
                       Todas tus solicitudes fueron revisadas.
                       <br />
                     </TableCell>
@@ -147,15 +241,26 @@ const MisSolicitudesPage = () => {
                     <Fragment key={req.id}>
                       <TableRow
                         key={req.id}
-                        className="border-b border-[#E4E4E4] hover:bg-muted/40"
+                        className="border-b border-[#E4E4E4]"
                       >
-                        <TableCell className="px-6 py-6 font-semibold">
-                          {tasks.find(
+                        <TableCell
+                          className="px-6 py-6 font-semibold min-w-0 truncate"
+                          title={
+                            orderedSubtypes.find(
+                              (task) =>
+                                task.id ===
+                                activityLogs.find(
+                                  (log) => log.id === req.activity_log_id,
+                                )?.subtype_id,
+                            )?.name ?? "-"
+                          }
+                        >
+                          {orderedSubtypes.find(
                             (task) =>
                               task.id ===
                               activityLogs.find(
                                 (log) => log.id === req.activity_log_id,
-                              )?.task_type_id,
+                              )?.subtype_id,
                           )?.name ?? "-"}
                         </TableCell>
 
@@ -191,11 +296,10 @@ const MisSolicitudesPage = () => {
 
                       <TableRow
                         key={`${req.id}-detail`}
-                        className="bg-muted/30 border-b border-[#E4E4E4]"
+                        className="bg-white border-b border-[#E4E4E4]"
                       >
-                        <TableCell colSpan={5} className="px-6 py-4">
+                        <TableCell colSpan={4} className="px-6 py-4">
                           <div className="flex flex-col md:flex-row gap-4">
-                            {/* Valor anterior */}
                             <div className="flex-1 rounded-lg border border-red-200 bg-red-50 p-3">
                               <p className="text-[11px] font-semibold uppercase tracking-wide text-red-500 mb-1">
                                 Valor anterior
@@ -205,12 +309,10 @@ const MisSolicitudesPage = () => {
                               </p>
                             </div>
 
-                            {/* Flecha separadora */}
                             <div className="hidden md:flex items-center text-gris-kurve-dark">
                               <ChevronRight size={20} />
                             </div>
 
-                            {/* Valor nuevo */}
                             <div className="flex-1 rounded-lg border border-green-200 bg-green-50 p-3">
                               <p className="text-[11px] font-semibold uppercase tracking-wide text-green-600 mb-1">
                                 Valor nuevo
@@ -220,11 +322,14 @@ const MisSolicitudesPage = () => {
                                   ? tasks.find(
                                       (task) => task.id == req.new_value,
                                     )?.name
-                                  : req.new_value}
+                                  : req.field_name === "subtype_id"
+                                    ? (orderedSubtypes.find(
+                                        (task) => task.id == req.new_value,
+                                      )?.name ?? req.new_value)
+                                    : req.new_value}
                               </p>
                             </div>
 
-                            {/* Motivo */}
                             {req.reason && (
                               <div className="flex-1 rounded-lg border border-border bg-background p-3">
                                 <p className="text-[11px] font-semibold uppercase tracking-wide text-gris-kurve-dark mb-1">
@@ -246,6 +351,7 @@ const MisSolicitudesPage = () => {
           </div>
         </div>
       </main>
+      <BottomNav items={navItems} onFabClick={() => {}} />
     </div>
   );
 };

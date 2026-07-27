@@ -7,7 +7,8 @@ import { resend, FROM_EMAIL } from "@/lib/resend";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "kurvedevelops@gmail.com";
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const VALID_STATUSES = ["in_progress", "delivered", "published"] as const;
 
 // Schema para crear solicitud de corrección
@@ -19,7 +20,7 @@ const createEditRequestSchema = z
       "hours",
       "pieces_count",
       "task_type_id",
-      "category_id",
+      "subtype_id",
       "log_date",
       "status",
       "notes",
@@ -36,8 +37,7 @@ const createEditRequestSchema = z
     switch (field_name) {
       case "hours": {
         const n = Number(new_value);
-        if (isNaN(n) || n <= 0)
-          fail("Debe ser un número positivo (ej. 1.5)");
+        if (isNaN(n) || n <= 0) fail("Debe ser un número positivo (ej. 1.5)");
         break;
       }
       case "pieces_count": {
@@ -47,19 +47,23 @@ const createEditRequestSchema = z
         break;
       }
       case "log_date": {
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(new_value) || isNaN(Date.parse(new_value)))
+        if (
+          !/^\d{4}-\d{2}-\d{2}$/.test(new_value) ||
+          isNaN(Date.parse(new_value))
+        )
           fail("Debe ser una fecha válida en formato YYYY-MM-DD");
         break;
       }
       case "status": {
         if (!(VALID_STATUSES as readonly string[]).includes(new_value))
-          fail(`Estado inválido. Valores permitidos: ${VALID_STATUSES.join(", ")}`);
+          fail(
+            `Estado inválido. Valores permitidos: ${VALID_STATUSES.join(", ")}`,
+          );
         break;
       }
       case "task_type_id":
-      case "category_id": {
-        if (!UUID_RE.test(new_value))
-          fail("Debe ser un UUID válido");
+      case "subtype_id": {
+        if (!UUID_RE.test(new_value)) fail("Debe ser un UUID válido");
         break;
       }
       // "notes": cualquier string es válido
@@ -93,7 +97,7 @@ export async function POST(request: Request) {
         error: "Datos inválidos",
         details: parsed.error.flatten(),
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -110,7 +114,7 @@ export async function POST(request: Request) {
       {
         error: "Actividad no encontrada o no pertenece al usuario",
       },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
@@ -137,7 +141,7 @@ export async function POST(request: Request) {
       {
         error: "Error al crear solicitud de corrección",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -189,7 +193,7 @@ export async function POST(request: Request) {
       message: "Solicitud de corrección creada correctamente",
       data: editRequest,
     },
-    { status: 201 }
+    { status: 201 },
   );
 }
 
@@ -208,7 +212,7 @@ export async function GET() {
       *,
       activity_logs(*),
       users!edit_requests_requested_by_fkey(*)
-    `
+    `,
     )
     .eq("status", "pending")
     .order("created_at", { ascending: false });
@@ -218,7 +222,7 @@ export async function GET() {
       {
         error: "Error al obtener solicitudes de corrección",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -226,6 +230,6 @@ export async function GET() {
     {
       data: editRequests,
     },
-    { status: 200 }
+    { status: 200 },
   );
 }

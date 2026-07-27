@@ -16,7 +16,7 @@ export async function GET(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
+  console.log("auth user id:", user?.id)
   if (!user) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }

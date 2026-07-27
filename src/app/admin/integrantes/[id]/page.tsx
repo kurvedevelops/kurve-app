@@ -136,18 +136,27 @@ const MemberDetail = () => {
           </h1>
         </div>
 
-        <div className="bg-white shadow rounded-xl p-8 mt-8">
-          <div className="flex gap-8 items-center">
-            <div className=" bg-verde-kurve rounded-2xl w-24 h-24 flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">
-                {getInitials(memberDetail?.full_name)}
-              </span>
+        <div className="bg-white shadow rounded-xl p-5 md:p-8 mt-8">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-8 md:items-center">
+            <div className="flex items-center gap-4 md:contents">
+              <div className="bg-verde-kurve rounded-2xl w-16 h-16 md:w-24 md:h-24 flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-bold text-xl md:text-2xl">
+                  {getInitials(memberDetail?.full_name)}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-1 min-w-0 md:hidden">
+                <h2 className="text-xl font-bold truncate">
+                  {memberDetail?.full_name}
+                </h2>
+              </div>
             </div>
-            <div className="flex flex-col gap-1">
+
+            <div className="flex flex-col gap-1 min-w-0 hidden md:flex">
               <h2 className="text-3xl font-bold mb-1">
                 {memberDetail?.full_name}
               </h2>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 <p className="text-gray-600 text-xs">
                   <span className="text-xs font-semibold">Cargo: </span>
                   {cargoNombre || "Sin especificar"}
@@ -162,10 +171,27 @@ const MemberDetail = () => {
                 </p>
               </div>
             </div>
-            <div className="ml-auto flex items-center gap-2">
+
+            {/* Info apilada, solo mobile */}
+            <div className="flex flex-col gap-1 md:hidden">
+              <p className="text-gray-600 text-xs">
+                <span className="font-semibold">Cargo: </span>
+                {cargoNombre || "Sin especificar"}
+              </p>
+              <p className="text-gray-600 text-xs break-words">
+                <span className="font-semibold">Email: </span>
+                {memberDetail?.email}
+              </p>
+              <p className="text-gray-600 text-xs">
+                <span className="font-semibold">Telefono: </span>
+                {memberDetail?.phone || "Sin especificar"}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 md:ml-auto">
               <Button
                 variant="outline"
-                className="px-6 py-6 flex items-center gap-2 border-verde-kurve text-verde-kurve-dark cursor-pointer hover:bg-verde-kurve-light"
+                className="flex-1 md:flex-none px-4 md:px-6 py-4 md:py-6 flex items-center justify-center gap-2 border-verde-kurve text-verde-kurve-dark cursor-pointer hover:bg-verde-kurve-light"
                 onClick={() => setShowEditModal(true)}
               >
                 <Pencil size={16} />
@@ -173,7 +199,7 @@ const MemberDetail = () => {
               </Button>
               <Button
                 variant="outline"
-                className="px-6 py-6 flex items-center gap-2 border-red-500 text-red-500 cursor-pointer hover:bg-red-300 hover:text-red-600"
+                className="flex-1 md:flex-none px-4 md:px-6 py-4 md:py-6 flex items-center justify-center gap-2 border-red-500 text-red-500 cursor-pointer hover:bg-red-300 hover:text-red-600"
                 onClick={() => {
                   setDeleteConfirm({
                     open: true,
@@ -182,7 +208,7 @@ const MemberDetail = () => {
                   });
                 }}
               >
-                <UserMinus />
+                <UserMinus size={16} />
                 Eliminar
               </Button>
             </div>
@@ -233,17 +259,19 @@ const MemberDetail = () => {
                           <h3 className="font-bold mt-3 text-xl">
                             {client.name}
                           </h3>
-                          <div className="flex justify-between items-center mt-5 pt-3 border-t border-gray-200">
-                            <span className="text-center font-semibold">
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 mt-5 pt-3 border-t border-gray-200">
+                            <span className="text-xs sm:text-sm font-semibold whitespace-nowrap">
                               ÚLTIMA ACTIVIDAD
                             </span>
                             {lastLogForClient ? (
-                              <span className="text-xs text-center text-muted-foreground">
-                                {lastLogForClient?.task_types?.name} |{" "}
+                              <span className="text-xs text-muted-foreground truncate">
+                                {lastLogForClient?.task_subtypes?.name} |{" "}
                                 {lastLogForClient?.log_date}
                               </span>
                             ) : (
-                              "No hay actividades recientes"
+                              <span className="text-xs text-muted-foreground">
+                                No hay actividades recientes
+                              </span>
                             )}
                           </div>
                         </CardContent>

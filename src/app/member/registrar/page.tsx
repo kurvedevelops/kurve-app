@@ -16,8 +16,9 @@ import {
 } from "@/hooks/middleware";
 import { createClient } from "@/lib/supabase/client";
 import Swal from "sweetalert2";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { navItems } from "@/components/layout/NavItems";
 
 const registroSchema = Yup.object().shape({
   client_id: Yup.string().required("Selecciona un cliente"),
@@ -64,6 +65,8 @@ const RegistrarHorasPage = () => {
   const { activityLogs, loadingActivityLogs, refetchActivityLogs } =
     useActivityLogs(user?.id || "");
   const { orderedSubtypes, loadingOrderedSubtypes } = useOrderedTaskSubtypes();
+  const [activePackages, setActivePackages] = useState<any[]>([]);
+
 
   const userClients = clients.filter((client) =>
     clientsId.some((item) => item.client_id === client.id),
@@ -88,51 +91,6 @@ const RegistrarHorasPage = () => {
     })
     .reduce((total, log) => total + log.hours, 0);
 
-  const navItems = [
-    {
-      label: "Inicio",
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-        </svg>
-      ),
-      href: "/member",
-    },
-    {
-      label: "Actividades",
-      icon: <Clock size={24} />,
-      href: "/member/activities",
-    },
-    {
-      label: "Registrar",
-      icon: <Plus size={28} />,
-      href: "/member/register",
-      isFab: true,
-    },
-    {
-      label: "Mensajes",
-      icon: <MessageSquare size={24} />,
-      href: "/member/messages",
-    },
-    {
-      label: "Perfil",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
-      ),
-      href: "/member/profile",
-    },
-  ];
-
   const router = useRouter();
 
   const formik = useFormik({
@@ -145,10 +103,12 @@ const RegistrarHorasPage = () => {
       subtype_id: "",
       pieces_count: 0,
       notes: "",
+      package_id: "",
     },
     enableReinitialize: true,
     validationSchema: registroSchema,
     onSubmit: async (values, { setSubmitting, resetForm, setStatus }) => {
+      console.log("package_id antes de insertar:", values.package_id);
       if (!user?.id) {
         setStatus({ error: "Usuario no autenticado" });
         setSubmitting(false);
@@ -165,6 +125,7 @@ const RegistrarHorasPage = () => {
           hours: values.hours,
           pieces_count: values.pieces_count,
           notes: values.notes || null,
+          package_id: values.package_id || null,
         });
 
         if (error) throw error;
@@ -198,7 +159,7 @@ const RegistrarHorasPage = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       const values = formik.values;
-      if (values.client_id || values.task_type_id) {
+      if (values.client_id || values.subtype_id) {
         localStorage.setItem("activity_draft", JSON.stringify(values));
       } else {
         localStorage.removeItem("activity_draft");
@@ -213,10 +174,11 @@ const RegistrarHorasPage = () => {
 
     try {
       const parsed = JSON.parse(draft);
-      if (parsed.client_id || parsed.task_type_id) {
+      if (parsed.client_id || parsed.subtype_id) {
         formik.setValues({
           ...formik.initialValues,
           ...parsed,
+          task_type_id: user?.task_type_id ?? "",
         });
 
         Swal.fire({
@@ -234,6 +196,42 @@ const RegistrarHorasPage = () => {
       localStorage.removeItem("activity_draft");
     }
   }, []);
+
+useEffect(() => {
+  const fetchActivePackages = async () => {
+    if (!formik.values.client_id) {
+      setActivePackages([]);
+      formik.setFieldValue("package_id", "");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/clients/${formik.values.client_id}/active-package`);
+      if (!res.ok) {
+        setActivePackages([]);
+        formik.setFieldValue("package_id", "");
+        return;
+      }
+
+      const json = await res.json();
+      const packages = json.data ?? [];
+
+      setActivePackages(packages);
+
+      if (packages.length === 1) {
+        formik.setFieldValue("package_id", packages[0].package_id);
+      } else {
+        formik.setFieldValue("package_id", "");
+      }
+    } catch (err) {
+      console.error("Error al traer paquetes activos:", err);
+      setActivePackages([]);
+      formik.setFieldValue("package_id", "");
+    }
+  };
+
+  fetchActivePackages();
+}, [formik.values.client_id]);
+
 
   return (
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
@@ -510,7 +508,7 @@ const RegistrarHorasPage = () => {
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-foreground truncate">
-                        {log.task_types?.name}
+                        {log.task_subtypes?.name}
                       </p>
                       <p className="text-xs text-gris-kurve-dark">
                         {log.clients?.name} • {log.log_date}

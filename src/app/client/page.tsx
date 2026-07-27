@@ -37,7 +37,7 @@ const ClientPage = () => {
       <main className="flex-1 md:ml-47 lg:ml-64 px-5 py-8 md:p-8">
         <PageHeader
           badge="Portal del Cliente"
-          title="Bienvenido"
+          title="Resumen de Consumo"
           showName={true}
           subtitle="Monitorea tu actividad y metricas clave"
         />

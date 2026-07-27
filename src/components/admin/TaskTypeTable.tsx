@@ -30,7 +30,7 @@ const TaskTypesTable = ({ taskTypes, onSave, onAdd }: TaskTypesTableProps) => {
   };
 
   return (
-    <div className="bg-white rounded-xl overflow-hidden shadow-sm overflow-x-auto mt-10 md:mx-20">
+    <div className="bg-white rounded-xl overflow-hidden shadow-sm overflow-x-auto mt-4 md:mx-20">
       <div className="flex items-center justify-between mb-5 gap-3 mt-4 ml-4 mr-4">
         <h2 className="text-base font-medium text-gray-900">
           Registro de roles
