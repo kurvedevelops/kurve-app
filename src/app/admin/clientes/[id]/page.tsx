@@ -36,6 +36,8 @@ import type { ClientLinkFormData } from "@/components/modals/admin/cliente/Clien
 import { Card, CardHeader } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ConfirmDeleteModal } from "@/components/modals/BorrarEntidadModal";
+import ConsumptionChart from "@/components/client/ConsumptionChart";
+import ConsumptionPackageSection from "@/components/admin/ConsumptionPackageSection";
 
 const ClientDetailPage = () => {
   const params = useParams();
@@ -273,9 +275,9 @@ const ClientDetailPage = () => {
           Paquetes activos
         </h1>
         {/* Paquete Section */}
-        <div className="bg-background rounded-xl border border-border p-8">
+        <div>
           {packageConsumption.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20">
+            <div className="flex bg-background border border-border rounded-lg flex-col items-center justify-center py-20">
               <div className="w-16 h-16 rounded-full bg-verde-kurve/10 flex items-center justify-center mb-4">
                 <Package size={32} className="text-verde-kurve" />
               </div>
@@ -306,72 +308,10 @@ const ClientDetailPage = () => {
               )}
             </div>
           ) : (
-            <>
-              {packageConsumption.map((pkg) => (
-                <div key={pkg.package_id} className="mb-2">
-                  {/* Package Header */}
-                  <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
-                    <div className="min-w-0">
-                      <h4 className="text-xl font-bold text-foreground mb-1 break-words">
-                        {pkg.package_name}
-                      </h4>
-                      <p className="text-sm text-gris-kurve-dark">
-                        {pkg.start_date
-                          ? new Date(pkg.start_date).toLocaleDateString("es-AR")
-                          : "Indefinido"}{" "}
-                        -{" "}
-                        {pkg.end_date
-                          ? new Date(pkg.end_date).toLocaleDateString("es-AR")
-                          : "Indefinido"}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 mt-3 flex-shrink-0">
-                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-verde-kurve/10 text-verde-kurve">
-                        ●{" "}
-                        {pkg.package_status === "active"
-                          ? "Activo"
-                          : "Inactivo"}
-                      </span>
-                      <button
-                        onClick={() =>
-                          setUnassignConfirm({
-                            open: true,
-                            packageId: pkg.package_id,
-                            packageName: pkg.package_name,
-                          })
-                        }
-                        className="px-3 py-1 rounded-full text-xs font-bold bg-red-50 text-red-500 hover:bg-red-100 transition-colors cursor-pointer"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Horas */}
-                    <div className="bg-muted rounded-lg p-4">
-                      <p className="text-xs font-semibold text-gris-kurve-dark uppercase tracking-wide mb-2">
-                        Horas Totales
-                      </p>
-                      <p className="text-2xl font-bold text-foreground">
-                        {pkg.total_hours}
-                        <span className="text-sm ml-1 font-normal">hs</span>
-                      </p>
-                    </div>
-
-                    <div className="bg-muted rounded-lg p-4">
-                      <p className="text-xs font-semibold text-gris-kurve-dark uppercase tracking-wide mb-2">
-                        Horas Consumidas
-                      </p>
-                      <p className="text-2xl font-bold text-foreground">
-                        {pkg.consumed_hours}
-                        <span className="text-sm ml-1 font-normal">hs</span>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </>
+            <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ConsumptionChart clientId={clientId} />
+              <ConsumptionPackageSection clientId={clientId} />
+            </div>
           )}
         </div>
         <div>
@@ -394,7 +334,7 @@ const ClientDetailPage = () => {
               <p className="text-sm text-gray-400">Cargando...</p>
             ) : links.length === 0 ? (
               // Empty State
-              <div className="flex flex-col items-center justify-center py-20">
+              <div className="flex flex-col bg-background border border-border rounded-lg items-center justify-center py-20">
                 <div className="w-16 h-16 rounded-full bg-verde-kurve/10 flex items-center justify-center mb-4">
                   <LinkIcon size={32} className="text-verde-kurve" />
                 </div>
