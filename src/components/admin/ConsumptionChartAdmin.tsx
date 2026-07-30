@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useClientConsumption } from "@/hooks/middleware";
+import { useClientConsumption, useClients } from "@/hooks/middleware";
+import { useMemo } from "react";
 import { BarChart2 } from "lucide-react";
 import {
   BarChart,
@@ -51,7 +52,24 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 const ConsumptionChartAdmin = () => {
   const { data, loading, error } = useClientConsumption();
+  const { clients } = useClients();
   const router = useRouter();
+
+  const clientNameById = useMemo(
+    () => new Map(clients.map((c) => [c.id, c.name])),
+    [clients],
+  );
+
+  const chartData = useMemo(
+    () =>
+      data
+        .map((d) => ({
+          ...d,
+          client_name: clientNameById.get(d.client_id) ?? "Sin cliente",
+        }))
+        .reverse(),
+    [data, clientNameById],
+  );
 
   const handleBarClick = (entry: any) => {
     if (entry?.client_id) {
@@ -92,12 +110,12 @@ const ConsumptionChartAdmin = () => {
 
       <ResponsiveContainer width="100%" height={300}>
         <BarChart
-          data={data}
+          data={chartData}
           margin={{ top: 4, right: 8, left: -20, bottom: 40 }}
           barSize={75}
         >
           <XAxis
-            dataKey="package_name"
+            dataKey="client_name"
             tick={{ fontSize: 11, fill: "#9ca3af" }}
             angle={-35}
             textAnchor="end"
