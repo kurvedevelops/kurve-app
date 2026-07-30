@@ -16,7 +16,7 @@ export async function GET(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  console.log("auth user id:", user?.id)
+  console.log("auth user id:", user?.id);
   if (!user) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
@@ -31,7 +31,10 @@ export async function GET(
     .single();
 
   if (!profile) {
-    return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Usuario no encontrado" },
+      { status: 404 },
+    );
   }
 
   if (profile.role === "member") {
@@ -54,7 +57,7 @@ export async function GET(
 
   // v_client_consumption filtra por status = 'active' y devuelve una fila
   // por paquete activo (soporta múltiples paquetes activos por cliente)
-  const { data: packages, error } = await supabase
+  const { data: rawPackages, error } = await supabase
     .from("v_client_consumption")
     .select(
       "package_id, package_name, total_hours, consumed_hours, hours_percent, start_date, end_date",
@@ -69,6 +72,10 @@ export async function GET(
       { status: 500 },
     );
   }
+
+  const packages = Array.from(
+    new Map((rawPackages ?? []).map((p) => [p.package_id, p])).values(),
+  );
 
   return NextResponse.json({ data: packages ?? [] }, { status: 200 });
 }

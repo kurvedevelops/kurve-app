@@ -66,7 +66,7 @@ const RegistrarHorasPage = () => {
     useActivityLogs(user?.id || "");
   const { orderedSubtypes, loadingOrderedSubtypes } = useOrderedTaskSubtypes();
   const [activePackages, setActivePackages] = useState<any[]>([]);
-
+  const [loadingPackages, setLoadingPackages] = useState(false);
 
   const userClients = clients.filter((client) =>
     clientsId.some((item) => item.client_id === client.id),
@@ -108,13 +108,12 @@ const RegistrarHorasPage = () => {
     enableReinitialize: true,
     validationSchema: registroSchema,
     onSubmit: async (values, { setSubmitting, resetForm, setStatus }) => {
-      console.log("package_id antes de insertar:", values.package_id);
       if (!user?.id) {
         setStatus({ error: "Usuario no autenticado" });
         setSubmitting(false);
         return;
       }
-
+      console.log(values.package_id);
       try {
         const { error } = await supabase.from("activity_logs").insert({
           user_id: user.id,
@@ -197,41 +196,45 @@ const RegistrarHorasPage = () => {
     }
   }, []);
 
-useEffect(() => {
-  const fetchActivePackages = async () => {
-    if (!formik.values.client_id) {
-      setActivePackages([]);
-      formik.setFieldValue("package_id", "");
-      return;
-    }
-    try {
-      const res = await fetch(`/api/clients/${formik.values.client_id}/active-package`);
-      if (!res.ok) {
+  useEffect(() => {
+    const fetchActivePackages = async () => {
+      if (!formik.values.client_id) {
         setActivePackages([]);
         formik.setFieldValue("package_id", "");
         return;
       }
+      setLoadingPackages(true); // ⬅️ nuevo
+      try {
+        const res = await fetch(
+          `/api/clients/${formik.values.client_id}/active-package`,
+        );
+        if (!res.ok) {
+          setActivePackages([]);
+          formik.setFieldValue("package_id", "");
+          return;
+        }
+        const json = await res.json();
+        console.log("active-package response:", res.status, json); // ⬅️ temporal
+        const packages = json.data ?? [];
 
-      const json = await res.json();
-      const packages = json.data ?? [];
+        setActivePackages(packages);
 
-      setActivePackages(packages);
-
-      if (packages.length === 1) {
-        formik.setFieldValue("package_id", packages[0].package_id);
-      } else {
+        if (packages.length === 1) {
+          formik.setFieldValue("package_id", packages[0].package_id);
+        } else {
+          formik.setFieldValue("package_id", "");
+        }
+      } catch (err) {
+        console.error("Error al traer paquetes activos:", err);
+        setActivePackages([]);
         formik.setFieldValue("package_id", "");
+      } finally {
+        setLoadingPackages(false);
       }
-    } catch (err) {
-      console.error("Error al traer paquetes activos:", err);
-      setActivePackages([]);
-      formik.setFieldValue("package_id", "");
-    }
-  };
+    };
 
-  fetchActivePackages();
-}, [formik.values.client_id]);
-
+    fetchActivePackages();
+  }, [formik.values.client_id]);
 
   return (
     <div className="min-h-screen w-full bg-muted flex flex-col md:flex-row">
@@ -458,10 +461,14 @@ useEffect(() => {
               <div className="flex justify-center">
                 <button
                   type="submit"
-                  disabled={formik.isSubmitting}
+                  disabled={formik.isSubmitting || loadingPackages} // ⬅️ agregado loadingPackages
                   className="w-full md:w-fit px-8 py-3 bg-verde-kurve text-white font-semibold rounded-lg hover:bg-verde-kurve-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {formik.isSubmitting ? "Registrando..." : "Registrar Horas"}
+                  {formik.isSubmitting
+                    ? "Registrando..."
+                    : loadingPackages
+                      ? "Buscando paquete..."
+                      : "Registrar Horas"}
                 </button>
               </div>
             </form>
