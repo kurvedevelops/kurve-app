@@ -27,6 +27,7 @@ interface RecentActivity {
   name: string;
   client: string;
   taskType: string;
+  taskSubtype: string;
   hours: number;
 }
 
@@ -56,7 +57,8 @@ const AdminPage = () => {
         initials: getInitials(log.users?.full_name),
         name: log.users?.full_name ?? "Sin nombre",
         client: log.clients?.name ?? "Sin cliente",
-        taskType: log.task_types?.name ?? "Sin tipo",
+        taskType: log.task_types?.name ?? "Sin rol",
+        taskSubtype: log.task_subtypes?.name ?? "Sin tarea",
         hours: log.hours ?? 0,
       })),
     [activityLogs],
@@ -224,10 +226,10 @@ const AdminPage = () => {
                           </div>
                           <div>
                             <p className="text-sm font-medium text-gray-800">
-                              {activity.name}
+                              {activity.name} · {activity.taskType}
                             </p>
                             <p className="text-xs text-gray-400">
-                              {activity.client} · {activity.taskType}
+                              {activity.client} · {activity.taskSubtype}
                             </p>
                           </div>
                         </div>
