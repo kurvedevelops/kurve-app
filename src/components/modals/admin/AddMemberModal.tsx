@@ -249,10 +249,12 @@ const AddMemberModal = ({
 
             <button
               type="submit"
-              disabled={!(formik.isValid && formik.dirty)}
+              disabled={
+                !(formik.isValid && formik.dirty) || formik.isSubmitting
+              }
               className="cursor-pointer h-9 px-4 text-sm font-medium rounded-lg bg-verde-kurve text-white hover:bg-verde-kurve/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Guardar
+              {formik.isSubmitting ? "Guardando..." : "Guardar"}
             </button>
           </div>
         </form>
