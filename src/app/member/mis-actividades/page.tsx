@@ -58,7 +58,6 @@ const MisActividadesPage = () => {
     user?.id || "",
     appliedFilters,
   );
-  const { subtypes, loadingSubtypes } = useTaskSubtypesConfig();
 
   const totalPages = Math.ceil(totalCount / 5);
 
